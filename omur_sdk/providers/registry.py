@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 from typing import Any
 
 import structlog
@@ -76,6 +75,7 @@ class ProviderRegistry:
             log.warning("registry.unknown_provider", name=name, tenant_id=tenant_id)
             return
         key = f"{tenant_id}:{name}"
+        assert key not in self._tasks, f"Task {key!r} already running — cancel before starting"
         instance = cls(tenant_id=tenant_id, config=config)
         self._tasks[key] = asyncio.create_task(instance.run(), name=key)
         log.info("registry.task_started", key=key)
@@ -122,6 +122,8 @@ class ProviderRegistry:
 
         backoff = 1.0
         while True:
+            client = None
+            pubsub = None
             try:
                 client = redis.from_url(self._valkey_url)
                 pubsub = client.pubsub()
@@ -145,6 +147,11 @@ class ProviderRegistry:
                 log.warning("registry.valkey_disconnected", error=str(exc), retry_in=backoff)
                 await asyncio.sleep(backoff)
                 backoff = min(backoff * 2, 60.0)
+            finally:
+                if pubsub is not None:
+                    await pubsub.aclose()
+                if client is not None:
+                    await client.aclose()
 
     async def _reconcile_all(self) -> None:
         """Re-read all enabled providers from DB and sync running tasks."""

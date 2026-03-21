@@ -56,8 +56,10 @@ async def test_stop_cancels_all_tasks(registry):
     with patch.object(registry, "_fetch_providers", new=AsyncMock(return_value=STUB_DB_ROWS)), \
          patch.object(registry, "_subscribe_valkey", new=AsyncMock()):
         await registry.start()
+        tasks_before_stop = list(registry._tasks.values())
         await registry.stop()
-        assert all(t.cancelled() or t.done() for t in registry._tasks.values())
+        assert len(tasks_before_stop) == 1
+        assert all(t.cancelled() or t.done() for t in tasks_before_stop)
 
 
 @pytest.mark.asyncio
