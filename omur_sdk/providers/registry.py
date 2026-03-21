@@ -77,8 +77,19 @@ class ProviderRegistry:
         key = f"{tenant_id}:{name}"
         assert key not in self._tasks, f"Task {key!r} already running — cancel before starting"
         instance = cls(tenant_id=tenant_id, config=config)
-        self._tasks[key] = asyncio.create_task(instance.run(), name=key)
+        task = asyncio.create_task(instance.run(), name=key)
+        task.add_done_callback(lambda t, k=key: self._on_task_done(k, t))
+        self._tasks[key] = task
         log.info("registry.task_started", key=key)
+
+    def _on_task_done(self, key: str, task: asyncio.Task) -> None:
+        """Remove crashed tasks from _tasks so reconcile can restart them."""
+        if task.cancelled():
+            return
+        exc = task.exception()
+        if exc is not None:
+            log.error("registry.task_crashed", key=key, error=str(exc))
+            self._tasks.pop(key, None)
 
     async def _cancel_tasks(self, keys: list[str]) -> None:
         tasks = []
