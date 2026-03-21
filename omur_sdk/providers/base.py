@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class ProviderDocument(BaseModel):
@@ -16,7 +16,7 @@ class ProviderDocument(BaseModel):
     content: str
     doc_type: str | None = None
     doc_date: str | None = None
-    meta: dict[str, Any] = {}
+    meta: dict[str, Any] = Field(default_factory=dict)
 
 
 class ProviderMetric(BaseModel):
@@ -27,7 +27,7 @@ class ProviderMetric(BaseModel):
     unit: str
     ts: int           # nanoseconds UTC epoch
     tenant_id: str
-    meta: dict[str, Any] = {}
+    meta: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("value", mode="before")
     @classmethod
@@ -46,6 +46,13 @@ class ProviderBase(ABC):
 
     kind: str   # 'collector' | 'indexer' | 'sensor'
     name: str   # e.g. 'fitbit', 'gdrive', 'weather_station'
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        if not getattr(cls, "__abstractmethods__", None):
+            for attr in ("kind", "name"):
+                if not isinstance(cls.__dict__.get(attr), str):
+                    raise TypeError(f"{cls.__name__} must define class attribute '{attr}' as a str")
 
     def __init__(self, tenant_id: str, config: dict[str, Any]) -> None:
         self.tenant_id = tenant_id
