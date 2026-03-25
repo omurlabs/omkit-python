@@ -9,6 +9,7 @@ description = "Shared provider framework for Omur services"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.9",
+    "pydantic-settings>=2.6",
     "asyncpg>=0.30",
     "redis>=5.0",
     "structlog>=24.4",
