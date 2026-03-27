@@ -29,7 +29,7 @@ class BaseServiceSettings(BaseSettings):
 
     # Ollama
     OLLAMA_HOST: str = "http://ollama:11434"
-    OLLAMA_CHAT_MODEL: str = "llama3.2"
+    OLLAMA_CHAT_MODEL: str = "qwen3:8b"
     OLLAMA_EMBED_MODEL: str = "bge-m3"
 
     @property
