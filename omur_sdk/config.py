@@ -16,6 +16,9 @@ class BaseServiceSettings(BaseSettings):
     OMUR_MODE: str = "standalone"
     OMUR_TENANT_TOKEN: str = ""
 
+    # CORS
+    CORS_ORIGINS: str = "https://omur.local,http://localhost:3000"
+
     # PostgreSQL
     POSTGRES_HOST: str = "postgres"
     POSTGRES_PORT: int = 5432
