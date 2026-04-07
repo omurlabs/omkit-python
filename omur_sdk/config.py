@@ -1,5 +1,6 @@
 """Shared base settings for all Omur services."""
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,6 +16,7 @@ class BaseServiceSettings(BaseSettings):
     # Omur runtime
     OMUR_MODE: str = "standalone"
     OMUR_TENANT_TOKEN: str = ""
+    omur_settings_key: str = Field(default="", alias="OMUR_SETTINGS_KEY")
 
     # CORS
     CORS_ORIGINS: str = "https://omur.local,http://localhost:3000"
