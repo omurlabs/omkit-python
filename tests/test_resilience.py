@@ -1,5 +1,6 @@
 import pytest
 import httpx
+from unittest.mock import MagicMock
 from omur_sdk.resilience import CircuitBreaker, CircuitOpen, resilient
 
 
@@ -70,10 +71,31 @@ async def test_non_transient_errors_are_not_retried():
     async def bad_request():
         nonlocal calls
         calls += 1
-        raise httpx.HTTPStatusError("bad", request=None, response=None)
+        mock_response = MagicMock()
+        mock_response.status_code = 400
+        raise httpx.HTTPStatusError("bad", request=MagicMock(), response=mock_response)
 
     # httpx.HTTPStatusError without response.status_code in {502,503,504} is non-transient
     with pytest.raises(httpx.HTTPStatusError):
         await bad_request()
 
     assert calls == 1  # no retry
+
+
+@pytest.mark.asyncio
+async def test_half_open_probe_success_closes_circuit():
+    """After timeout, a successful call in HALF_OPEN state closes the circuit."""
+    cb = CircuitBreaker(fail_max=1, reset_timeout=0, name="test")
+    cb.record_failure()
+    # Force to half_open by reading state twice (reset_timeout=0)
+    _ = cb.state  # first read: open, sets _open_observed
+    assert cb.state == "half_open"
+
+    @resilient(cb)
+    async def ok():
+        return "success"
+
+    result = await ok()
+    assert result == "success"
+    assert cb.state == "closed"
+    assert cb._failures == 0

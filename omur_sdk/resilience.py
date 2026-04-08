@@ -1,6 +1,7 @@
 """HTTP resilience primitives: circuit breaker + retry with exponential backoff."""
 from __future__ import annotations
 
+import functools
 import time
 from enum import Enum
 from typing import Awaitable, Callable, TypeVar
@@ -91,6 +92,7 @@ def resilient(breaker: CircuitBreaker) -> Callable:
             retry=retry_if_exception(_is_transient),
             reraise=True,
         )
+        @functools.wraps(fn)
         async def wrapped(*args, **kwargs):
             return await breaker.call(fn(*args, **kwargs))
 
