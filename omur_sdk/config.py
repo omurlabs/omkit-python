@@ -29,7 +29,7 @@ class BaseServiceSettings(BaseSettings):
     POSTGRES_PASSWORD: str = ""
 
     # Valkey (Redis-compatible, Apache 2.0)
-    VALKEY_HOST: str = "redis"  # compose service name runs Valkey 9.0
+    VALKEY_HOST: str = "valkey"
     VALKEY_PORT: int = 6379
 
     # Ollama
