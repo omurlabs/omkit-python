@@ -31,6 +31,10 @@ class SyncNotifier:
         """Fire-and-forget sync notification. Never raises."""
         asyncio.create_task(self._send(resource_type, resource_id, data))
 
+    async def notify_delete(self, resource_type: str, resource_id: str) -> None:
+        """Fire-and-forget delete notification. Never raises."""
+        asyncio.create_task(self._send_delete(resource_type, resource_id))
+
     async def notify_metrics(self, metric_name: str, date: str, rows: list[dict]) -> None:
         """Fire-and-forget metrics sync notification. Never raises."""
         asyncio.create_task(self._send_metrics(metric_name, date, rows))
@@ -50,6 +54,22 @@ class SyncNotifier:
                            id=resource_id, status=resp.status_code)
         except Exception as e:
             log.warning("sync_notifier.failed", type=resource_type,
+                       id=resource_id, error=str(e))
+
+    async def _send_delete(self, resource_type: str, resource_id: str) -> None:
+        try:
+            client = self._get_client()
+            resp = await client.delete(
+                f"{self._base_url}/sync/{resource_type}/{resource_id}",
+                headers={"X-Service-Token": self._token},
+            )
+            if resp.status_code == 202:
+                log.debug("sync_notifier.delete_queued", type=resource_type, id=resource_id)
+            else:
+                log.warning("sync_notifier.delete_unexpected_status", type=resource_type,
+                           id=resource_id, status=resp.status_code)
+        except Exception as e:
+            log.warning("sync_notifier.delete_failed", type=resource_type,
                        id=resource_id, error=str(e))
 
     async def _send_metrics(self, metric_name: str, date: str, rows: list[dict]) -> None:
