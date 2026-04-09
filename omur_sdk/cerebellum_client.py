@@ -194,6 +194,24 @@ class CerebellumClient:
             all_results.extend(result.get("results", []))
         return all_results
 
+    async def classify(
+        self,
+        texts: list[str],
+        request_id: str | None = None,
+        tenant_id: str | None = None,
+    ) -> list[dict] | None:
+        """Classify documents. Returns None on failure."""
+        if not self.available:
+            return None
+
+        all_results = []
+        for batch in self._split_batch(texts):
+            result = await self._post("/classify", {"texts": batch}, request_id, tenant_id)
+            if result is None:
+                return None
+            all_results.extend(result.get("results", []))
+        return all_results
+
     async def close(self) -> None:
         if self._client and not self._client.is_closed:
             await self._client.aclose()
