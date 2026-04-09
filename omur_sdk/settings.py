@@ -4,6 +4,7 @@
 import asyncio
 import json
 import logging
+import os
 from typing import Any, Callable
 
 import redis.asyncio as aioredis
@@ -33,6 +34,8 @@ class SettingsManager:
         self._cache: dict[str, Any] = {}
         self._listeners: dict[str, list[Callable]] = {}
         self._subscriber_task: asyncio.Task | None = None
+        self._cache_path = os.environ.get("SETTINGS_CACHE_PATH", "/data/settings-cache.json")
+        self._secret_keys: set[str] = set()
 
     def get(self, key: str, default: Any = None) -> Any:
         """Read from in-memory cache. No I/O."""
@@ -76,19 +79,50 @@ class SettingsManager:
             except asyncio.CancelledError:
                 pass
 
+    def _write_cache(self):
+        """Write non-secret settings to local cache file atomically."""
+        try:
+            secret_keys = getattr(self, "_secret_keys", set())
+            data = {k: v for k, v in self._cache.items() if k not in secret_keys}
+            tmp_path = self._cache_path + ".tmp"
+            with open(tmp_path, "w") as f:
+                json.dump(data, f)
+            os.chmod(tmp_path, 0o600)
+            os.replace(tmp_path, self._cache_path)
+        except Exception as e:
+            logger.warning("Failed to write settings cache: %s", e)
+
+    def _read_cache(self):
+        """Read settings from local cache file (fallback when DB unavailable)."""
+        try:
+            with open(self._cache_path) as f:
+                self._cache.update(json.load(f))
+            logger.info("[%s] Loaded %d settings from cache", self._service_name, len(self._cache))
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            logger.warning("Failed to read settings cache: %s", e)
+
     async def _load_from_db(self):
         """Load all non-secret settings into cache."""
         from sqlalchemy import text
 
-        async with self._db_factory() as session:
-            await session.execute(text("SELECT set_config('app.tenant_id', :tid, true)"), {"tid": str(self._tenant_id)})
-            result = await session.execute(
-                text("SELECT key, value_json, is_secret FROM app_settings WHERE tenant_id = :tid"),
-                {"tid": self._tenant_id},
-            )
-            for row in result.all():
-                if not row.is_secret:
-                    self._cache[row.key] = row.value_json
+        try:
+            async with self._db_factory() as session:
+                await session.execute(text("SELECT set_config('app.tenant_id', :tid, true)"), {"tid": str(self._tenant_id)})
+                result = await session.execute(
+                    text("SELECT key, value_json, is_secret FROM app_settings WHERE tenant_id = :tid"),
+                    {"tid": self._tenant_id},
+                )
+                for row in result.all():
+                    if row.is_secret:
+                        self._secret_keys.add(row.key)
+                    else:
+                        self._cache[row.key] = row.value_json
+            self._write_cache()
+        except Exception as e:
+            logger.warning("[%s] DB load failed, trying cache: %s", self._service_name, e)
+            self._read_cache()
 
     async def _subscribe(self):
         """Subscribe to Valkey pub/sub channel for setting changes."""
@@ -124,6 +158,7 @@ class SettingsManager:
             self._cache[key] = payload["value"]
         elif payload.get("changed"):
             self._cache.pop(key, None)
+        self._write_cache()
 
         for callback in self._listeners.get(key, []):
             try:

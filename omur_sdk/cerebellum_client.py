@@ -151,6 +151,9 @@ class CerebellumClient:
         source_lang: str | None = None,
         request_id: str | None = None,
         tenant_id: str | None = None,
+        split_strategy: str | None = None,
+        skip_strategy: str | None = None,
+        batch_size: int = 1,
     ) -> list[dict] | None:
         """Translate texts to English. Returns None on failure."""
         if not self.available:
@@ -161,6 +164,12 @@ class CerebellumClient:
             payload = {"texts": batch}
             if source_lang:
                 payload["source_lang"] = source_lang
+            if split_strategy:
+                payload["split_strategy"] = split_strategy
+            if skip_strategy:
+                payload["skip_strategy"] = skip_strategy
+            if batch_size > 1:
+                payload["batch_size"] = batch_size
             result = await self._post("/translate", payload, request_id, tenant_id)
             if result is None:
                 return None
