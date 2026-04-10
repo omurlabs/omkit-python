@@ -39,6 +39,7 @@ class ProviderRegistry:
         self._valkey_url = valkey_url
         self._tasks: dict[str, asyncio.Task] = {}  # key: "{tenant_id}:{name}"
         self._valkey_task: asyncio.Task | None = None
+        self._table_missing: bool = False
 
     # ── Public API ────────────────────────────────────────────────
 
@@ -106,7 +107,11 @@ class ProviderRegistry:
             await asyncio.gather(*tasks, return_exceptions=True)
 
     async def _fetch_providers(self, tenant_id: str | None = None) -> list[dict[str, Any]]:
-        """Query DB for enabled providers of this registry's kind."""
+        """Query DB for enabled providers of this registry's kind.
+
+        Returns [] and logs a warning if the providers table doesn't exist yet
+        (pre-migration state). The warning is rate-limited to avoid log spam.
+        """
         import asyncpg
         conn = await asyncpg.connect(self._postgres_dsn.replace("postgresql+asyncpg://", "postgresql://"))
         try:
@@ -122,8 +127,17 @@ class ProviderRegistry:
                     "WHERE kind = $1 AND enabled = TRUE",
                     self.kind,
                 )
+            if self._table_missing:
+                log.info("registry.table_available", kind=self.kind)
+                self._table_missing = False
             return [{"tenant_id": r["tenant_id"], "name": r["name"], "config": r["config"]} for r in rows]
             # asyncpg auto-deserializes JSONB to dict — no json.loads() needed
+        except asyncpg.UndefinedTableError:
+            if not self._table_missing:
+                log.warning("registry.table_missing", kind=self.kind,
+                            hint="run the migrate container to create the providers table")
+                self._table_missing = True
+            return []
         finally:
             await conn.close()
 
