@@ -43,7 +43,11 @@ class ProviderRegistry:
     # ── Public API ────────────────────────────────────────────────
 
     async def start(self) -> None:
-        rows = await self._fetch_providers()
+        try:
+            rows = await self._fetch_providers()
+        except Exception as exc:
+            log.warning("registry.db_unavailable", kind=self.kind, error=str(exc))
+            rows = []
         for row in rows:
             self._start_task(row["tenant_id"], row["name"], row["config"])
         self._valkey_task = asyncio.create_task(self._subscribe_valkey())
