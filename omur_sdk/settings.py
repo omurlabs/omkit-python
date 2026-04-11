@@ -34,7 +34,7 @@ class SettingsManager:
         self._cache: dict[str, Any] = {}
         self._listeners: dict[str, list[Callable]] = {}
         self._subscriber_task: asyncio.Task | None = None
-        self._cache_path = os.environ.get("SETTINGS_CACHE_PATH", "/data/settings-cache.json")
+        self._cache_path = os.environ.get("SETTINGS_CACHE_PATH", "/tmp/settings-cache.json")
         self._secret_keys: set[str] = set()
 
     def get(self, key: str, default: Any = None) -> Any:
