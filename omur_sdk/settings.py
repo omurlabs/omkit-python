@@ -37,6 +37,22 @@ class SettingsManager:
         self._cache_path = os.environ.get("SETTINGS_CACHE_PATH", "/tmp/settings-cache.json")
         self._secret_keys: set[str] = set()
 
+    @classmethod
+    def create(
+        cls,
+        service_name: str,
+        db_session_factory,
+        settings,
+    ) -> "SettingsManager":
+        """Factory that reads valkey_url, tenant_id, encryption_key from a BaseServiceSettings instance."""
+        return cls(
+            service_name=service_name,
+            db_session_factory=db_session_factory,
+            valkey_url=settings.valkey_url,
+            tenant_id=os.environ.get("OMUR_TENANT_ID", ""),
+            encryption_key=getattr(settings, "omur_settings_key", ""),
+        )
+
     def get(self, key: str, default: Any = None) -> Any:
         """Read from in-memory cache. No I/O."""
         return self._cache.get(key, default)
