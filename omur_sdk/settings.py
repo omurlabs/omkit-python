@@ -46,10 +46,9 @@ class SettingsManager:
         from sqlalchemy import text
 
         async with self._db_factory() as session:
-            await session.execute(text("SELECT set_config('app.tenant_id', :tid, true)"), {"tid": str(self._tenant_id)})
             result = await session.execute(
-                text("SELECT value_json, is_secret FROM app_settings WHERE tenant_id = :tid AND key = :key"),
-                {"tid": self._tenant_id, "key": key},
+                text("SELECT value_json, is_secret FROM app_settings WHERE key = :key"),
+                {"key": key},
             )
             row = result.one_or_none()
             if not row or not row.is_secret:
@@ -109,10 +108,8 @@ class SettingsManager:
 
         try:
             async with self._db_factory() as session:
-                await session.execute(text("SELECT set_config('app.tenant_id', :tid, true)"), {"tid": str(self._tenant_id)})
                 result = await session.execute(
-                    text("SELECT key, value_json, is_secret FROM app_settings WHERE tenant_id = :tid"),
-                    {"tid": self._tenant_id},
+                    text("SELECT key, value_json, is_secret FROM app_settings"),
                 )
                 for row in result.all():
                     if row.is_secret:
