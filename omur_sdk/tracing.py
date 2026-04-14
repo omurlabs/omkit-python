@@ -33,11 +33,15 @@ def init_tracing(
         log.info("tracing.disabled", service=service_name)
         return None
 
-    from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
-    from opentelemetry.sdk.resources import Resource
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    try:
+        from opentelemetry import trace
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    except ImportError:
+        log.info("tracing.not_installed", service=service_name)
+        return None
 
     resource = Resource.create({"service.name": service_name})
     provider = TracerProvider(resource=resource)
