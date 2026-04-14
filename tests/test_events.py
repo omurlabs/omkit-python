@@ -24,9 +24,9 @@ def bus(redis_client):
 
 @pytest.mark.asyncio
 async def test_publish_adds_to_stream(bus, redis_client):
-    redis_client.xadd.return_value = "1234-0"
+    redis_client.xadd.return_value = b"1234-0"
     msg_id = await bus.publish("user.created", {"user_id": "abc"})
-    assert msg_id == "1234-0"
+    assert msg_id == b"1234-0"
     redis_client.xadd.assert_called_once()
     call_args = redis_client.xadd.call_args
     stream_key = call_args[0][0]

@@ -2,6 +2,7 @@
 
 import json
 import time
+from typing import Any
 
 import structlog
 
@@ -13,14 +14,20 @@ STREAM_KEY_PREFIX = "omur:events"
 class EventBus:
     """Lightweight event bus backed by Valkey (Redis) Streams."""
 
-    def __init__(self, redis_client, service_name: str) -> None:
+    def __init__(self, redis_client: Any, service_name: str) -> None:
+        """Initialize EventBus with a Redis client.
+
+        Args:
+            redis_client: A redis.asyncio.Redis instance for stream operations.
+            service_name: Name of the service publishing events.
+        """
         self._redis = redis_client
         self._service_name = service_name
 
     def _stream_key(self, event_type: str) -> str:
         return f"{STREAM_KEY_PREFIX}:{event_type}"
 
-    async def publish(self, event_type: str, data: dict) -> str:
+    async def publish(self, event_type: str, data: dict) -> str | bytes:
         """Publish an event to the stream. Returns the message ID."""
         payload = {**data, "source": self._service_name, "timestamp": time.time()}
         stream_key = self._stream_key(event_type)
@@ -54,7 +61,10 @@ class EventBus:
         return items
 
     async def ack(self, event_type: str, group: str, msg_id: str) -> None:
-        """Acknowledge a message in a consumer group."""
+        """Acknowledge a message in a consumer group.
+
+        Only applicable when consuming via XREADGROUP (not XREAD).
+        """
         stream_key = self._stream_key(event_type)
         await self._redis.xack(stream_key, group, msg_id)
         log.debug("eventbus.ack", event_type=event_type, group=group, msg_id=msg_id)
