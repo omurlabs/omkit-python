@@ -31,6 +31,7 @@ class BaseServiceSettings(BaseSettings):
     # Valkey (Redis-compatible, Apache 2.0)
     VALKEY_HOST: str = "valkey"
     VALKEY_PORT: int = 6379
+    VALKEY_PASSWORD: str = ""
 
     # Ollama
     OLLAMA_HOST: str = "http://ollama:11434"
@@ -54,4 +55,6 @@ class BaseServiceSettings(BaseSettings):
 
     @property
     def valkey_url(self) -> str:
+        if self.VALKEY_PASSWORD:
+            return f"redis://:{self.VALKEY_PASSWORD}@{self.VALKEY_HOST}:{self.VALKEY_PORT}"
         return f"redis://{self.VALKEY_HOST}:{self.VALKEY_PORT}"
