@@ -80,10 +80,27 @@ class SettingsManager:
         self._listeners.setdefault(key, []).append(callback)
 
     async def start(self):
-        """Load all settings from DB into cache and start Valkey subscriber."""
+        """Load all settings from DB into cache, validate, and start Valkey subscriber."""
         await self._load_from_db()
+        self._validate()
         self._subscriber_task = asyncio.create_task(self._subscribe())
         logger.info("[%s] SettingsManager started, %d settings cached", self._service_name, len(self._cache))
+
+    def _validate(self):
+        """Log warnings for settings with invalid or empty values that may cause runtime errors."""
+        for key, value in self._cache.items():
+            if value is None:
+                logger.warning("[%s] Setting '%s' is null", self._service_name, key)
+            elif isinstance(value, str) and value.strip() == "" and "api_key" not in key and "token" not in key:
+                logger.warning("[%s] Setting '%s' is empty", self._service_name, key)
+            elif isinstance(value, str):
+                # Check for common misconfigurations: JSON strings that should be parsed
+                stripped = value.strip()
+                if (stripped.startswith("{") and stripped.endswith("}")) or (stripped.startswith("[") and stripped.endswith("]")):
+                    try:
+                        json.loads(stripped)
+                    except json.JSONDecodeError:
+                        logger.warning("[%s] Setting '%s' looks like invalid JSON", self._service_name, key)
 
     async def stop(self):
         """Stop the Valkey subscriber."""
