@@ -104,8 +104,16 @@ def middleware(
 
             tid_token = _tenant_id_var.set(raw_tid)
             rid_token = _request_id_var.set(raw_rid)
+
+            async def send_with_request_id(message):
+                if message.get("type") == "http.response.start":
+                    headers = list(message.get("headers", []))
+                    headers.append((b"x-request-id", raw_rid.encode()))
+                    message = {**message, "headers": headers}
+                await send(message)
+
             try:
-                await app(scope, receive, send)
+                await app(scope, receive, send_with_request_id)
             finally:
                 _tenant_id_var.reset(tid_token)
                 _request_id_var.reset(rid_token)

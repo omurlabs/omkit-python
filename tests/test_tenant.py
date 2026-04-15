@@ -163,6 +163,31 @@ async def test_middleware_generates_request_id_when_absent():
     uuid.UUID(captured_rid)  # validates it's a UUID
 
 
+@pytest.mark.asyncio
+async def test_middleware_adds_request_id_to_response_headers():
+    tid = str(_uuid4_alias())
+    responses = []
+
+    async def app(scope, receive, send):
+        await send({"type": "http.response.start", "status": 200, "headers": []})
+        await send({"type": "http.response.body", "body": b""})
+
+    async def capture_send(msg):
+        responses.append(msg)
+
+    mw = tenant.middleware()
+    wrapped = mw(app)
+
+    scope = {"type": "http", "path": "/chat", "headers": [
+        (b"x-tenant-id", tid.encode()),
+    ]}
+    await wrapped(scope, AsyncMock(), capture_send)
+
+    start_msg = responses[0]
+    header_names = [h[0] for h in start_msg["headers"]]
+    assert b"x-request-id" in header_names
+
+
 from unittest.mock import MagicMock, patch
 
 
