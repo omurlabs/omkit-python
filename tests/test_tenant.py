@@ -233,7 +233,7 @@ def test_pool_reset_listener_registers_checkin_event():
     engine = MagicMock()
     engine.sync_engine = MagicMock()
 
-    with patch("omur_sdk.tenant.event") as mock_event:
+    with patch("sqlalchemy.event") as mock_event:
         tenant.pool_reset_listener(engine)
         mock_event.listens_for.assert_called_once_with(
             engine.sync_engine, "checkin"
