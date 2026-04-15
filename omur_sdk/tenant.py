@@ -6,9 +6,11 @@ Background tasks use bind() to establish context.
 
 from __future__ import annotations
 
+import json
 import uuid
 from contextvars import ContextVar
 from contextlib import contextmanager
+from typing import Callable
 
 import structlog
 
@@ -37,6 +39,77 @@ def current_or_none() -> str | None:
 def request_id() -> str | None:
     """Return current request ID or None."""
     return _request_id_var.get()
+
+
+_DEFAULT_EXCLUDE = frozenset({"/health", "/ready", "/metrics"})
+
+
+def _get_header(headers: list[tuple[bytes, bytes]], name: bytes) -> str | None:
+    """Extract a header value from raw ASGI headers."""
+    for key, value in headers:
+        if key.lower() == name:
+            return value.decode("latin-1")
+    return None
+
+
+def _validate_uuid(value: str) -> bool:
+    """Check if value is a valid UUID (any version, case-insensitive)."""
+    try:
+        uuid.UUID(value)
+        return True
+    except ValueError:
+        return False
+
+
+def middleware(
+    exclude_paths: set[str] | None = None,
+) -> Callable:
+    """ASGI middleware factory for tenant extraction.
+
+    Extracts X-Tenant-ID from request headers, validates as UUID, sets contextvar.
+    Returns 401 for missing/invalid tenant on non-excluded paths.
+    """
+    excluded = frozenset(exclude_paths) if exclude_paths is not None else _DEFAULT_EXCLUDE
+
+    def asgi_middleware(app):
+        async def wrapped(scope, receive, send):
+            if scope["type"] != "http":
+                await app(scope, receive, send)
+                return
+
+            path = scope.get("path", "")
+            if path in excluded:
+                await app(scope, receive, send)
+                return
+
+            headers = scope.get("headers", [])
+            raw_tid = _get_header(headers, b"x-tenant-id")
+
+            if not raw_tid or not _validate_uuid(raw_tid):
+                body = json.dumps({"error": "X-Tenant-ID header required"}).encode()
+                await send({
+                    "type": "http.response.start",
+                    "status": 401,
+                    "headers": [
+                        (b"content-type", b"application/json"),
+                        (b"content-length", str(len(body)).encode()),
+                    ],
+                })
+                await send({"type": "http.response.body", "body": body})
+                return
+
+            raw_rid = _get_header(headers, b"x-request-id") or str(uuid.uuid4())
+
+            tid_token = _tenant_id_var.set(raw_tid)
+            rid_token = _request_id_var.set(raw_rid)
+            try:
+                await app(scope, receive, send)
+            finally:
+                _tenant_id_var.reset(tid_token)
+                _request_id_var.reset(rid_token)
+
+        return wrapped
+    return asgi_middleware
 
 
 @contextmanager
