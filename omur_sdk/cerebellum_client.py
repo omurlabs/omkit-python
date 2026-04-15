@@ -11,6 +11,8 @@ from typing import Any
 
 import httpx
 
+from omur_sdk import tenant
+
 log = structlog.get_logger()
 
 _MAX_BATCH_SIZE = 32
@@ -76,18 +78,18 @@ class CerebellumClient:
         self,
         endpoint: str,
         payload: dict,
-        request_id: str | None = None,
-        tenant_id: str | None = None,
     ) -> dict | None:
         """POST to Cerebellum. Returns None on failure (caller should fallback)."""
         if not self.available:
             return None
 
-        headers = {}
-        if request_id:
-            headers["X-Request-ID"] = request_id
-        if tenant_id:
-            headers["X-Tenant-ID"] = tenant_id
+        headers: dict[str, str] = {}
+        tid = tenant.current_or_none()
+        if tid:
+            headers["X-Tenant-ID"] = tid
+        rid = tenant.request_id()
+        if rid:
+            headers["X-Request-ID"] = rid
 
         try:
             client = self._get_client()
@@ -112,8 +114,6 @@ class CerebellumClient:
     async def embed(
         self,
         texts: list[str],
-        request_id: str | None = None,
-        tenant_id: str | None = None,
     ) -> list[list[float]] | None:
         """Get embeddings. Returns None on failure."""
         if not self.available:
@@ -121,7 +121,7 @@ class CerebellumClient:
 
         all_embeddings = []
         for batch in self._split_batch(texts):
-            result = await self._post("/embed", {"texts": batch}, request_id, tenant_id)
+            result = await self._post("/embed", {"texts": batch})
             if result is None:
                 return None
             all_embeddings.extend(result.get("embeddings", []))
@@ -130,8 +130,6 @@ class CerebellumClient:
     async def ner(
         self,
         texts: list[str],
-        request_id: str | None = None,
-        tenant_id: str | None = None,
     ) -> list[dict] | None:
         """Run NER. Returns None on failure."""
         if not self.available:
@@ -139,7 +137,7 @@ class CerebellumClient:
 
         all_results = []
         for batch in self._split_batch(texts):
-            result = await self._post("/ner", {"texts": batch}, request_id, tenant_id)
+            result = await self._post("/ner", {"texts": batch})
             if result is None:
                 return None
             all_results.extend(result.get("results", []))
@@ -149,8 +147,6 @@ class CerebellumClient:
         self,
         texts: list[str],
         source_lang: str | None = None,
-        request_id: str | None = None,
-        tenant_id: str | None = None,
         split_strategy: str | None = None,
         skip_strategy: str | None = None,
         batch_size: int = 1,
@@ -170,7 +166,7 @@ class CerebellumClient:
                 payload["skip_strategy"] = skip_strategy
             if batch_size > 1:
                 payload["batch_size"] = batch_size
-            result = await self._post("/translate", payload, request_id, tenant_id)
+            result = await self._post("/translate", payload)
             if result is None:
                 return None
             all_results.extend(result.get("translations", []))
@@ -179,8 +175,6 @@ class CerebellumClient:
     async def detect_language(
         self,
         texts: list[str],
-        request_id: str | None = None,
-        tenant_id: str | None = None,
     ) -> list[dict] | None:
         """Detect language. Returns None on failure."""
         if not self.available:
@@ -188,7 +182,7 @@ class CerebellumClient:
 
         all_results = []
         for batch in self._split_batch(texts):
-            result = await self._post("/detect-language", {"texts": batch}, request_id, tenant_id)
+            result = await self._post("/detect-language", {"texts": batch})
             if result is None:
                 return None
             all_results.extend(result.get("results", []))
@@ -197,8 +191,6 @@ class CerebellumClient:
     async def classify(
         self,
         texts: list[str],
-        request_id: str | None = None,
-        tenant_id: str | None = None,
     ) -> list[dict] | None:
         """Classify documents. Returns None on failure."""
         if not self.available:
@@ -206,7 +198,7 @@ class CerebellumClient:
 
         all_results = []
         for batch in self._split_batch(texts):
-            result = await self._post("/classify", {"texts": batch}, request_id, tenant_id)
+            result = await self._post("/classify", {"texts": batch})
             if result is None:
                 return None
             all_results.extend(result.get("results", []))

@@ -1,9 +1,11 @@
 """Tests for CerebellumClient — circuit breaker, batch splitting, fallback."""
 
 import pytest
+from uuid import uuid4
 from unittest.mock import AsyncMock, patch, MagicMock
 
 from omur_sdk.cerebellum_client import CerebellumClient
+from omur_sdk import tenant
 
 
 @pytest.fixture
@@ -62,3 +64,51 @@ async def test_disabled_returns_none():
     client = CerebellumClient(base_url="http://cerebellum:8006", enabled=False)
     result = await client.embed(["test"])
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_post_injects_tenant_from_contextvar():
+    """_post should read tenant_id and request_id from contextvars."""
+    tid = str(uuid4())
+    rid = str(uuid4())
+    client = CerebellumClient(base_url="http://cerebellum:8006")
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"embeddings": [[0.1]]}
+    mock_response.raise_for_status = MagicMock()
+
+    mock_http = AsyncMock()
+    mock_http.post.return_value = mock_response
+    mock_http.is_closed = False
+    client._client = mock_http
+
+    with tenant.bind(tid, request_id=rid):
+        await client.embed(["test"])
+
+    call_kwargs = mock_http.post.call_args
+    headers = call_kwargs.kwargs.get("headers", {})
+    assert headers.get("X-Tenant-ID") == tid
+    assert headers.get("X-Request-ID") == rid
+
+
+@pytest.mark.asyncio
+async def test_post_works_without_tenant_context():
+    """When no tenant is set, headers should be empty."""
+    client = CerebellumClient(base_url="http://cerebellum:8006")
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"embeddings": [[0.1]]}
+    mock_response.raise_for_status = MagicMock()
+
+    mock_http = AsyncMock()
+    mock_http.post.return_value = mock_response
+    mock_http.is_closed = False
+    client._client = mock_http
+
+    await client.embed(["test"])
+
+    call_kwargs = mock_http.post.call_args
+    headers = call_kwargs.kwargs.get("headers", {})
+    assert "X-Tenant-ID" not in headers
