@@ -62,6 +62,9 @@ class ProviderRegistry:
         log.info("registry.stopped", kind=self.kind)
 
     async def _reload_tenant(self, tenant_id: str) -> None:
+        if not tenant_id or len(tenant_id) < 36:
+            log.warning("registry.invalid_tenant_id", tenant_id=tenant_id, hint="skipping reload")
+            return
         # Cancel all tasks for this tenant
         tenant_keys = [k for k in self._tasks if k.startswith(f"{tenant_id}:")]
         await self._cancel_tasks(tenant_keys)
@@ -113,7 +116,11 @@ class ProviderRegistry:
         (pre-migration state). The warning is rate-limited to avoid log spam.
         """
         import asyncpg
-        conn = await asyncpg.connect(self._postgres_dsn.replace("postgresql+asyncpg://", "postgresql://"))
+        # Connect directly to postgres (bypass PgBouncer) to avoid RLS issues
+        # with SET ROLE omur_app when app.tenant_id isn't set.
+        dsn = self._postgres_dsn.replace("postgresql+asyncpg://", "postgresql://")
+        dsn = dsn.replace("pgbouncer:6432", "postgres:5432")
+        conn = await asyncpg.connect(dsn)
         try:
             if tenant_id:
                 rows = await conn.fetch(
