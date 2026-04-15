@@ -13,6 +13,8 @@ from contextlib import contextmanager
 from typing import Callable
 
 import structlog
+from sqlalchemy import event, text
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
 
 log = structlog.get_logger()
 
@@ -110,6 +112,36 @@ def middleware(
 
         return wrapped
     return asgi_middleware
+
+
+async def set_rls(session: AsyncSession) -> None:
+    """Set PostgreSQL RLS tenant context. Must be called inside an active transaction.
+
+    Uses transaction-local set_config so the setting resets when the transaction ends.
+    """
+    if not session.in_transaction():
+        raise RuntimeError(
+            "set_rls() must be called inside an active transaction. "
+            "Use 'async with session.begin():' before calling."
+        )
+    tid = require()
+    await session.execute(
+        text("SELECT set_config('app.tenant_id', :tid, true)"),
+        {"tid": tid},
+    )
+
+
+def pool_reset_listener(engine: AsyncEngine) -> None:
+    """Register pool event to clear tenant context on connection checkin.
+
+    Defense-in-depth: ensures no tenant leakage even if a transaction
+    aborts unexpectedly.
+    """
+    @event.listens_for(engine.sync_engine, "checkin")
+    def _reset_tenant(dbapi_conn, connection_record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("RESET app.tenant_id")
+        cursor.close()
 
 
 @contextmanager

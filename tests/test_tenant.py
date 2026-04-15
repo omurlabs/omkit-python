@@ -161,3 +161,55 @@ async def test_middleware_generates_request_id_when_absent():
 
     assert captured_rid is not None
     uuid.UUID(captured_rid)  # validates it's a UUID
+
+
+from unittest.mock import MagicMock, patch
+
+
+@pytest.mark.asyncio
+async def test_set_rls_executes_set_config():
+    tid = str(uuid4())
+    session = AsyncMock()
+    session.in_transaction = MagicMock(return_value=True)
+
+    with tenant.bind(tid):
+        await tenant.set_rls(session)
+
+    session.execute.assert_called_once()
+    call_args = session.execute.call_args
+    # First arg is the text() SQL
+    assert "set_config" in str(call_args[0][0])
+    # Second arg is the params dict
+    assert call_args[0][1] == {"tid": tid}
+
+
+@pytest.mark.asyncio
+async def test_set_rls_raises_outside_transaction():
+    tid = str(uuid4())
+    session = AsyncMock()
+    session.in_transaction = MagicMock(return_value=False)
+
+    with tenant.bind(tid):
+        with pytest.raises(RuntimeError, match="active transaction"):
+            await tenant.set_rls(session)
+
+
+@pytest.mark.asyncio
+async def test_set_rls_raises_without_tenant():
+    session = AsyncMock()
+    session.in_transaction = MagicMock(return_value=True)
+
+    with pytest.raises(RuntimeError, match="No tenant"):
+        await tenant.set_rls(session)
+
+
+def test_pool_reset_listener_registers_checkin_event():
+    """pool_reset_listener should register a 'checkin' event on the sync engine."""
+    engine = MagicMock()
+    engine.sync_engine = MagicMock()
+
+    with patch("omur_sdk.tenant.event") as mock_event:
+        tenant.pool_reset_listener(engine)
+        mock_event.listens_for.assert_called_once_with(
+            engine.sync_engine, "checkin"
+        )
