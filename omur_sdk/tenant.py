@@ -63,62 +63,75 @@ def _validate_uuid(value: str) -> bool:
         return False
 
 
-def middleware(
-    exclude_paths: set[str] | None = None,
-) -> Callable:
-    """ASGI middleware factory for tenant extraction.
+class TenantMiddleware:
+    """Pure ASGI middleware for tenant extraction.
 
-    Extracts X-Tenant-ID from request headers, validates as UUID, sets contextvar.
-    Returns 401 for missing/invalid tenant on non-excluded paths.
+    Usage with FastAPI:
+        app.add_middleware(TenantMiddleware)
+        app.add_middleware(TenantMiddleware, exclude_paths={"/health", "/custom"})
     """
-    excluded = frozenset(exclude_paths) if exclude_paths is not None else _DEFAULT_EXCLUDE
+
+    def __init__(self, app, exclude_paths: set[str] | None = None) -> None:
+        self.app = app
+        self.excluded = frozenset(exclude_paths) if exclude_paths is not None else _DEFAULT_EXCLUDE
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        path = scope.get("path", "")
+        if path in self.excluded:
+            await self.app(scope, receive, send)
+            return
+
+        headers = scope.get("headers", [])
+        raw_tid = _get_header(headers, b"x-tenant-id")
+
+        if not raw_tid or not _validate_uuid(raw_tid):
+            body = json.dumps({"error": "X-Tenant-ID header required"}).encode()
+            await send({
+                "type": "http.response.start",
+                "status": 401,
+                "headers": [
+                    (b"content-type", b"application/json"),
+                    (b"content-length", str(len(body)).encode()),
+                ],
+            })
+            await send({"type": "http.response.body", "body": body})
+            return
+
+        raw_rid = _get_header(headers, b"x-request-id") or str(uuid.uuid4())
+
+        tid_token = _tenant_id_var.set(raw_tid)
+        rid_token = _request_id_var.set(raw_rid)
+
+        async def send_with_request_id(message):
+            if message.get("type") == "http.response.start":
+                resp_headers = list(message.get("headers", []))
+                resp_headers.append((b"x-request-id", raw_rid.encode()))
+                message = {**message, "headers": resp_headers}
+            await send(message)
+
+        try:
+            await self.app(scope, receive, send_with_request_id)
+        finally:
+            _tenant_id_var.reset(tid_token)
+            _request_id_var.reset(rid_token)
+
+
+def middleware(exclude_paths: set[str] | None = None) -> Callable:
+    """ASGI middleware factory. Prefer TenantMiddleware class with app.add_middleware().
+
+    This factory form works for raw ASGI wrapping (tests).
+    For FastAPI, use: app.add_middleware(TenantMiddleware)
+    """
+    excluded = exclude_paths
 
     def asgi_middleware(app):
-        async def wrapped(scope, receive, send):
-            if scope["type"] != "http":
-                await app(scope, receive, send)
-                return
+        mw = TenantMiddleware(app, exclude_paths=excluded)
+        return mw
 
-            path = scope.get("path", "")
-            if path in excluded:
-                await app(scope, receive, send)
-                return
-
-            headers = scope.get("headers", [])
-            raw_tid = _get_header(headers, b"x-tenant-id")
-
-            if not raw_tid or not _validate_uuid(raw_tid):
-                body = json.dumps({"error": "X-Tenant-ID header required"}).encode()
-                await send({
-                    "type": "http.response.start",
-                    "status": 401,
-                    "headers": [
-                        (b"content-type", b"application/json"),
-                        (b"content-length", str(len(body)).encode()),
-                    ],
-                })
-                await send({"type": "http.response.body", "body": body})
-                return
-
-            raw_rid = _get_header(headers, b"x-request-id") or str(uuid.uuid4())
-
-            tid_token = _tenant_id_var.set(raw_tid)
-            rid_token = _request_id_var.set(raw_rid)
-
-            async def send_with_request_id(message):
-                if message.get("type") == "http.response.start":
-                    headers = list(message.get("headers", []))
-                    headers.append((b"x-request-id", raw_rid.encode()))
-                    message = {**message, "headers": headers}
-                await send(message)
-
-            try:
-                await app(scope, receive, send_with_request_id)
-            finally:
-                _tenant_id_var.reset(tid_token)
-                _request_id_var.reset(rid_token)
-
-        return wrapped
     return asgi_middleware
 
 
