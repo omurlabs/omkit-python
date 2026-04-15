@@ -24,9 +24,6 @@ dev = [
     "pytest-asyncio>=0.24",
     "redis>=5.0",
 ]
-db = [
-    "sqlalchemy>=2.0",
-]
 tracing = [
     "opentelemetry-api>=1.33.0",
     "opentelemetry-sdk>=1.33.0",
