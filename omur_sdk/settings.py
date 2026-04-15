@@ -49,7 +49,7 @@ class SettingsManager:
             service_name=service_name,
             db_session_factory=db_session_factory,
             valkey_url=settings.valkey_url,
-            tenant_id=os.environ.get("OMUR_TENANT_ID", ""),
+            tenant_id="",
             encryption_key=getattr(settings, "omur_settings_key", ""),
         )
 

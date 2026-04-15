@@ -1,6 +1,5 @@
 """Tests for SettingsManager.create() factory."""
 
-import os
 from unittest.mock import MagicMock, AsyncMock
 
 from omur_sdk.settings import SettingsManager
@@ -13,7 +12,6 @@ def test_create_factory_returns_settings_manager():
     mock_settings.omur_settings_key = "test-key"
     mock_session_factory = AsyncMock()
 
-    os.environ["OMUR_TENANT_ID"] = "test-tenant"
     mgr = SettingsManager.create(
         service_name="test-svc",
         db_session_factory=mock_session_factory,
@@ -23,4 +21,4 @@ def test_create_factory_returns_settings_manager():
     assert mgr._service_name == "test-svc"
     assert mgr._valkey_url == "redis://valkey:6379"
     assert mgr._encryption_key == "test-key"
-    assert mgr._tenant_id == "test-tenant"
+    assert mgr._tenant_id == ""
