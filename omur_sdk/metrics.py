@@ -5,10 +5,15 @@ Usage:
     mount_metrics(app, "spine")  # exposes /metrics, instruments all routes
 """
 
-from fastapi import FastAPI
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
 
-def mount_metrics(app: FastAPI, service_name: str) -> None:
+def mount_metrics(app: "FastAPI", service_name: str) -> None:
     """Wire prometheus-fastapi-instrumentator with default labels and a /metrics endpoint.
 
     Idempotent: calling twice on the same app is a no-op.
