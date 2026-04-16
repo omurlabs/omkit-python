@@ -51,3 +51,20 @@ def init_tracing(
 
     log.info("tracing.enabled", service=service_name, endpoint=endpoint)
     return provider
+
+
+def instrument_fastapi(app) -> None:
+    """Wrap a FastAPI app with OpenTelemetry server-side instrumentation.
+
+    Idempotent: calling twice on the same app is a no-op. Silently no-ops if
+    opentelemetry-instrumentation-fastapi is not installed (in-tree optional).
+    """
+    try:
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    except ImportError:
+        return
+
+    if getattr(app, "_omur_otel_instrumented", False):
+        return
+    FastAPIInstrumentor.instrument_app(app)
+    app._omur_otel_instrumented = True
