@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from typing import Any
 
 import structlog
@@ -10,6 +11,18 @@ import structlog
 from .base import ProviderBase
 
 log = structlog.get_logger()
+
+
+def _backend_from_env() -> str:
+    v = os.getenv("OMUR_PROVIDERS_BACKEND", "postgres")
+    if v not in {"postgres", "redis"}:
+        # Invalid values fall back to postgres to avoid blocking startup on a typo.
+        log.warning("registry.invalid_backend_env", value=v)
+        return "postgres"
+    return v
+
+
+DEFAULT_PROVIDERS_POLL_INTERVAL = 10.0
 
 
 class ProviderRegistry:
@@ -32,6 +45,9 @@ class ProviderRegistry:
         provider_classes: dict[str, type[ProviderBase]],
         postgres_dsn: str,
         valkey_url: str,
+        *,
+        poll_interval: float = DEFAULT_PROVIDERS_POLL_INTERVAL,
+        backend: str | None = None,
     ) -> None:
         self.kind = kind
         self.provider_classes = provider_classes
@@ -39,7 +55,11 @@ class ProviderRegistry:
         self._valkey_url = valkey_url
         self._tasks: dict[str, asyncio.Task] = {}  # key: "{tenant_id}:{name}"
         self._valkey_task: asyncio.Task | None = None
+        self._poll_task: asyncio.Task | None = None
         self._table_missing: bool = False
+        self._poll_interval = poll_interval
+        self._backend = backend or _backend_from_env()
+        self._stop = asyncio.Event()
 
     # ── Public API ────────────────────────────────────────────────
 
@@ -51,15 +71,41 @@ class ProviderRegistry:
             rows = []
         for row in rows:
             self._start_task(row["tenant_id"], row["name"], row["config"])
-        self._valkey_task = asyncio.create_task(self._subscribe_valkey())
-        log.info("registry.started", kind=self.kind, tasks=len(self._tasks))
+        if self._backend == "redis":
+            self._valkey_task = asyncio.create_task(self._subscribe_valkey())
+        else:
+            self._poll_task = asyncio.create_task(self._poll_loop())
+        log.info(
+            "registry.started", kind=self.kind, tasks=len(self._tasks),
+            backend=self._backend,
+        )
 
     async def stop(self) -> None:
+        self._stop.set()
         if self._valkey_task:
             self._valkey_task.cancel()
             await asyncio.gather(self._valkey_task, return_exceptions=True)
+        if self._poll_task:
+            self._poll_task.cancel()
+            await asyncio.gather(self._poll_task, return_exceptions=True)
         await self._cancel_tasks(list(self._tasks.keys()))
         log.info("registry.stopped", kind=self.kind)
+
+    async def _poll_loop(self) -> None:
+        """Reconcile running-vs-desired tasks every poll_interval by re-reading
+        the providers table. Replaces the valkey pub/sub path when backend is
+        set to postgres (default)."""
+        while not self._stop.is_set():
+            try:
+                await asyncio.wait_for(self._stop.wait(), timeout=self._poll_interval)
+            except asyncio.TimeoutError:
+                pass
+            if self._stop.is_set():
+                return
+            try:
+                await self._reconcile_all()
+            except Exception as exc:
+                log.warning("registry.poll_failed", kind=self.kind, error=str(exc))
 
     async def _reload_tenant(self, tenant_id: str) -> None:
         if not tenant_id or len(tenant_id) < 36:
