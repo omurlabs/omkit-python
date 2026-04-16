@@ -14,17 +14,36 @@ from omur_sdk.encryption import decrypt_value
 logger = logging.getLogger(__name__)
 
 
+def _backend_from_env() -> str:
+    v = os.getenv("OMUR_SETTINGS_BACKEND", "postgres")
+    if v not in {"postgres", "redis"}:
+        raise ValueError(f"unknown OMUR_SETTINGS_BACKEND: {v}")
+    return v
+
+
 class SettingsManager:
     """Drop-in settings manager for services.
-    Loads all settings from DB on start, subscribes to Valkey for live updates."""
+
+    Loads all settings from DB on start and then keeps the in-memory cache
+    fresh via either a Postgres polling task (default) or a Valkey pub/sub
+    subscriber (opt-in via ``OMUR_SETTINGS_BACKEND=redis``).
+
+    Backward-compatible construction keeps accepting the legacy
+    ``(service_name, db_session_factory, valkey_url, tenant_id, ...)`` signature.
+    New callers can pass an asyncpg ``pool`` with ``poll_interval`` to use the
+    polling backend without a SQLAlchemy session factory.
+    """
 
     def __init__(
         self,
-        service_name: str,
-        db_session_factory,
-        valkey_url: str,
-        tenant_id: str,
+        service_name: str = "omur",
+        db_session_factory=None,
+        valkey_url: str = "",
+        tenant_id: str = "",
         encryption_key: str = "",
+        *,
+        pool=None,
+        poll_interval: float = 5.0,
     ):
         self._service_name = service_name
         self._db_factory = db_session_factory
@@ -36,6 +55,11 @@ class SettingsManager:
         self._subscriber_task: asyncio.Task | None = None
         self._cache_path = os.environ.get("SETTINGS_CACHE_PATH", "/tmp/settings-cache.json")
         self._secret_keys: set[str] = set()
+        self._pool = pool
+        self._poll_interval = poll_interval
+        self._poll_last_seen = None
+        self._poll_task: asyncio.Task | None = None
+        self._stop = asyncio.Event()
 
     @classmethod
     def create(
@@ -80,11 +104,24 @@ class SettingsManager:
         self._listeners.setdefault(key, []).append(callback)
 
     async def start(self):
-        """Load all settings from DB into cache, validate, and start Valkey subscriber."""
-        await self._load_from_db()
+        """Load all settings from DB into cache, validate, and start the
+        configured live-update worker."""
+        if self._pool is not None:
+            # Asyncpg pool path — use polling by default.
+            await self._load_from_pool()
+        else:
+            await self._load_from_db()
         self._validate()
-        self._subscriber_task = asyncio.create_task(self._subscribe())
-        logger.info("[%s] SettingsManager started, %d settings cached", self._service_name, len(self._cache))
+
+        backend = _backend_from_env() if self._pool is not None else ("redis" if self._valkey_url else "postgres")
+        if backend == "redis" and self._valkey_url:
+            self._subscriber_task = asyncio.create_task(self._subscribe())
+        elif self._pool is not None:
+            self._poll_task = asyncio.create_task(self._poll_loop())
+        logger.info(
+            "[%s] SettingsManager started, backend=%s, %d settings cached",
+            self._service_name, backend, len(self._cache),
+        )
 
     def _validate(self):
         """Log warnings for settings with invalid or empty values that may cause runtime errors."""
@@ -103,13 +140,95 @@ class SettingsManager:
                         logger.warning("[%s] Setting '%s' looks like invalid JSON", self._service_name, key)
 
     async def stop(self):
-        """Stop the Valkey subscriber."""
+        """Stop any background live-update workers."""
+        self._stop.set()
         if self._subscriber_task:
             self._subscriber_task.cancel()
             try:
                 await self._subscriber_task
             except asyncio.CancelledError:
                 pass
+        if self._poll_task:
+            self._poll_task.cancel()
+            try:
+                await self._poll_task
+            except asyncio.CancelledError:
+                pass
+
+    async def _load_from_pool(self):
+        """Load all non-secret settings via the asyncpg pool."""
+        try:
+            async with self._pool.acquire() as conn:
+                rows = await conn.fetch(
+                    "SELECT key, value_json, is_secret, updated_at FROM app_settings"
+                )
+                latest = self._poll_last_seen
+                for r in rows:
+                    if latest is None or r["updated_at"] > latest:
+                        latest = r["updated_at"]
+                    if r["is_secret"]:
+                        self._secret_keys.add(r["key"])
+                        continue
+                    value = r["value_json"]
+                    if isinstance(value, (bytes, bytearray)):
+                        value = value.decode()
+                    if isinstance(value, str):
+                        try:
+                            value = json.loads(value)
+                        except json.JSONDecodeError:
+                            pass
+                    self._cache[r["key"]] = value
+                if latest is not None:
+                    self._poll_last_seen = latest
+        except Exception as e:
+            logger.warning("[%s] pool load failed: %s", self._service_name, e)
+
+    async def _poll_loop(self):
+        """Background task: re-fetch rows with updated_at > last_seen."""
+        while not self._stop.is_set():
+            try:
+                await asyncio.wait_for(self._stop.wait(), timeout=self._poll_interval)
+            except asyncio.TimeoutError:
+                pass
+            if self._stop.is_set():
+                return
+            await self._poll_once()
+
+    async def _poll_once(self):
+        try:
+            async with self._pool.acquire() as conn:
+                rows = await conn.fetch(
+                    "SELECT key, value_json, is_secret, updated_at FROM app_settings "
+                    "WHERE updated_at > $1 ORDER BY updated_at ASC",
+                    self._poll_last_seen,
+                )
+            latest = self._poll_last_seen
+            for r in rows:
+                if latest is None or r["updated_at"] > latest:
+                    latest = r["updated_at"]
+                if r["is_secret"]:
+                    continue
+                value = r["value_json"]
+                if isinstance(value, (bytes, bytearray)):
+                    value = value.decode()
+                if isinstance(value, str):
+                    try:
+                        value = json.loads(value)
+                    except json.JSONDecodeError:
+                        pass
+                self._cache[r["key"]] = value
+                for callback in self._listeners.get(r["key"], []):
+                    try:
+                        if asyncio.iscoroutinefunction(callback):
+                            await callback(value)
+                        else:
+                            callback(value)
+                    except Exception as e:
+                        logger.error("Settings callback error for %s: %s", r["key"], e)
+            if latest is not None:
+                self._poll_last_seen = latest
+        except Exception as e:
+            logger.warning("[%s] poll failed: %s", self._service_name, e)
 
     def _write_cache(self):
         """Write non-secret settings to local cache file atomically."""
