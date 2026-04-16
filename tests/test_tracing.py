@@ -63,3 +63,13 @@ def test_init_tracing_sets_service_name():
         tracing_mod.init_tracing("spine", endpoint="http://localhost:4318")
         attrs = sdk_resources_mod.Resource.create.call_args[0][0]
         assert attrs["service.name"] == "spine"
+
+
+def test_instrument_fastapi_idempotent():
+    from fastapi import FastAPI
+
+    from omur_sdk.tracing import instrument_fastapi
+
+    app = FastAPI()
+    instrument_fastapi(app)
+    instrument_fastapi(app)  # second call must not raise

@@ -31,6 +31,9 @@ tracing = [
     "opentelemetry-instrumentation-fastapi>=0.54b0",
     "opentelemetry-instrumentation-httpx>=0.54b0",
 ]
+metrics = [
+    "prometheus-fastapi-instrumentator>=7.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
