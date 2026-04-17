@@ -135,8 +135,16 @@ def check_query(lim: Limits, usage: Usage) -> Decision:
     return Decision(allowed=True)
 
 
+def _cap_at_32_days(s: int) -> int:
+    if s < 0:
+        return 60
+    if s > 32 * 24 * 3600:
+        return 32 * 24 * 3600
+    return s
+
+
 def _seconds_until_next_month() -> int:
     now = datetime.now(timezone.utc)
     y, m = (now.year + 1, 1) if now.month == 12 else (now.year, now.month + 1)
     nxt = datetime(y, m, 1, 0, 0, 0, tzinfo=timezone.utc)
-    return int((nxt - now).total_seconds())
+    return _cap_at_32_days(int((nxt - now).total_seconds()))

@@ -52,6 +52,21 @@ def test_check_query_allows_when_under():
     assert d.allowed
 
 
+from omur_sdk.quota import _cap_at_32_days  # type: ignore[attr-defined]
+
+
+def test_cap_at_32_days():
+    cases = [
+        (-5, 60),
+        (0, 0),
+        (1000, 1000),
+        (32 * 24 * 3600, 32 * 24 * 3600),
+        (99 * 24 * 3600, 32 * 24 * 3600),
+    ]
+    for given, want in cases:
+        assert _cap_at_32_days(given) == want, f"cap({given}) = {_cap_at_32_days(given)}, want {want}"
+
+
 def test_defaults_match_stage1_spec():
     assert DEFAULT_DOCS == 100
     assert DEFAULT_STORAGE_BYTES == 500 * 1024 * 1024
