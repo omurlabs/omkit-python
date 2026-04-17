@@ -62,3 +62,69 @@ async def test_disabled_returns_none():
     client = CerebellumClient(base_url="http://cerebellum:8006", enabled=False)
     result = await client.embed(["test"])
     assert result is None
+
+
+# --- Tenant header propagation (X-Tenant-ID) ---
+
+def _mock_response(payload: dict):
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.json.return_value = payload
+    resp.raise_for_status = MagicMock()
+    return resp
+
+
+@pytest.mark.asyncio
+async def test_post_sends_tenant_header_from_contextvar(client):
+    """When no tenant_id is passed, _post should pull it from the SDK contextvar."""
+    from omur_sdk.tenant import _tenant_id_var
+
+    tid = "11111111-1111-1111-1111-111111111111"
+    token = _tenant_id_var.set(tid)
+    try:
+        mock_post = AsyncMock(return_value=_mock_response({"embeddings": [[0.1]]}))
+        with patch.object(client, "_get_client") as mock_get_client:
+            mock_get_client.return_value = MagicMock(post=mock_post)
+            result = await client._post("/embed", {"texts": ["hi"]})
+        assert result == {"embeddings": [[0.1]]}
+        _, kwargs = mock_post.call_args
+        assert kwargs["headers"].get("X-Tenant-ID") == tid
+    finally:
+        _tenant_id_var.reset(token)
+
+
+@pytest.mark.asyncio
+async def test_post_explicit_tenant_id_wins_over_contextvar(client):
+    """Explicit tenant_id argument should override the contextvar."""
+    from omur_sdk.tenant import _tenant_id_var
+
+    ctx_tid = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    explicit_tid = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+    token = _tenant_id_var.set(ctx_tid)
+    try:
+        mock_post = AsyncMock(return_value=_mock_response({"ok": True}))
+        with patch.object(client, "_get_client") as mock_get_client:
+            mock_get_client.return_value = MagicMock(post=mock_post)
+            await client._post("/embed", {"texts": ["hi"]}, tenant_id=explicit_tid)
+        _, kwargs = mock_post.call_args
+        assert kwargs["headers"].get("X-Tenant-ID") == explicit_tid
+    finally:
+        _tenant_id_var.reset(token)
+
+
+@pytest.mark.asyncio
+async def test_post_omits_tenant_header_when_both_unset(client):
+    """No contextvar and no explicit arg => no X-Tenant-ID header (caller handles 401)."""
+    from omur_sdk.tenant import _tenant_id_var
+
+    # Defensively ensure contextvar is unset for this test.
+    token = _tenant_id_var.set(None)
+    try:
+        mock_post = AsyncMock(return_value=_mock_response({"ok": True}))
+        with patch.object(client, "_get_client") as mock_get_client:
+            mock_get_client.return_value = MagicMock(post=mock_post)
+            await client._post("/embed", {"texts": ["hi"]})
+        _, kwargs = mock_post.call_args
+        assert "X-Tenant-ID" not in kwargs["headers"]
+    finally:
+        _tenant_id_var.reset(token)
