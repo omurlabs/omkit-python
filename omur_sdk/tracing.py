@@ -4,8 +4,9 @@ Usage:
     from omur_sdk.tracing import init_tracing
     init_tracing("spine")  # Call once at startup
 
-Requires OTEL_EXPORTER_OTLP_ENDPOINT env var (e.g. http://alloy:4318).
-Set to empty string to disable tracing.
+Tracing is OFF by default since the 2026-04 infra consolidation (Alloy,
+Tempo, and VictoriaLogs were removed). Set OTEL_EXPORTER_OTLP_ENDPOINT
+to a reachable collector (e.g. ``http://alloy:4318``) to re-enable.
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ import structlog
 
 log = structlog.get_logger()
 
-DEFAULT_ENDPOINT = "http://alloy:4318"
+DEFAULT_ENDPOINT = ""
 
 
 def init_tracing(
