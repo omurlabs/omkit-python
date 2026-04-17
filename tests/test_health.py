@@ -18,6 +18,15 @@ def test_health_returns_ok():
     assert data["version"] == "1.0.0"
 
 
+def test_healthz_alias_matches_health():
+    app = FastAPI()
+    mount_health_endpoints(app, "test-svc", "1.0.0")
+    client = TestClient(app)
+    resp = client.get("/healthz")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ok", "service": "test-svc", "version": "1.0.0"}
+
+
 def test_ready_returns_ready_when_check_passes():
     async def check():
         return {"db": "ok"}

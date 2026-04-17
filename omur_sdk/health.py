@@ -20,11 +20,15 @@ def mount_health_endpoints(
     version: str,
     ready_check: Callable[[], Awaitable[dict[str, str]]] | None = None,
 ) -> None:
-    """Mount /health and /ready endpoints on a FastAPI app."""
+    """Mount /health, /healthz (liveness alias) and /ready endpoints."""
 
-    @app.get("/health", tags=["meta"])
-    async def health() -> dict:
+    async def _liveness() -> dict:
         return {"status": "ok", "service": service_name, "version": version}
+
+    # /health and /healthz are aliases — /healthz matches k8s liveness-probe
+    # convention; /health is retained for callers that pre-date that.
+    app.add_api_route("/health", _liveness, methods=["GET"], tags=["meta"])
+    app.add_api_route("/healthz", _liveness, methods=["GET"], tags=["meta"])
 
     @app.get("/ready", tags=["meta"])
     async def readiness():
