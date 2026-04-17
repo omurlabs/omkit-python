@@ -2,7 +2,13 @@ import os
 
 import pytest
 
-from omur_sdk.dbpool import create_pool
+from omur_sdk.dbpool import create_pool, sqlalchemy_asyncpg_connect_args
+
+
+def test_sqlalchemy_connect_args_disables_prepared_statements():
+    args = sqlalchemy_asyncpg_connect_args()
+    assert args["statement_cache_size"] == 0
+    assert args["prepared_statement_cache_size"] == 0
 
 
 @pytest.mark.asyncio

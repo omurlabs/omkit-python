@@ -10,9 +10,24 @@ after removing PgBouncer (which previously took care of the role reset via
 from __future__ import annotations
 
 import re
-from typing import Optional
+from typing import Any, Optional
 
 import asyncpg
+
+
+def sqlalchemy_asyncpg_connect_args() -> dict[str, Any]:
+    """Return ``connect_args`` for ``create_async_engine(..., connect_args=...)``
+    that keep the resulting engine compatible with pgbouncer transaction mode.
+
+    Disables asyncpg's statement cache (prepared statements don't survive
+    pgbouncer's per-transaction server rotation) while leaving extended
+    query protocol + binary params intact. Harmless when talking to
+    postgres directly — the only cost is a few percent of single-query
+    throughput."""
+    return {
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
+    }
 
 
 def _normalize_dsn(dsn: str) -> str:
@@ -31,7 +46,13 @@ async def create_pool(
     **kwargs,
 ) -> asyncpg.Pool:
     """Create an asyncpg pool. If ``role`` is given, every new physical
-    connection runs ``SET ROLE "<role>"`` via the init coroutine."""
+    connection runs ``SET ROLE "<role>"`` via the init coroutine.
+
+    ``statement_cache_size`` defaults to ``0`` so that pgbouncer in
+    transaction mode can be reintroduced as a pure config change
+    (prepared statements don't survive across pgbouncer's per-transaction
+    server rotation). Callers can override by passing ``statement_cache_size``
+    explicitly."""
 
     async def _init(conn: asyncpg.Connection) -> None:
         if role:
@@ -39,6 +60,7 @@ async def create_pool(
 
     if role:
         kwargs.setdefault("init", _init)
+    kwargs.setdefault("statement_cache_size", 0)
 
     return await asyncpg.create_pool(
         _normalize_dsn(dsn),
