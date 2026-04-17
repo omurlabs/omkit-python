@@ -22,7 +22,7 @@ class CerebellumClient:
     def __init__(
         self,
         base_url: str = "http://cerebellum:8006",
-        timeout: float = 5.0,
+        timeout: float = 60.0,
         failure_threshold: int = 5,
         cooldown_seconds: float = 60.0,
         enabled: bool = True,
@@ -114,7 +114,7 @@ class CerebellumClient:
             return resp.json()
         except (httpx.TimeoutException, httpx.ConnectError, httpx.HTTPStatusError) as e:
             self._record_failure()
-            log.warning("cerebellum.request_failed", endpoint=endpoint, error=str(e))
+            log.warning("cerebellum.request_failed", endpoint=endpoint, error=repr(e))
             return None
 
     # --- Public API ---

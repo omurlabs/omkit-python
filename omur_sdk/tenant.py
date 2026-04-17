@@ -41,7 +41,7 @@ def request_id() -> str | None:
     return _request_id_var.get()
 
 
-_DEFAULT_EXCLUDE = frozenset({"/health", "/ready", "/metrics"})
+_DEFAULT_EXCLUDE = frozenset({"/health", "/healthz", "/ready", "/metrics"})
 
 
 def _get_header(headers: list[tuple[bytes, bytes]], name: bytes) -> str | None:
