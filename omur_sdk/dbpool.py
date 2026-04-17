@@ -30,6 +30,26 @@ def sqlalchemy_asyncpg_connect_args() -> dict[str, Any]:
     }
 
 
+async def new_session_pool(dsn: str, **kwargs) -> asyncpg.Pool:
+    """Build an asyncpg pool for :class:`omur_sdk.sessions.PostgresSessionStore`.
+
+    The session pool intentionally does **not** run ``SET ROLE omur_app``
+    on each new connection. Token-based session lookup (``get``/``delete``)
+    takes an opaque token without knowing the tenant, so SELECT/DELETE
+    under a role that's subject to the ``sessions_tenant_isolation`` RLS
+    policy would silently return zero rows. Connecting as the default
+    ``omur`` superuser (which has ``BYPASSRLS``) lets token lookup cross
+    tenants; writes (``put``, ``list``) still run inside a transaction
+    that sets ``app.tenant_id`` so RLS is honored for multi-tenant
+    mutations.
+
+    Use this helper in service lifespans that need a SessionStore. For
+    pools that back RLS-enforced app queries, use :func:`create_pool`
+    with ``role='omur_app'`` instead.
+    """
+    return await create_pool(dsn, **kwargs)
+
+
 def _normalize_dsn(dsn: str) -> str:
     """Strip a SQLAlchemy dialect suffix like ``+asyncpg`` from the URL
     scheme so asyncpg accepts a DSN that was originally shaped for

@@ -33,9 +33,9 @@ class Session:
 
 
 class SessionStore(Protocol):
-    async def get(self, token: str) -> Session: ...
+    async def get(self, token: str, *, tenant_id: str | None = None) -> Session: ...
     async def put(self, session: Session) -> None: ...
-    async def delete(self, token: str) -> None: ...
+    async def delete(self, token: str, *, tenant_id: str | None = None) -> None: ...
     async def list(self, tenant_id: str) -> list[Session]: ...
     async def close(self) -> None: ...
 
@@ -49,12 +49,30 @@ def _parse_payload(value: Any) -> dict[str, Any]:
 
 
 class PostgresSessionStore:
-    """Store backed by an asyncpg pool and the ``sessions`` table."""
+    """Store backed by an asyncpg pool and the ``sessions`` table.
+
+    Contract with respect to Postgres RLS (``sessions_tenant_isolation``
+    policy):
+
+    - ``put(session)`` and ``list(tenant_id)`` always work because the
+      tenant is known; both run inside a transaction that sets
+      ``app.tenant_id`` so the policy is satisfied under any role.
+    - ``get(token)`` and ``delete(token)`` accept the opaque token as
+      the capability. If the pool has ``SET ROLE omur_app`` applied, RLS
+      will filter the SELECT/DELETE to zero rows. Build the session
+      pool with :func:`new_session_pool` (no ``SET ROLE``; superuser
+      bypasses RLS) so token lookup crosses tenants.
+
+    Defense-in-depth: callers that already know the expected tenant may
+    pass ``tenant_id=`` to ``get``/``delete``; the store will then
+    verify/scope the operation in-Python so a stolen token can't be used
+    against a different tenant's row.
+    """
 
     def __init__(self, pool):
         self._pool = pool
 
-    async def get(self, token: str) -> Session:
+    async def get(self, token: str, *, tenant_id: str | None = None) -> Session:
         async with self._pool.acquire() as conn:
             row = await conn.fetchrow(
                 "SELECT token, tenant_id::text, payload, created_at, expires_at "
@@ -62,6 +80,9 @@ class PostgresSessionStore:
                 token,
             )
         if not row:
+            raise NotFound(token)
+        if tenant_id is not None and row["tenant_id"] != tenant_id:
+            # Token belongs to a different tenant — treat as missing.
             raise NotFound(token)
         return Session(
             token=row["token"],
@@ -73,29 +94,55 @@ class PostgresSessionStore:
 
     async def put(self, s: Session) -> None:
         async with self._pool.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO sessions (token, tenant_id, payload, expires_at) "
-                "VALUES ($1, $2::uuid, $3::jsonb, $4) "
-                "ON CONFLICT (token) DO UPDATE SET "
-                "payload = EXCLUDED.payload, expires_at = EXCLUDED.expires_at",
-                s.token,
-                s.tenant_id,
-                json.dumps(s.payload),
-                s.expires_at,
-            )
+            async with conn.transaction():
+                # Satisfy the sessions_tenant_isolation RLS policy
+                # regardless of whether the pool runs as omur_app or a
+                # BYPASSRLS superuser. set_config(..., true) is
+                # transaction-local so it doesn't leak across checkouts.
+                await conn.execute(
+                    "SELECT set_config('app.tenant_id', $1, true)",
+                    s.tenant_id,
+                )
+                await conn.execute(
+                    "INSERT INTO sessions (token, tenant_id, payload, expires_at) "
+                    "VALUES ($1, $2::uuid, $3::jsonb, $4) "
+                    "ON CONFLICT (token) DO UPDATE SET "
+                    "payload = EXCLUDED.payload, expires_at = EXCLUDED.expires_at",
+                    s.token,
+                    s.tenant_id,
+                    json.dumps(s.payload),
+                    s.expires_at,
+                )
 
-    async def delete(self, token: str) -> None:
+    async def delete(self, token: str, *, tenant_id: str | None = None) -> None:
         async with self._pool.acquire() as conn:
-            await conn.execute("DELETE FROM sessions WHERE token = $1", token)
+            if tenant_id is not None:
+                async with conn.transaction():
+                    await conn.execute(
+                        "SELECT set_config('app.tenant_id', $1, true)",
+                        tenant_id,
+                    )
+                    await conn.execute(
+                        "DELETE FROM sessions WHERE token = $1 AND tenant_id = $2::uuid",
+                        token,
+                        tenant_id,
+                    )
+            else:
+                await conn.execute("DELETE FROM sessions WHERE token = $1", token)
 
     async def list(self, tenant_id: str) -> list[Session]:
         async with self._pool.acquire() as conn:
-            rows = await conn.fetch(
-                "SELECT token, tenant_id::text, payload, created_at, expires_at "
-                "FROM sessions WHERE tenant_id = $1::uuid AND expires_at > now() "
-                "ORDER BY created_at DESC",
-                tenant_id,
-            )
+            async with conn.transaction():
+                await conn.execute(
+                    "SELECT set_config('app.tenant_id', $1, true)",
+                    tenant_id,
+                )
+                rows = await conn.fetch(
+                    "SELECT token, tenant_id::text, payload, created_at, expires_at "
+                    "FROM sessions WHERE tenant_id = $1::uuid AND expires_at > now() "
+                    "ORDER BY created_at DESC",
+                    tenant_id,
+                )
         return [
             Session(
                 token=r["token"],
