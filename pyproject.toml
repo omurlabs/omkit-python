@@ -8,31 +8,31 @@ version = "0.2.0"
 description = "Shared provider framework for Omur services"
 requires-python = ">=3.12"
 dependencies = [
-    "pydantic>=2.12",
+    "pydantic>=2.13",
     "pydantic-settings>=2.13",
-    "asyncpg>=0.30",
-    "redis>=5.0",
-    "structlog>=24.4",
+    "asyncpg>=0.31",
+    "redis>=5.3",
+    "structlog>=25.5",
     "cryptography>=43.0",
     "tenacity>=8.0",
-    "prometheus_client>=0.21",
+    "prometheus_client>=0.25",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3",
     "pytest-asyncio>=0.24",
-    "redis>=5.0",
+    "redis>=5.3",
 ]
 tracing = [
-    "opentelemetry-api>=1.33.0",
-    "opentelemetry-sdk>=1.33.0",
-    "opentelemetry-exporter-otlp-proto-http>=1.33.0",
-    "opentelemetry-instrumentation-fastapi>=0.54b0",
-    "opentelemetry-instrumentation-httpx>=0.54b0",
+    "opentelemetry-api>=1.41.0",
+    "opentelemetry-sdk>=1.41.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.41.0",
+    "opentelemetry-instrumentation-fastapi>=0.62b0",
+    "opentelemetry-instrumentation-httpx>=0.62b0",
 ]
 metrics = [
-    "prometheus-fastapi-instrumentator>=7.0",
+    "prometheus-fastapi-instrumentator>=7.1",
 ]
 
 [tool.setuptools.packages.find]
