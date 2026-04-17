@@ -83,6 +83,16 @@ class CerebellumClient:
         if not self.available:
             return None
 
+        # Resolve tenant_id: explicit arg wins, else pick up from the SDK
+        # tenant contextvar (populated by TenantMiddleware or tenant.bind).
+        # Cerebellum's own TenantMiddleware returns 401 without X-Tenant-ID.
+        if tenant_id is None:
+            try:
+                from omur_sdk.tenant import current_or_none
+                tenant_id = current_or_none()
+            except Exception:
+                tenant_id = None
+
         headers = {}
         if request_id:
             headers["X-Request-ID"] = request_id
