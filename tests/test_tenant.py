@@ -188,7 +188,7 @@ async def test_middleware_adds_request_id_to_response_headers():
     assert b"x-request-id" in header_names
 
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 
 @pytest.mark.asyncio
@@ -226,15 +226,3 @@ async def test_set_rls_raises_without_tenant():
 
     with pytest.raises(RuntimeError, match="No tenant"):
         await tenant.set_rls(session)
-
-
-def test_pool_reset_listener_registers_checkin_event():
-    """pool_reset_listener should register a 'checkin' event on the sync engine."""
-    engine = MagicMock()
-    engine.sync_engine = MagicMock()
-
-    with patch("sqlalchemy.event") as mock_event:
-        tenant.pool_reset_listener(engine)
-        mock_event.listens_for.assert_called_once_with(
-            engine.sync_engine, "checkin"
-        )

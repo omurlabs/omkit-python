@@ -153,21 +153,6 @@ async def set_rls(session) -> None:
     )
 
 
-def pool_reset_listener(engine) -> None:
-    """Register pool event to clear tenant context on connection checkin.
-
-    Defense-in-depth: ensures no tenant leakage even if a transaction
-    aborts unexpectedly. Requires sqlalchemy (optional dependency).
-    """
-    from sqlalchemy import event
-
-    @event.listens_for(engine.sync_engine, "checkin")
-    def _reset_tenant(dbapi_conn, connection_record):
-        cursor = dbapi_conn.cursor()
-        cursor.execute("RESET app.tenant_id")
-        cursor.close()
-
-
 @contextmanager
 def bind(tenant_id: str, request_id: str | None = None):
     """Set tenant context for background tasks, scripts, and tests.
