@@ -54,11 +54,17 @@ async def load(session: AsyncSession) -> Limits:
     The caller is expected to have already invoked ``tenant.set_rls(session)``.
     Falls back to defaults when no row exists for the tenant.
     """
+    # ``tenant_quotas`` intentionally has no RLS policy (operators need
+    # cross-tenant visibility for capacity planning), so we filter by
+    # the caller's app.tenant_id GUC explicitly. Without this WHERE the
+    # helper would return an arbitrary row belonging to another tenant.
     row = (
         await session.execute(
             text(
                 "SELECT docs_limit, storage_bytes_limit, queries_per_month_limit "
-                "FROM tenant_quotas LIMIT 1"
+                "FROM tenant_quotas "
+                "WHERE tenant_id = current_setting('app.tenant_id', true)::uuid "
+                "LIMIT 1"
             )
         )
     ).first()
@@ -79,6 +85,12 @@ async def get_usage(session: AsyncSession) -> Usage:
     """Read docs / storage_bytes / queries-this-month for the request tenant.
 
     Caller must have already set RLS on the session.
+
+    Services that don't hold SELECT on ``usage_log`` (e.g. marrow, which
+    only enforces upload-side quotas) get ``queries_this_month=0`` from
+    this helper — the upload-path checks never read that field, and the
+    spine middleware that does enforce query quota will roll back and
+    surface the real permission error instead.
     """
     doc_row = (
         await session.execute(
@@ -88,14 +100,23 @@ async def get_usage(session: AsyncSession) -> Usage:
             )
         )
     ).one()
-    queries = (
-        await session.execute(
-            text(
-                "SELECT COUNT(*)::int FROM usage_log "
-                "WHERE created_at >= date_trunc('month', now())"
+    queries = 0
+    nested = await session.begin_nested()
+    try:
+        queries = (
+            await session.execute(
+                text(
+                    "SELECT COUNT(*)::int FROM usage_log "
+                    "WHERE created_at >= date_trunc('month', now())"
+                )
             )
-        )
-    ).scalar() or 0
+        ).scalar() or 0
+        await nested.commit()
+    except Exception:
+        # Permission denied / table missing: upload-side callers don't
+        # need queries_this_month. Rolling back the savepoint keeps the
+        # outer transaction usable so callers can still read `docs`.
+        await nested.rollback()
     return Usage(
         docs=int(doc_row[0]),
         storage_bytes=int(doc_row[1]),
