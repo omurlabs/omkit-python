@@ -15,19 +15,34 @@ from typing import Any, Optional
 import asyncpg
 
 
-def sqlalchemy_asyncpg_connect_args() -> dict[str, Any]:
-    """Return ``connect_args`` for ``create_async_engine(..., connect_args=...)``
-    that keep the resulting engine compatible with pgbouncer transaction mode.
+def sqlalchemy_asyncpg_connect_args(role: str | None = "omur_app") -> dict[str, Any]:
+    """Return ``connect_args`` for ``create_async_engine(..., connect_args=...)``.
 
-    Disables asyncpg's statement cache (prepared statements don't survive
-    pgbouncer's per-transaction server rotation) while leaving extended
-    query protocol + binary params intact. Harmless when talking to
-    postgres directly — the only cost is a few percent of single-query
-    throughput."""
-    return {
+    Keeps the engine pgbouncer-transaction-mode-compatible
+    (``statement_cache_size=0``, ``prepared_statement_cache_size=0``) and,
+    when ``role`` is non-empty, applies ``SET ROLE <role>`` at connection
+    startup via asyncpg's ``server_settings`` dict so every pool
+    checkout already runs as the restricted role without any sync-event
+    listener. Pass ``role=None`` to opt out.
+
+    Running the role switch through ``server_settings`` (rather than a
+    sync ``"connect"`` event listener that calls ``dbapi_conn.cursor()``)
+    avoids a greenlet race between SQLAlchemy's async adapter and
+    asyncpg's connection init — the listener would occasionally see a
+    half-initialized DBAPI connection and raise ``'NoneType' object
+    has no attribute 'cursor'`` / ``'commit'``. asyncpg issues
+    ``SET name = value`` for every entry in ``server_settings`` during
+    the connection handshake, before the connection is handed to the
+    pool, so the role is always in place by the time SQLAlchemy sees
+    the connection.
+    """
+    args: dict[str, Any] = {
         "statement_cache_size": 0,
         "prepared_statement_cache_size": 0,
     }
+    if role:
+        args["server_settings"] = {"role": role}
+    return args
 
 
 async def new_session_pool(dsn: str, **kwargs) -> asyncpg.Pool:
