@@ -25,6 +25,7 @@ class Event:
     id: int
     topic: str
     payload: Any
+    tenant_id: Optional[str] = None  # None for global/system events
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -33,6 +34,9 @@ Handler = Callable[[Event], Awaitable[None]]
 
 class EventBus(Protocol):
     async def publish(self, topic: str, payload: Any) -> None: ...
+    async def publish_tenant(
+        self, tenant_id: str, topic: str, payload: Any
+    ) -> None: ...
     async def subscribe(self, topic: str, handler: Handler) -> None: ...
     async def close(self) -> None: ...
 
@@ -62,22 +66,54 @@ class PostgresEventBus:
         self._batch = batch_size
         self._stop = asyncio.Event()
 
+    async def _as_bus_role(self, conn) -> None:
+        """Drop the per-connection omur_app role and disable row_security.
+
+        The event bus is infrastructure — subscribers must see every tenant's
+        events on their topic, and publishes happen outside a user session.
+        Pool owner must be a superuser or BYPASSRLS role. Mirror of the Go
+        SDK's withBusRole pattern.
+        """
+        await conn.execute("RESET ROLE")
+        await conn.execute("SET LOCAL row_security = off")
+
     async def publish(self, topic: str, payload: Any) -> None:
         async with self._pool.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO events (topic, payload) VALUES ($1, $2::jsonb)",
-                topic,
-                json.dumps(payload),
-            )
+            async with conn.transaction():
+                await self._as_bus_role(conn)
+                await conn.execute(
+                    "INSERT INTO events (topic, payload) VALUES ($1, $2::jsonb)",
+                    topic,
+                    json.dumps(payload),
+                )
+
+    async def publish_tenant(
+        self, tenant_id: str, topic: str, payload: Any
+    ) -> None:
+        if not tenant_id:
+            await self.publish(topic, payload)
+            return
+        async with self._pool.acquire() as conn:
+            async with conn.transaction():
+                await self._as_bus_role(conn)
+                await conn.execute(
+                    "INSERT INTO events (tenant_id, topic, payload) "
+                    "VALUES ($1::uuid, $2, $3::jsonb)",
+                    tenant_id,
+                    topic,
+                    json.dumps(payload),
+                )
 
     async def subscribe(self, topic: str, handler: Handler) -> None:
         async with self._pool.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO event_offsets (consumer, topic, last_id) "
-                "VALUES ($1, $2, 0) ON CONFLICT DO NOTHING",
-                self._consumer,
-                topic,
-            )
+            async with conn.transaction():
+                await self._as_bus_role(conn)
+                await conn.execute(
+                    "INSERT INTO event_offsets (consumer, topic, last_id) "
+                    "VALUES ($1, $2, 0) ON CONFLICT DO NOTHING",
+                    self._consumer,
+                    topic,
+                )
         # Drain once immediately so short-lived subscribers and tests don't
         # have to wait a full poll_interval for the first delivery.
         try:
@@ -100,19 +136,22 @@ class PostgresEventBus:
 
     async def _poll_once(self, topic: str, handler: Handler) -> None:
         async with self._pool.acquire() as conn:
-            rows = await conn.fetch(
-                "SELECT id, topic, payload, created_at FROM events "
-                "WHERE topic = $1 AND id > ("
-                "  SELECT last_id FROM event_offsets WHERE consumer = $2 AND topic = $1"
-                ") ORDER BY id ASC LIMIT $3",
-                topic,
-                self._consumer,
-                self._batch,
-            )
+            async with conn.transaction():
+                await self._as_bus_role(conn)
+                rows = await conn.fetch(
+                    "SELECT id, tenant_id::text AS tenant_id, topic, payload, created_at FROM events "
+                    "WHERE topic = $1 AND id > ("
+                    "  SELECT last_id FROM event_offsets WHERE consumer = $2 AND topic = $1"
+                    ") ORDER BY id ASC LIMIT $3",
+                    topic,
+                    self._consumer,
+                    self._batch,
+                )
             last_id = 0
             for r in rows:
                 e = Event(
                     id=r["id"],
+                    tenant_id=r["tenant_id"],
                     topic=r["topic"],
                     payload=_parse_payload(r["payload"]),
                     created_at=r["created_at"],
@@ -120,13 +159,15 @@ class PostgresEventBus:
                 await handler(e)
                 last_id = r["id"]
             if last_id:
-                await conn.execute(
-                    "UPDATE event_offsets SET last_id = $1 "
-                    "WHERE consumer = $2 AND topic = $3",
-                    last_id,
-                    self._consumer,
-                    topic,
-                )
+                async with conn.transaction():
+                    await self._as_bus_role(conn)
+                    await conn.execute(
+                        "UPDATE event_offsets SET last_id = $1 "
+                        "WHERE consumer = $2 AND topic = $3",
+                        last_id,
+                        self._consumer,
+                        topic,
+                    )
 
     async def close(self) -> None:
         self._stop.set()
@@ -155,6 +196,14 @@ class RedisEventBus:
     async def publish(self, topic: str, payload: Any) -> None:
         await self._r.xadd(self._stream(topic), {"payload": json.dumps(payload)})
 
+    async def publish_tenant(
+        self, tenant_id: str, topic: str, payload: Any
+    ) -> None:
+        await self._r.xadd(
+            self._stream(topic),
+            {"tenant_id": tenant_id, "payload": json.dumps(payload)},
+        )
+
     async def subscribe(self, topic: str, handler: Handler) -> None:
         stream = self._stream(topic)
         try:
@@ -178,8 +227,16 @@ class RedisEventBus:
                     payload_raw = fields.get(b"payload") or fields.get("payload")
                     if isinstance(payload_raw, bytes):
                         payload_raw = payload_raw.decode()
+                    tenant_raw = fields.get(b"tenant_id") or fields.get("tenant_id")
+                    if isinstance(tenant_raw, bytes):
+                        tenant_raw = tenant_raw.decode()
                     payload = json.loads(payload_raw)
-                    e = Event(id=0, topic=topic, payload=payload)
+                    e = Event(
+                        id=0,
+                        tenant_id=tenant_raw or None,
+                        topic=topic,
+                        payload=payload,
+                    )
                     try:
                         await handler(e)
                         await self._r.xack(stream, self._group, msg_id)
