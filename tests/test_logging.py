@@ -1,4 +1,9 @@
 """Tests for shared structlog configuration."""
+from __future__ import annotations
+
+import json
+import logging
+from io import StringIO
 
 import structlog
 from omur_sdk.logging import configure_logging
@@ -16,3 +21,53 @@ def test_configure_logging_is_idempotent():
     """Calling configure_logging twice doesn't raise."""
     configure_logging("svc-a")
     configure_logging("svc-b")
+
+
+def _capture_line(monkeypatch, env_value: str | None) -> str:
+    if env_value is None:
+        monkeypatch.delenv("LOG_FORMAT", raising=False)
+    else:
+        monkeypatch.setenv("LOG_FORMAT", env_value)
+
+    buf = StringIO()
+
+    class _StreamLoggerFactory:
+        def __call__(self, *args, **kwargs):
+            logger = logging.Logger("test")
+            handler = logging.StreamHandler(buf)
+            handler.setFormatter(logging.Formatter("%(message)s"))
+            logger.addHandler(handler)
+            logger.setLevel(logging.INFO)
+            return logger
+
+    structlog.reset_defaults()
+    configure_logging("test-svc")
+    structlog.configure(
+        processors=structlog.get_config()["processors"],
+        wrapper_class=structlog.get_config()["wrapper_class"],
+        context_class=structlog.get_config()["context_class"],
+        logger_factory=_StreamLoggerFactory(),
+        cache_logger_on_first_use=False,
+    )
+
+    log = structlog.get_logger()
+    log.info("hello", user="vadim")
+    return buf.getvalue().strip()
+
+
+def test_default_is_json(monkeypatch):
+    line = _capture_line(monkeypatch, None)
+    payload = json.loads(line)
+    assert payload["event"] == "hello"
+    assert payload["user"] == "vadim"
+    assert payload["level"] == "info"
+
+
+def test_console_format(monkeypatch):
+    line = _capture_line(monkeypatch, "console")
+    assert "hello" in line
+    try:
+        json.loads(line)
+    except json.JSONDecodeError:
+        return
+    raise AssertionError("console format produced JSON unexpectedly")
