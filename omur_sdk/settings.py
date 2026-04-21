@@ -59,7 +59,7 @@ class SettingsManager:
         self._poll_interval = poll_interval
         self._poll_last_seen = None
         self._poll_task: asyncio.Task | None = None
-        self._stop = asyncio.Event()
+        self._stop: asyncio.Event | None = None
 
     @classmethod
     def create(
@@ -106,6 +106,8 @@ class SettingsManager:
     async def start(self):
         """Load all settings from DB into cache, validate, and start the
         configured live-update worker."""
+        if self._stop is None:
+            self._stop = asyncio.Event()
         if self._pool is not None:
             # Asyncpg pool path — use polling by default.
             await self._load_from_pool()
@@ -141,6 +143,9 @@ class SettingsManager:
 
     async def stop(self):
         """Stop any background live-update workers."""
+        if self._stop is None:
+            # start() was never called; nothing to stop.
+            return
         self._stop.set()
         if self._subscriber_task:
             self._subscriber_task.cancel()
