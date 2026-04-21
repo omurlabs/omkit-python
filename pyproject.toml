@@ -42,5 +42,8 @@ metrics = [
 where = ["."]
 include = ["omur_sdk*"]
 
+[tool.setuptools.package-data]
+omur_sdk = ["py.typed"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
