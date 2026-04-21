@@ -26,12 +26,14 @@ class CerebellumClient:
         failure_threshold: int = 5,
         cooldown_seconds: float = 60.0,
         enabled: bool = True,
+        service_token: str | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.failure_threshold = failure_threshold
         self.cooldown_seconds = cooldown_seconds
         self.enabled = enabled
+        self._service_token = service_token
 
         self._consecutive_failures = 0
         self._circuit_opened_at: float | None = None
@@ -93,11 +95,13 @@ class CerebellumClient:
             except Exception:
                 tenant_id = None
 
-        headers = {}
+        headers: dict[str, str] = {}
         if request_id:
             headers["X-Request-ID"] = request_id
         if tenant_id:
             headers["X-Tenant-ID"] = tenant_id
+        if self._service_token:
+            headers["X-Service-Token"] = self._service_token
 
         try:
             client = self._get_client()

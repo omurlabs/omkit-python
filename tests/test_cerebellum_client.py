@@ -128,3 +128,31 @@ async def test_post_omits_tenant_header_when_both_unset(client):
         assert "X-Tenant-ID" not in kwargs["headers"]
     finally:
         _tenant_id_var.reset(token)
+
+
+# --- Service token forwarding (X-Service-Token) ---
+
+
+@pytest.mark.asyncio
+async def test_post_sends_service_token_header():
+    """When constructed with service_token, _post should forward X-Service-Token."""
+    client = CerebellumClient(base_url="http://cb.test", service_token="secret-abc")
+    mock_post = AsyncMock(return_value=_mock_response({"results": []}))
+    with patch.object(client, "_get_client") as mock_get_client:
+        mock_get_client.return_value = MagicMock(post=mock_post)
+        await client._post("/ner", {"texts": ["hello"]}, tenant_id="t-1")
+    _, kwargs = mock_post.call_args
+    assert kwargs["headers"].get("X-Service-Token") == "secret-abc"
+    assert kwargs["headers"].get("X-Tenant-ID") == "t-1"
+
+
+@pytest.mark.asyncio
+async def test_post_omits_service_token_when_unset():
+    """No service_token on constructor => no X-Service-Token header."""
+    client = CerebellumClient(base_url="http://cb.test")
+    mock_post = AsyncMock(return_value=_mock_response({"results": []}))
+    with patch.object(client, "_get_client") as mock_get_client:
+        mock_get_client.return_value = MagicMock(post=mock_post)
+        await client._post("/ner", {"texts": ["hello"]}, tenant_id="t-1")
+    _, kwargs = mock_post.call_args
+    assert "X-Service-Token" not in kwargs["headers"]
