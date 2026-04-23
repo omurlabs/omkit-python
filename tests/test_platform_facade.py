@@ -1,0 +1,70 @@
+"""Facade smoke test — omur_sdk.platform re-exports platform primitives."""
+
+import sys
+
+from omur_sdk.platform import (
+    BaseServiceSettings,
+    SettingsManager,
+    ModelLifecycle,
+    ModelRegistry,
+    CerebellumClient,
+    SyncNotifier,
+)
+
+EXPECTED_EXPORTS = {
+    "BaseServiceSettings",
+    "SettingsManager",
+    "ModelLifecycle",
+    "ModelRegistry",
+    "CerebellumClient",
+    "SyncNotifier",
+}
+
+
+def test_platform_facade_identity_matches_underlying():
+    from omur_sdk import (
+        cerebellum_client,
+        config,
+        model_lifecycle,
+        settings,
+        sync_notifier,
+    )
+
+    assert BaseServiceSettings is config.BaseServiceSettings
+    assert SettingsManager is settings.SettingsManager
+    assert ModelLifecycle is model_lifecycle.ModelLifecycle
+    assert ModelRegistry is model_lifecycle.ModelRegistry
+    assert CerebellumClient is cerebellum_client.CerebellumClient
+    assert SyncNotifier is sync_notifier.SyncNotifier
+
+
+def test_platform_facade_types():
+    for cls in (
+        BaseServiceSettings,
+        SettingsManager,
+        ModelLifecycle,
+        ModelRegistry,
+        CerebellumClient,
+        SyncNotifier,
+    ):
+        assert isinstance(cls, type), f"{cls!r} should be a class"
+
+
+def test_platform_facade_all_matches_imports_exactly():
+    import omur_sdk.platform as facade
+
+    declared = set(getattr(facade, "__all__", ()))
+    assert declared == EXPECTED_EXPORTS, (
+        f"__all__ drift: declared={declared}, expected={EXPECTED_EXPORTS}"
+    )
+
+
+def test_platform_facade_does_not_leak_internals():
+    to_purge = [m for m in sys.modules if m.startswith("omur_sdk.internal")]
+    for m in to_purge:
+        del sys.modules[m]
+
+    import omur_sdk.platform  # noqa: F401
+
+    leaked = [m for m in sys.modules if m.startswith("omur_sdk.internal")]
+    assert not leaked, f"facade leaked private modules: {leaked}"
