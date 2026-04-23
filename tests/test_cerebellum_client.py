@@ -156,3 +156,83 @@ async def test_post_omits_service_token_when_unset():
         await client._post("/ner", {"texts": ["hello"]}, tenant_id="t-1")
     _, kwargs = mock_post.call_args
     assert "X-Service-Token" not in kwargs["headers"]
+
+
+# --- rerank() helper ---
+
+
+@pytest.mark.asyncio
+async def test_rerank_returns_full_response_dict(client):
+    """Happy path: rerank returns the server payload verbatim."""
+    payload = {
+        "results": [
+            {"index": 1, "score": 0.9, "truncated": False},
+            {"index": 0, "score": 0.2, "truncated": False},
+        ],
+        "model": "bge-reranker-base",
+    }
+    mock_post = AsyncMock(return_value=_mock_response(payload))
+    with patch.object(client, "_get_client") as mock_get_client:
+        mock_get_client.return_value = MagicMock(post=mock_post)
+        result = await client.rerank("aspirin", ["banana", "aspirin 100mg"], top_k=2)
+    assert result == payload
+    _, kwargs = mock_post.call_args
+    body = kwargs["json"]
+    assert body == {"query": "aspirin", "passages": ["banana", "aspirin 100mg"], "top_k": 2}
+
+
+@pytest.mark.asyncio
+async def test_rerank_short_circuits_empty_passages(client):
+    """Empty passages must NOT hit the wire — return an empty result locally."""
+    mock_post = AsyncMock()
+    with patch.object(client, "_get_client") as mock_get_client:
+        mock_get_client.return_value = MagicMock(post=mock_post)
+        result = await client.rerank("q", [], top_k=5)
+    assert result == {"results": [], "model": ""}
+    mock_post.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_rerank_returns_none_on_5xx(client):
+    """A 5xx response must surface as None so frontal falls back to
+    pre-rerank order rather than failing the RAG request."""
+    import httpx
+
+    err = httpx.HTTPStatusError(
+        "boom",
+        request=MagicMock(),
+        response=MagicMock(status_code=500),
+    )
+    failing_resp = MagicMock()
+    failing_resp.status_code = 500
+    failing_resp.raise_for_status = MagicMock(side_effect=err)
+    mock_post = AsyncMock(return_value=failing_resp)
+    with patch.object(client, "_get_client") as mock_get_client:
+        mock_get_client.return_value = MagicMock(post=mock_post)
+        result = await client.rerank("q", ["p1", "p2"], top_k=1)
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_rerank_returns_none_on_timeout(client):
+    """Timeout path must also surface as None (same fallback contract)."""
+    import httpx
+
+    mock_post = AsyncMock(side_effect=httpx.TimeoutException("slow"))
+    with patch.object(client, "_get_client") as mock_get_client:
+        mock_get_client.return_value = MagicMock(post=mock_post)
+        result = await client.rerank("q", ["p1"], top_k=1)
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_rerank_returns_none_when_circuit_open(client):
+    """Circuit open => rerank returns None without issuing a request."""
+    for _ in range(3):
+        client._record_failure()
+    mock_post = AsyncMock()
+    with patch.object(client, "_get_client") as mock_get_client:
+        mock_get_client.return_value = MagicMock(post=mock_post)
+        result = await client.rerank("q", ["p1"], top_k=1)
+    assert result is None
+    mock_post.assert_not_called()
