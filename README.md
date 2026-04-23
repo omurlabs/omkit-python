@@ -75,3 +75,28 @@ settings = Settings()
 | `omur_sdk.metrics` | `mount_metrics(app, name)` — Prometheus `/metrics` with default exclusions |
 | `omur_sdk.tenant` | `TenantMiddleware` + contextvar accessors |
 | `omur_sdk.config` | `BaseServiceSettings` Pydantic base class |
+
+## Facade groups (recommended imports)
+
+New code should prefer importing from one of the grouped facades below. The
+flat-module imports shown above keep working; facades are additive aliases
+for discoverability. Nothing here changes the underlying behavior —
+`omur_sdk.transport.build_tenant_client is omur_sdk.http.build_tenant_client`
+at runtime.
+
+| Facade | Covers | Import example |
+|--------|--------|----------------|
+| `omur_sdk.transport` | http, tracing, metrics, health, logging, resilience | `from omur_sdk.transport import build_tenant_client, mount_metrics` |
+| `omur_sdk.data` | dbpool, sessions | `from omur_sdk.data import create_pool, SessionStore` |
+| `omur_sdk.platform` | config, settings, model_lifecycle, cerebellum_client, sync_notifier | `from omur_sdk.platform import BaseServiceSettings, SettingsManager` |
+| `omur_sdk.security` | sanitize helpers | `from omur_sdk.security import sanitize_llm_output` |
+
+### Not currently faceted (import directly)
+
+- `omur_sdk.tenant` — already a clean single-module surface.
+- `omur_sdk.eventbus` — domain-specific; keep bus construction explicit.
+- `omur_sdk.encryption` — deliberately unfaceted to avoid casual crypto imports.
+- `omur_sdk.quota` — composite API (`Resource` / `Limits` / `Usage` / `Decision` + `check_upload` / `check_query`); merits its own facade or direct imports.
+- `omur_sdk.cleanup` — single class (`Loop`); direct import is fine.
+- `omur_sdk.internal.*` — private; never import from callers.
+- `omur_sdk.providers.*` — already sub-packaged.
