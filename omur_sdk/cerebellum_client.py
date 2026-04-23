@@ -226,6 +226,35 @@ class CerebellumClient:
             all_results.extend(result.get("results", []))
         return all_results
 
+    async def rerank(
+        self,
+        query: str,
+        passages: list[str],
+        top_k: int = 5,
+        request_id: str | None = None,
+        tenant_id: str | None = None,
+    ) -> dict | None:
+        """Re-rank passages for a query using cerebellum's cross-encoder.
+
+        Returns the full response dict ``{"results": [...], "model": "..."}``
+        or ``None`` on failure (timeout, 5xx, circuit open). Frontal's
+        fallback path relies on ``None`` to mean "use pre-rerank order";
+        raising on failure would break that contract and force the RAG
+        request to fail on reranker outage.
+
+        Unlike embed/ner/etc. this endpoint is NOT split into batches —
+        the cross-encoder scores each (query, passage) pair jointly and
+        splitting the batch would change the score order (ties break
+        within a batch but can shuffle across batches).
+        """
+        if not self.available:
+            return None
+        if not passages:
+            return {"results": [], "model": ""}
+
+        payload = {"query": query, "passages": passages, "top_k": top_k}
+        return await self._post("/rerank", payload, request_id, tenant_id)
+
     async def close(self) -> None:
         if self._client and not self._client.is_closed:
             await self._client.aclose()
