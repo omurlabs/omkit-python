@@ -1,4 +1,4 @@
-"""Security facade — re-exports sanitation helpers.
+"""Security facade — re-exports sanitation helpers and event logger.
 
 The ``omur_sdk.encryption`` module has a mixed public surface and is
 intentionally NOT re-exported here; continue to import from
@@ -12,10 +12,12 @@ from omur_sdk.sanitize import (
     sanitize_llm_output,
     sanitize_llm_response,
 )
+from omur_sdk.security.events import log_security_event
 
 __all__ = [
     "sanitize_llm_output",
     "sanitize_html",
     "sanitize_llm_response",
     "extract_json",
+    "log_security_event",
 ]

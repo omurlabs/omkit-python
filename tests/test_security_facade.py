@@ -7,6 +7,7 @@ from omur_sdk.security import (
     sanitize_html,
     sanitize_llm_response,
     extract_json,
+    log_security_event,
 )
 
 EXPECTED_EXPORTS = {
@@ -14,6 +15,7 @@ EXPECTED_EXPORTS = {
     "sanitize_html",
     "sanitize_llm_response",
     "extract_json",
+    "log_security_event",
 }
 
 
@@ -27,7 +29,7 @@ def test_security_facade_identity_matches_sanitize():
 
 
 def test_security_facade_sanitize_callables():
-    for fn in (sanitize_llm_output, sanitize_html, sanitize_llm_response, extract_json):
+    for fn in (sanitize_llm_output, sanitize_html, sanitize_llm_response, extract_json, log_security_event):
         assert callable(fn)
 
 
