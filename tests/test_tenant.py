@@ -226,3 +226,104 @@ async def test_set_rls_raises_without_tenant():
 
     with pytest.raises(RuntimeError, match="No tenant"):
         await tenant.set_rls(session)
+
+
+# ---------------------------------------------------------------------------
+# async_bind, set_rls_conn, hashed_for_log
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_async_bind_sets_and_resets():
+    tid = str(uuid4())
+    rid = str(uuid4())
+    async with tenant.async_bind(tid, request_id=rid):
+        assert tenant.require() == tid
+        assert tenant.request_id() == rid
+    assert tenant.current_or_none() is None
+    assert tenant.request_id() is None
+
+
+@pytest.mark.asyncio
+async def test_async_bind_resets_on_exception():
+    tid = str(uuid4())
+    with pytest.raises(ValueError, match="boom"):
+        async with tenant.async_bind(tid):
+            assert tenant.require() == tid
+            raise ValueError("boom")
+    assert tenant.current_or_none() is None
+
+
+@pytest.mark.asyncio
+async def test_async_bind_nested():
+    outer = str(uuid4())
+    inner = str(uuid4())
+    async with tenant.async_bind(outer):
+        assert tenant.require() == outer
+        async with tenant.async_bind(inner):
+            assert tenant.require() == inner
+        assert tenant.require() == outer
+    assert tenant.current_or_none() is None
+
+
+@pytest.mark.asyncio
+async def test_set_rls_conn_runs_set_config():
+    tid = str(uuid4())
+    conn = MagicMock()
+    conn.is_in_transaction = MagicMock(return_value=True)
+    conn.execute = AsyncMock()
+
+    async with tenant.async_bind(tid):
+        await tenant.set_rls_conn(conn)
+
+    conn.execute.assert_awaited_once_with(
+        "SELECT set_config('app.tenant_id', $1, true)", tid
+    )
+
+
+@pytest.mark.asyncio
+async def test_set_rls_conn_requires_transaction():
+    tid = str(uuid4())
+    conn = MagicMock()
+    conn.is_in_transaction = MagicMock(return_value=False)
+    conn.execute = AsyncMock()
+
+    async with tenant.async_bind(tid):
+        with pytest.raises(RuntimeError, match="active transaction"):
+            await tenant.set_rls_conn(conn)
+    conn.execute.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_set_rls_conn_requires_tenant():
+    conn = MagicMock()
+    conn.is_in_transaction = MagicMock(return_value=True)
+    conn.execute = AsyncMock()
+
+    with pytest.raises(RuntimeError, match="No tenant"):
+        await tenant.set_rls_conn(conn)
+
+
+def test_hashed_for_log_with_explicit_key():
+    tid = str(uuid4())
+    h1 = tenant.hashed_for_log(tid, key=b"secret")
+    h2 = tenant.hashed_for_log(tid, key=b"secret")
+    h3 = tenant.hashed_for_log(tid, key=b"other")
+    assert h1 == h2
+    assert h1 != h3
+    assert len(h1) == 16
+
+
+def test_hashed_for_log_reads_env(monkeypatch):
+    tid = str(uuid4())
+    monkeypatch.setenv("OMUR_LOG_HMAC_KEY", "env-secret")
+    h_env = tenant.hashed_for_log(tid)
+    h_explicit = tenant.hashed_for_log(tid, key=b"env-secret")
+    assert h_env == h_explicit
+
+
+def test_hashed_for_log_requires_key(monkeypatch):
+    tid = str(uuid4())
+    monkeypatch.delenv("OMUR_LOG_HMAC_KEY", raising=False)
+    with pytest.raises(RuntimeError, match="OMUR_LOG_HMAC_KEY"):
+        tenant.hashed_for_log(tid)

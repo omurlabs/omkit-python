@@ -6,13 +6,19 @@ Background tasks use bind() to establish context.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
+import os
 import uuid
 from contextvars import ContextVar
-from contextlib import contextmanager
-from typing import Callable
+from contextlib import asynccontextmanager, contextmanager
+from typing import TYPE_CHECKING, AsyncIterator, Callable
 
 import structlog
+
+if TYPE_CHECKING:
+    import asyncpg
 
 log = structlog.get_logger()
 
@@ -153,6 +159,23 @@ async def set_rls(session) -> None:
     )
 
 
+async def set_rls_conn(conn: "asyncpg.Connection") -> None:
+    """Set PostgreSQL RLS tenant context on an asyncpg connection.
+
+    Asyncpg counterpart of set_rls(). Reads tenant from ContextVar (require()).
+    Must be called inside an active transaction — set_config(..., true) is
+    transaction-local; outside a transaction the setting silently leaks across
+    pooled checkouts (cross-tenant data leak risk).
+    """
+    if not conn.is_in_transaction():
+        raise RuntimeError(
+            "set_rls_conn() must be called inside an active transaction. "
+            "Use 'async with conn.transaction():' before calling."
+        )
+    tid = require()
+    await conn.execute("SELECT set_config('app.tenant_id', $1, true)", tid)
+
+
 @contextmanager
 def bind(tenant_id: str, request_id: str | None = None):
     """Set tenant context for background tasks, scripts, and tests.
@@ -166,3 +189,42 @@ def bind(tenant_id: str, request_id: str | None = None):
     finally:
         _tenant_id_var.reset(tid_token)
         _request_id_var.reset(rid_token)
+
+
+@asynccontextmanager
+async def async_bind(
+    tenant_id: str, request_id: str | None = None
+) -> AsyncIterator[None]:
+    """Async counterpart of bind() for use inside `async with` blocks.
+
+    ContextVar set/reset itself is sync; this is a convenience wrapper so
+    job-queue middleware and other async code can write `async with
+    tenant.async_bind(tid):` without a `with` inside `async def`.
+    """
+    tid_token = _tenant_id_var.set(tenant_id)
+    rid_token = _request_id_var.set(request_id)
+    try:
+        yield
+    finally:
+        _tenant_id_var.reset(tid_token)
+        _request_id_var.reset(rid_token)
+
+
+def hashed_for_log(tenant_id: str, key: bytes | None = None) -> str:
+    """HMAC-SHA-256 of tenant_id for log/metric correlation without re-id risk.
+
+    Plain SHA-256 over a finite tenant population is brute-forceable; HMAC with
+    a per-deployment secret is not. Reads OMUR_LOG_HMAC_KEY from env when key
+    not supplied. Returns first 16 hex chars (8 bytes) — enough entropy for
+    correlation, short enough for log lines.
+    """
+    if key is None:
+        env = os.environ.get("OMUR_LOG_HMAC_KEY")
+        if not env:
+            raise RuntimeError(
+                "OMUR_LOG_HMAC_KEY env var required for tenant log hashing. "
+                "Set in BaseServiceSettings or pass key= explicitly."
+            )
+        key = env.encode("utf-8")
+    digest = hmac.new(key, tenant_id.encode("utf-8"), hashlib.sha256).hexdigest()
+    return digest[:16]
