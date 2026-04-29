@@ -217,6 +217,11 @@ def hashed_for_log(tenant_id: str, key: bytes | None = None) -> str:
     a per-deployment secret is not. Reads OMUR_LOG_HMAC_KEY from env when key
     not supplied. Returns first 16 hex chars (8 bytes) — enough entropy for
     correlation, short enough for log lines.
+
+    Key encoding contract: OMUR_LOG_HMAC_KEY must be a hex string (output of
+    `openssl rand -hex 32`). hashed_for_log decodes it to raw bytes before
+    HMAC, so the full 256 bits of entropy are used. A bare ASCII passphrase
+    will silently work but only at ~5 bits/char effective key strength.
     """
     if key is None:
         env = os.environ.get("OMUR_LOG_HMAC_KEY")
@@ -225,6 +230,16 @@ def hashed_for_log(tenant_id: str, key: bytes | None = None) -> str:
                 "OMUR_LOG_HMAC_KEY env var required for tenant log hashing. "
                 "Set in BaseServiceSettings or pass key= explicitly."
             )
-        key = env.encode("utf-8")
+        try:
+            key = bytes.fromhex(env)
+        except ValueError as exc:
+            raise RuntimeError(
+                "OMUR_LOG_HMAC_KEY must be a hex string (openssl rand -hex 32). "
+                f"Got {len(env)} chars, decode error: {exc}"
+            ) from exc
+        if len(key) < 16:
+            raise RuntimeError(
+                f"OMUR_LOG_HMAC_KEY too short ({len(key)} bytes); need >= 16"
+            )
     digest = hmac.new(key, tenant_id.encode("utf-8"), hashlib.sha256).hexdigest()
     return digest[:16]

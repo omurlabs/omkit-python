@@ -53,11 +53,28 @@ def test_unwrap_rejects_bad_tenant_id():
 
 
 def test_unwrap_rejects_missing_version():
+    """Cross-SDK contract: Go rejects envelopes with version==0 (missing
+    field zero-value). Python must reject the missing-key case symmetrically
+    or a Go-produced "no version" message would be silently upgraded by
+    Python while Go dead-letters it.
+    """
     bogus = json.dumps({"tenant_id": TID, "payload": {"x": 1}})
-    # Pydantic uses default → version=1; this should succeed actually.
-    # But spec requires version explicitly present. Verify our shape:
-    env = unwrap(bogus)
-    assert env.version == ENVELOPE_VERSION  # default kicks in
+    with pytest.raises(InvalidEnvelopeError, match="version"):
+        unwrap(bogus)
+
+
+def test_unwrap_rejects_empty_payload():
+    """Cross-SDK contract: Go rejects len(payload) == 0; Python rejects
+    empty dict to match.
+    """
+    bogus = json.dumps({"version": 1, "tenant_id": TID, "payload": {}})
+    with pytest.raises(InvalidEnvelopeError, match="empty"):
+        unwrap(bogus)
+
+
+def test_wrap_rejects_empty_payload():
+    with pytest.raises(InvalidEnvelopeError, match="empty"):
+        wrap(TID, {})
 
 
 def test_unwrap_rejects_future_version():

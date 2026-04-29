@@ -24,11 +24,18 @@ class Envelope(BaseModel):
     """Tenant-scoped task envelope.
 
     `payload` is opaque — handlers parse it into their own pydantic model.
+    Cross-SDK contract: matches Go's packages/omur-go-sdk/jobqueue/Envelope
+    field-for-field. Empty payloads and missing version keys are rejected by
+    both sides — wrap()/Wrap() produce envelopes that round-trip cleanly
+    between Python and Go workers.
     """
 
     model_config = {"frozen": True, "extra": "forbid"}
 
-    version: int = Field(default=ENVELOPE_VERSION)
+    # `version` is required — no default. Go's Unwrap rejects envelopes
+    # with version==0 (missing field zero-value), so the Python side must
+    # reject the missing-key case symmetrically.
+    version: int
     tenant_id: str
     payload: dict[str, Any]
 
@@ -49,6 +56,15 @@ class Envelope(BaseModel):
         if v > ENVELOPE_VERSION:
             raise ValueError(
                 f"unsupported envelope version {v} (max {ENVELOPE_VERSION})"
+            )
+        return v
+
+    @field_validator("payload")
+    @classmethod
+    def _validate_payload(cls, v: dict[str, Any]) -> dict[str, Any]:
+        if not v:
+            raise ValueError(
+                "payload must not be empty — Go workers dead-letter empty payloads"
             )
         return v
 

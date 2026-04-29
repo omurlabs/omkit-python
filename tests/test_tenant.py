@@ -306,20 +306,37 @@ async def test_set_rls_conn_requires_tenant():
 
 def test_hashed_for_log_with_explicit_key():
     tid = str(uuid4())
-    h1 = tenant.hashed_for_log(tid, key=b"secret")
-    h2 = tenant.hashed_for_log(tid, key=b"secret")
-    h3 = tenant.hashed_for_log(tid, key=b"other")
+    h1 = tenant.hashed_for_log(tid, key=b"secret-bytes-key-1234567890abcdef")
+    h2 = tenant.hashed_for_log(tid, key=b"secret-bytes-key-1234567890abcdef")
+    h3 = tenant.hashed_for_log(tid, key=b"other-bytes-key-1234567890abcdef!")
     assert h1 == h2
     assert h1 != h3
     assert len(h1) == 16
 
 
-def test_hashed_for_log_reads_env(monkeypatch):
+def test_hashed_for_log_reads_env_hex(monkeypatch):
     tid = str(uuid4())
-    monkeypatch.setenv("OMUR_LOG_HMAC_KEY", "env-secret")
+    # openssl rand -hex 32 produces 64-char hex string
+    hex_key = "0123456789abcdef" * 4
+    monkeypatch.setenv("OMUR_LOG_HMAC_KEY", hex_key)
     h_env = tenant.hashed_for_log(tid)
-    h_explicit = tenant.hashed_for_log(tid, key=b"env-secret")
+    h_explicit = tenant.hashed_for_log(tid, key=bytes.fromhex(hex_key))
     assert h_env == h_explicit
+
+
+def test_hashed_for_log_rejects_non_hex_env(monkeypatch):
+    tid = str(uuid4())
+    monkeypatch.setenv("OMUR_LOG_HMAC_KEY", "not-hex-zzz!")
+    with pytest.raises(RuntimeError, match="hex string"):
+        tenant.hashed_for_log(tid)
+
+
+def test_hashed_for_log_rejects_short_env(monkeypatch):
+    tid = str(uuid4())
+    # Only 8 hex chars = 4 bytes
+    monkeypatch.setenv("OMUR_LOG_HMAC_KEY", "deadbeef")
+    with pytest.raises(RuntimeError, match="too short"):
+        tenant.hashed_for_log(tid)
 
 
 def test_hashed_for_log_requires_key(monkeypatch):
