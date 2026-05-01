@@ -2,8 +2,8 @@
 
 exports: class SettingsManager
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The SettingsManager must maintain thread-safe cache access and ensure all database and Redis operations are properly synchronized to prevent race conditions during concurrent updates.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 # packages/omur-sdk/omur_sdk/settings.py
@@ -76,7 +76,10 @@ class SettingsManager:
         db_session_factory,
         settings,
     ) -> "SettingsManager":
-        """Factory that reads valkey_url, tenant_id, encryption_key from a BaseServiceSettings instance."""
+        """Factory that reads valkey_url, tenant_id, encryption_key from a BaseServiceSettings instance.
+
+        Rules:   The `service_name` must be a valid string that uniquely identifies the service; `db_session_factory` must be a callable that returns a valid database session; `settings` must have a `valkey_url` attribute, and optionally an `omur_settings_key` for encryption.
+        """
         return cls(
             service_name=service_name,
             db_session_factory=db_session_factory,
@@ -86,11 +89,17 @@ class SettingsManager:
         )
 
     def get(self, key: str, default: Any = None) -> Any:
-        """Read from in-memory cache. No I/O."""
+        """Read from in-memory cache. No I/O.
+
+        Rules:   The function only retrieves values from an in-memory cache; it does not handle missing keys gracefully if the default is not provided, and assumes the cache has already been populated.
+        """
         return self._cache.get(key, default)
 
     async def get_secret(self, key: str) -> str | None:
-        """Decrypt and return a secret value. Reads from DB, not cache."""
+        """Decrypt and return a secret value. Reads from DB, not cache.
+
+        Rules:   The function assumes that the database table `app_settings` exists with columns `value_json`, `is_secret`, and `key`; the `decrypt_value` function must be defined and properly handle decryption of the stored values.
+        """
         from sqlalchemy import text
 
         async with self._db_factory() as session:
@@ -108,11 +117,16 @@ class SettingsManager:
                 return None
 
     def on_change(self, key: str, callback: Callable):
-        """Register a callback for when a specific setting changes."""
+        """Register a callback for when a specific setting changes.
+
+        Rules:   Callbacks registered via `on_change` are expected to be synchronous and should not block or raise exceptions, as they are invoked directly during setting updates.
+        """
         self._listeners.setdefault(key, []).append(callback)
 
     async def start(self):
         """Load all settings from DB into cache, validate, and start the
+
+        Rules:   The `start` method requires that either `_pool` is set (for asyncpg) or `_valkey_url` is provided (for Redis); if neither is present, it defaults to a PostgreSQL-based polling mechanism.
         configured live-update worker."""
         if self._stop is None:
             self._stop = asyncio.Event()
@@ -150,7 +164,10 @@ class SettingsManager:
                         logger.warning("[%s] Setting '%s' looks like invalid JSON", self._service_name, key)
 
     async def stop(self):
-        """Stop any background live-update workers."""
+        """Stop any background live-update workers.
+
+        Rules:   Calling `stop` without a prior call to `start` will result in no-op behavior, but it's important to ensure that `start` was called and that background tasks were initialized before attempting to stop them.
+        """
         if self._stop is None:
             # start() was never called; nothing to stop.
             return

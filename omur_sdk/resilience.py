@@ -2,8 +2,8 @@
 
 exports: T | class CircuitOpen | class CircuitBreaker | resilient(breaker)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The circuit breaker must maintain thread safety across all state transitions and failure tracking operations. The breaker's state must be consistent between concurrent calls and failures, with proper synchronization to prevent race conditions during state changes. All external dependencies like httpx exceptions must be handled with specific type checking to ensure transient error detection works correctly.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 from __future__ import annotations
@@ -67,6 +67,9 @@ class CircuitBreaker:
             self._open_observed = False
 
     async def call(self, coro: Awaitable[T]) -> T:
+        """
+        Rules:   The circuit breaker must be in the 'closed' state to allow calls; otherwise, it raises a CircuitOpen exception. The state transition logic depends on reset_timeout and fail_max thresholds.
+        """
         if self.state == "open":
             raise CircuitOpen(
                 f"Circuit '{self.name}' is open — retry after {self.reset_timeout}s"
@@ -90,7 +93,10 @@ def _is_transient(exc: BaseException) -> bool:
 
 
 def resilient(breaker: CircuitBreaker) -> Callable:
-    """Decorator: retry 3× with exponential backoff, guarded by a circuit breaker."""
+    """Decorator: retry 3× with exponential backoff, guarded by a circuit breaker.
+
+    Rules:   The decorator applies a retry mechanism with exponential backoff and uses the provided circuit breaker to guard the function call. It assumes the circuit breaker is properly initialized with valid fail_max and reset_timeout values.
+    """
 
     def decorator(fn: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
         @retry(

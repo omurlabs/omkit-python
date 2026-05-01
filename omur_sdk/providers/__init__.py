@@ -3,7 +3,7 @@
 exports: none
 used_by: none
 rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 from .base import ProviderBase, ProviderDocument, ProviderMetric

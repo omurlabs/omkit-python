@@ -6,8 +6,8 @@ the migration is the canonical reminder.
 
 exports: log_security_event()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The security events module must maintain immutable evidence logging to ensure audit trail integrity and cannot allow external modification of logged security events after creation.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -45,6 +45,8 @@ async def log_security_event(
 
     Logs to stderr via stdlib logging at WARNING level when severity=='block'
     so ops can tail stdout/stderr without a separate query.
+
+    Rules:   The pool must already be configured with SET ROLE omur_app so RLS enforcement is active. The caller is responsible for setting the app.tenant_id GUC in the same transaction.
     """
     evidence_json = json.dumps(evidence or {})
 

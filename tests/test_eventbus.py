@@ -2,8 +2,8 @@
 
 exports: pool() | test_postgres_bus_publish_subscribe(pool) | test_backend_from_env(monkeypatch) | test_redis_bus_publish_subscribe()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module requires explicit environment variable configuration for database and Redis connections, and all tests must be isolated to prevent cross-test pollution of event bus state.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 import asyncio
@@ -58,6 +58,9 @@ async def pool():
 
 @pytest.mark.asyncio
 async def test_postgres_bus_publish_subscribe(pool):
+    """
+    Rules:   The test assumes a specific timing window (0.1s intervals) for message delivery, which may fail if the system is slow or under load.
+    """
     bus = PostgresEventBus(pool, consumer_name="test-py-consumer", poll_interval=0.1)
     received: list = []
 
@@ -93,6 +96,9 @@ def test_backend_from_env(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_redis_bus_publish_subscribe():
+    """
+    Rules:   The test requires TEST_REDIS_ADDR to be set and may fail if Redis is not reachable or misconfigured.
+    """
     addr = os.getenv("TEST_REDIS_ADDR")
     if not addr:
         pytest.skip("TEST_REDIS_ADDR not set")

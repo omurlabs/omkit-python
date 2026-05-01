@@ -3,8 +3,8 @@
 exports: class ProviderDocument | class ProviderMetric | class ProviderBase
 used_by: packages/omur-sdk/omur_sdk/providers/__init__.py → ProviderBase, ProviderDocument, ProviderMetric
          packages/omur-sdk/omur_sdk/providers/registry.py → ProviderBase
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   All provider classes must inherit from ProviderBase and implement the run() method, with ProviderMetric values must be coercible to float.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -40,6 +40,9 @@ class ProviderMetric(BaseModel):
     @field_validator("value", mode="before")
     @classmethod
     def coerce_value(cls, v: Any) -> float:
+        """
+        Rules:   Input value must be convertible to float, otherwise float() will raise ValueError. Future developers should ensure proper error handling for non-numeric inputs.
+        """
         return float(v)
 
 

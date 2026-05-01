@@ -2,8 +2,8 @@
 
 exports: DEFAULT_PROVIDERS_POLL_INTERVAL | class ProviderRegistry
 used_by: packages/omur-sdk/omur_sdk/providers/__init__.py → ProviderRegistry
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module must maintain thread safety across all asyncio task management and ensure consistent state synchronization between PostgreSQL and Valkey for tenant-provider configurations.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -71,6 +71,9 @@ class ProviderRegistry:
     # ── Public API ────────────────────────────────────────────────
 
     async def start(self) -> None:
+        """
+        Rules:   Registry must handle database unavailability gracefully by falling back to empty provider list and logging warning. The backend type (redis vs poll) determines which subscription mechanism is used, with redis using _subscribe_valkey() and poll using _poll_loop().
+        """
         try:
             rows = await self._fetch_providers()
         except Exception as exc:
@@ -88,6 +91,9 @@ class ProviderRegistry:
         )
 
     async def stop(self) -> None:
+        """
+        Rules:   Stop method must properly cancel all active tasks and ensure clean shutdown of both redis subscription and polling tasks, with proper exception handling during task cancellation.
+        """
         self._stop.set()
         if self._valkey_task:
             self._valkey_task.cancel()

@@ -7,7 +7,7 @@ full Worker contract is covered upstream in streaq's own tests.
 exports: TENANT | test_defaults_match_spec() | test_tenant_middleware_unwraps_and_binds() | test_tenant_middleware_unbinds_after_handler() | test_tenant_middleware_rejects_no_args() | test_tenant_middleware_rejects_malformed_envelope() | test_tenant_middleware_rejects_non_uuid_tenant() | test_tenant_middleware_passes_extra_args() | test_enqueue_wraps_payload_in_envelope() | test_enqueue_rejects_invalid_tenant() | test_prom_collector_emits_six_gauges() | test_prom_collector_handles_missing_counters() | test_prom_collector_describe_is_empty() | test_envelope_roundtrip_through_middleware()
 used_by: none
 rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -51,6 +51,9 @@ def test_defaults_match_spec() -> None:
 
 
 def test_tenant_middleware_unwraps_and_binds() -> None:
+    """
+    Rules:   The tenant middleware expects a valid JSON envelope with a 'tenant_id' field and a 'payload' field; malformed or missing fields will raise an InvalidEnvelopeError.
+    """
     received: dict[str, object] = {}
 
     async def handler(payload: dict) -> str:
@@ -69,6 +72,9 @@ def test_tenant_middleware_unwraps_and_binds() -> None:
 
 
 def test_tenant_middleware_unbinds_after_handler() -> None:
+    """
+    Rules:   The tenant ContextVar is reset to None after the handler completes, ensuring no leakage of tenant context across async calls.
+    """
     async def handler(payload: dict) -> None:
         return None
 
@@ -82,6 +88,9 @@ def test_tenant_middleware_unbinds_after_handler() -> None:
 
 
 def test_tenant_middleware_rejects_no_args() -> None:
+    """
+    Rules:   The middleware requires at least one argument (the envelope), and will raise an InvalidEnvelopeError if called without arguments.
+    """
     async def handler(payload: dict) -> None:
         pytest.fail("handler should not be called")
 
@@ -91,6 +100,9 @@ def test_tenant_middleware_rejects_no_args() -> None:
 
 
 def test_tenant_middleware_rejects_malformed_envelope() -> None:
+    """
+    Rules:   The envelope must pass validation by Envelope.validate(), including presence of a 'version' key; missing or invalid keys will raise an InvalidEnvelopeError.
+    """
     async def handler(payload: dict) -> None:
         pytest.fail("handler should not be called")
 
@@ -101,6 +113,9 @@ def test_tenant_middleware_rejects_malformed_envelope() -> None:
 
 
 def test_tenant_middleware_rejects_non_uuid_tenant() -> None:
+    """
+    Rules:   The 'tenant_id' field must be a valid UUID string; non-UUID values will cause an InvalidEnvelopeError.
+    """
     async def handler(payload: dict) -> None:
         pytest.fail("handler should not be called")
 
@@ -110,6 +125,9 @@ def test_tenant_middleware_rejects_non_uuid_tenant() -> None:
 
 
 def test_tenant_middleware_passes_extra_args() -> None:
+    """
+    Rules:   Extra positional and keyword arguments passed to the wrapped handler are forwarded correctly to the underlying handler function.
+    """
     received: list[object] = []
 
     async def handler(payload: dict, *args: object, **kwargs: object) -> None:
@@ -133,6 +151,9 @@ def test_tenant_middleware_passes_extra_args() -> None:
 
 
 def test_enqueue_wraps_payload_in_envelope() -> None:
+    """
+    Rules:   The enqueue function wraps the payload in an envelope with a fixed version (1) and tenant ID; the task must be enqueued with this structured envelope.
+    """
     captured: list[object] = []
 
     class FakeTask:
@@ -155,6 +176,9 @@ def test_enqueue_wraps_payload_in_envelope() -> None:
 
 
 def test_enqueue_rejects_invalid_tenant() -> None:
+    """
+    Rules:   The tenant ID passed to enqueue must be a valid UUID string; invalid tenant IDs will raise an InvalidEnvelopeError.
+    """
     class FakeTask:
         async def enqueue(self, *args: object, **kwargs: object) -> str:
             pytest.fail("should not enqueue with bad tenant")
@@ -181,6 +205,9 @@ class _FakeWorker:
 
 
 def test_prom_collector_emits_six_gauges() -> None:
+    """
+    Rules:   The StreaqPromCollector always emits exactly six gauges for worker metrics, regardless of whether the counters are initialized.
+    """
     worker = _FakeWorker(
         queue_name="marrow",
         completed=42,
@@ -210,7 +237,10 @@ def test_prom_collector_emits_six_gauges() -> None:
 
 
 def test_prom_collector_handles_missing_counters() -> None:
-    """A freshly constructed Worker may not have populated counters yet."""
+    """A freshly constructed Worker may not have populated counters yet.
+
+    Rules:   If a worker has not yet populated its counters, the collector will still emit all six gauges with a value of 0.0.
+    """
     worker = _FakeWorker(queue_name="empty")
     collector = StreaqPromCollector(worker)
     metrics = list(collector.collect())
@@ -222,6 +252,8 @@ def test_prom_collector_handles_missing_counters() -> None:
 
 def test_prom_collector_describe_is_empty() -> None:
     """describe() returning [] is allowed by prometheus_client; collect()
+
+    Rules:   The describe() method of StreaqPromCollector is expected to return an empty list, as it uses dynamic metric generation.
     runs on every scrape regardless. Verifies no static-name surface."""
     collector = StreaqPromCollector(_FakeWorker())
     assert list(collector.describe()) == []
@@ -235,6 +267,8 @@ def test_prom_collector_describe_is_empty() -> None:
 def test_envelope_roundtrip_through_middleware() -> None:
     """The bytes produced by `wrap()` (cross-SDK contract) decode cleanly
     into a dict that `tenant_middleware` accepts. Catches future drift
+
+    Rules:   The test assumes that `wrap()` produces bytes that can be decoded into a dictionary compatible with `tenant_middleware`. Future changes to the Envelope serialization format or middleware expectations could break this contract.
     between Envelope.model_dump_json() and Envelope.model_validate()."""
     tid = str(uuid.uuid4())
     raw = wrap(tid, {"doc_id": "abc"})

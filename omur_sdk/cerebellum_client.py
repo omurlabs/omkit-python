@@ -4,8 +4,8 @@ Features: circuit breaker, batch splitting, header forwarding, graceful fallback
 
 exports: _MAX_BATCH_SIZE | class CerebellumClient
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The `CerebellumClient` must maintain thread safety across all asynchronous operations and ensure the circuit breaker logic is consistently applied to all external HTTP calls to prevent cascading failures.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -47,7 +47,10 @@ class CerebellumClient:
 
     @property
     def available(self) -> bool:
-        """Returns False when disabled or circuit is open."""
+        """Returns False when disabled or circuit is open.
+
+        Rules:   The circuit breaker logic allows a probe request after cooldown seconds have passed, but only if failure threshold has been reached. Future developers must understand this half-open state behavior.
+        """
         if not self.enabled:
             return False
         if self._consecutive_failures < self.failure_threshold:
@@ -135,7 +138,10 @@ class CerebellumClient:
         request_id: str | None = None,
         tenant_id: str | None = None,
     ) -> list[list[float]] | None:
-        """Get embeddings. Returns None on failure."""
+        """Get embeddings. Returns None on failure.
+
+        Rules:   Function returns None on failure and relies on batch splitting; developers should know that individual batch failures lead to complete failure return.
+        """
         if not self.available:
             return None
 
@@ -153,7 +159,10 @@ class CerebellumClient:
         request_id: str | None = None,
         tenant_id: str | None = None,
     ) -> list[dict] | None:
-        """Run NER. Returns None on failure."""
+        """Run NER. Returns None on failure.
+
+        Rules:   Function returns None on failure and uses batch processing; developers must understand that any single batch failure results in a complete None return.
+        """
         if not self.available:
             return None
 
@@ -175,7 +184,10 @@ class CerebellumClient:
         skip_strategy: str | None = None,
         batch_size: int = 1,
     ) -> list[dict] | None:
-        """Translate texts to English. Returns None on failure."""
+        """Translate texts to English. Returns None on failure.
+
+        Rules:   Function returns None on failure and supports batch splitting; developers must understand that translation failures at any batch level result in a full None return.
+        """
         if not self.available:
             return None
 
@@ -202,7 +214,10 @@ class CerebellumClient:
         request_id: str | None = None,
         tenant_id: str | None = None,
     ) -> list[dict] | None:
-        """Detect language. Returns None on failure."""
+        """Detect language. Returns None on failure.
+
+        Rules:   Function returns None on failure and uses batch processing; developers must understand that any single batch failure results in a complete None return.
+        """
         if not self.available:
             return None
 
@@ -220,7 +235,10 @@ class CerebellumClient:
         request_id: str | None = None,
         tenant_id: str | None = None,
     ) -> list[dict] | None:
-        """Classify documents. Returns None on failure."""
+        """Classify documents. Returns None on failure.
+
+        Rules:   Function returns None on failure and uses batch processing; developers must understand that any single batch failure results in a complete None return.
+        """
         if not self.available:
             return None
 
@@ -252,6 +270,8 @@ class CerebellumClient:
         the cross-encoder scores each (query, passage) pair jointly and
         splitting the batch would change the score order (ties break
         within a batch but can shuffle across batches).
+
+        Rules:   Function returns None on failure and must maintain backward compatibility with frontal's fallback logic that relies on None to mean 'use pre-rerank order'; raising exceptions would break this contract.
         """
         if not self.available:
             return None

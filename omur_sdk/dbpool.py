@@ -8,8 +8,8 @@ after removing PgBouncer (which previously took care of the role reset via
 
 exports: sqlalchemy_asyncpg_connect_args(role) | new_session_pool(dsn) | create_pool(dsn)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module must maintain backward compatibility with existing SQLAlchemy and asyncpg integration patterns, and all database connection handling must adhere to async/await semantics throughout.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -41,6 +41,8 @@ def sqlalchemy_asyncpg_connect_args(role: str | None = "omur_app") -> dict[str, 
     the connection handshake, before the connection is handed to the
     pool, so the role is always in place by the time SQLAlchemy sees
     the connection.
+
+    Rules:   The function assumes that the `role` parameter is either a valid PostgreSQL role name or None. If a role is provided, it must exist in the database, and the calling user must have permission to switch to that role.
     """
     args: dict[str, Any] = {
         "statement_cache_size": 0,
@@ -67,6 +69,8 @@ async def new_session_pool(dsn: str, **kwargs) -> asyncpg.Pool:
     Use this helper in service lifespans that need a SessionStore. For
     pools that back RLS-enforced app queries, use :func:`create_pool`
     with ``role='omur_app'`` instead.
+
+    Rules:   The function intentionally avoids setting a role on connections to allow cross-tenant session lookups. Future developers must understand that this design relies on the `omur` superuser having `BYPASSRLS` privileges to ensure proper behavior.
     """
     return await create_pool(dsn, **kwargs)
 
@@ -93,6 +97,8 @@ async def create_pool(
     transaction mode can be reintroduced as a pure config change
     (prepared statements don't survive across pgbouncer's per-transaction
     server rotation). Callers can override by passing ``statement_cache_size``
+
+    Rules:   If `role` is provided, it must be a valid PostgreSQL role name, and the calling user must have the necessary permissions to execute `SET ROLE <role>`. Additionally, `statement_cache_size` is defaulted to 0 for pgbouncer compatibility, but callers can override this if needed.
     explicitly."""
 
     async def _init(conn: asyncpg.Connection) -> None:

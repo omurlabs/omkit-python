@@ -2,8 +2,8 @@
 
 exports: EXPECTED_EXPORTS | test_data_facade_identity_matches_underlying() | test_data_facade_types() | test_data_facade_all_matches_imports_exactly() | test_data_facade_does_not_leak_internals()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The data facade must maintain exact import equivalence with direct module imports, cannot expose internal implementation details through sys.modules, and must preserve identity consistency between facade and underlying components.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -60,6 +60,9 @@ def test_data_facade_all_matches_imports_exactly():
 
 
 def test_data_facade_does_not_leak_internals():
+    """
+    Rules:   Future developers must ensure that internal modules are properly purged from sys.modules to prevent leakage, as this test verifies the facade doesn't expose private implementation details.
+    """
     to_purge = [m for m in sys.modules if m.startswith("omur_sdk.internal")]
     for m in to_purge:
         del sys.modules[m]

@@ -5,8 +5,8 @@ Background tasks use bind() to establish context.
 
 exports: require() | current_or_none() | request_id() | _DEFAULT_EXCLUDE | class TenantMiddleware | middleware(exclude_paths) | set_rls(session) | set_rls_conn(conn) | bind(tenant_id, request_id) | async_bind(tenant_id, request_id) | hashed_for_log(tenant_id, key)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The tenant middleware must be applied before any database operations to ensure RLS policies are properly set, and all tenant context must be bound to the current request scope to maintain isolation between concurrent requests.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -33,7 +33,10 @@ _request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
 
 
 def require() -> str:
-    """Return current tenant ID or raise RuntimeError."""
+    """Return current tenant ID or raise RuntimeError.
+
+    Rules:   Tenant context must be set before calling this function, otherwise a RuntimeError is raised. Used in FastAPI middleware or background tasks via bind().
+    """
     tid = _tenant_id_var.get()
     if tid is None:
         raise RuntimeError(
@@ -44,12 +47,18 @@ def require() -> str:
 
 
 def current_or_none() -> str | None:
-    """Return current tenant ID or None. For shared services where tenant is optional."""
+    """Return current tenant ID or None. For shared services where tenant is optional.
+
+    Rules:   Returns None if no tenant context is set; intended for optional tenant scenarios like shared services.
+    """
     return _tenant_id_var.get()
 
 
 def request_id() -> str | None:
-    """Return current request ID or None."""
+    """Return current request ID or None.
+
+    Rules:   Returns None if no request ID is set; used for tracking requests across services.
+    """
     return _request_id_var.get()
 
 
@@ -135,6 +144,8 @@ def middleware(exclude_paths: set[str] | None = None) -> Callable:
 
     This factory form works for raw ASGI wrapping (tests).
     For FastAPI, use: app.add_middleware(TenantMiddleware)
+
+    Rules:   This function returns a factory for ASGI middleware; prefer using TenantMiddleware class directly with app.add_middleware() for FastAPI apps.
     """
     excluded = exclude_paths
 
@@ -150,6 +161,8 @@ async def set_rls(session) -> None:
 
     Uses transaction-local set_config so the setting resets when the transaction ends.
     Requires sqlalchemy (optional dependency).
+
+    Rules:   Must be called inside an active SQLAlchemy transaction; otherwise raises RuntimeError. Sets PostgreSQL RLS context using set_config within the transaction.
     """
     from sqlalchemy import text
 
@@ -172,6 +185,8 @@ async def set_rls_conn(conn: "asyncpg.Connection") -> None:
     Must be called inside an active transaction — set_config(..., true) is
     transaction-local; outside a transaction the setting silently leaks across
     pooled checkouts (cross-tenant data leak risk).
+
+    Rules:   Must be called inside an active asyncpg transaction; otherwise raises RuntimeError. Sets PostgreSQL RLS context using set_config within the transaction to prevent cross-tenant data leaks.
     """
     if not conn.is_in_transaction():
         raise RuntimeError(
@@ -187,6 +202,8 @@ def bind(tenant_id: str, request_id: str | None = None):
     """Set tenant context for background tasks, scripts, and tests.
 
     Resets on exit, even if an exception is raised.
+
+    Rules:   Sets tenant and request ID in ContextVars for background tasks, scripts, or tests; resets values on exit even if an exception occurs.
     """
     tid_token = _tenant_id_var.set(tenant_id)
     rid_token = _request_id_var.set(request_id)
@@ -206,6 +223,8 @@ async def async_bind(
     ContextVar set/reset itself is sync; this is a convenience wrapper so
     job-queue middleware and other async code can write `async with
     tenant.async_bind(tid):` without a `with` inside `async def`.
+
+    Rules:   Async version of bind(); used in async contexts with `async with tenant.async_bind(tid):` to manage tenant context.
     """
     tid_token = _tenant_id_var.set(tenant_id)
     rid_token = _request_id_var.set(request_id)
@@ -228,6 +247,8 @@ def hashed_for_log(tenant_id: str, key: bytes | None = None) -> str:
     `openssl rand -hex 32`). hashed_for_log decodes it to raw bytes before
     HMAC, so the full 256 bits of entropy are used. A bare ASCII passphrase
     will silently work but only at ~5 bits/char effective key strength.
+
+    Rules:   Requires OMUR_LOG_HMAC_KEY environment variable to be set as a hex-encoded 32-byte key; returns first 16 hex chars of HMAC-SHA-256 for log correlation.
     """
     if key is None:
         env = os.environ.get("OMUR_LOG_HMAC_KEY")

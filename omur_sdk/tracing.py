@@ -10,8 +10,8 @@ to a reachable collector (e.g. ``http://alloy:4318``) to re-enable.
 
 exports: DEFAULT_ENDPOINT | init_tracing(service_name, endpoint) | instrument_fastapi(app)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The tracing module must maintain backward compatibility with all existing FastAPI instrumentation patterns and cannot introduce breaking changes to the existing service_name and endpoint parameter signatures. The module requires explicit error handling for endpoint connection failures and must not modify global tracing state outside of the init_tracing and instrument_fastapi functions. All tracing operations must be thread-safe and support concurrent FastAPI application instances.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -32,6 +32,8 @@ def init_tracing(
     """Initialize OpenTelemetry with OTLP/HTTP export.
 
     Returns the TracerProvider, or None if tracing is disabled.
+
+    Rules:   Must ensure OTEL_EXPORTER_OTLP_ENDPOINT environment variable is set when endpoint is None and DEFAULT_ENDPOINT is not provided, otherwise tracing will be silently disabled.
     """
     if endpoint is None:
         endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", DEFAULT_ENDPOINT)
@@ -65,6 +67,8 @@ def instrument_fastapi(app) -> None:
 
     Idempotent: calling twice on the same app is a no-op. Silently no-ops if
     opentelemetry-instrumentation-fastapi is not installed (in-tree optional).
+
+    Rules:   Function is idempotent but requires opentelemetry-instrumentation-fastapi package to be installed, otherwise it will silently no-op without raising an error.
     """
     try:
         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor

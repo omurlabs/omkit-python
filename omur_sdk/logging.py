@@ -9,8 +9,8 @@ Usage:
 
 exports: configure_logging(service_name)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The logging module must maintain backward compatibility with existing log format configurations and service name resolution patterns across all SDK versions. The module cannot introduce breaking changes to its public API or alter the default logging behavior without explicit versioned migration paths. All logging configurations must remain thread-safe and support concurrent service initialization without race conditions.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 from __future__ import annotations
@@ -27,6 +27,8 @@ def configure_logging(service_name: str) -> None:
     ``LOG_FORMAT`` values:
         * ``json`` (default) — JSONRenderer for production / log aggregation.
         * ``console`` — ConsoleRenderer for local development.
+
+    Rules:   LOG_FORMAT environment variable must be either 'json' or 'console' (case insensitive), with 'json' as default. Future developers must ensure these specific values are handled or risk runtime errors.
     """
     fmt = os.environ.get("LOG_FORMAT", "json").lower()
     if fmt == "console":

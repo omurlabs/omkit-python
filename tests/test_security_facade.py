@@ -2,8 +2,8 @@
 
 exports: EXPECTED_EXPORTS | test_security_facade_identity_matches_sanitize() | test_security_facade_sanitize_callables() | test_security_facade_all_matches_imports_exactly() | test_security_facade_does_not_leak_internals()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The security facade must maintain exact import parity with all public functions from `omur_sdk.security` and must not expose any internal module references or leak implementation details through its public interface.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 

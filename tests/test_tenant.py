@@ -2,8 +2,10 @@
 
 exports: test_require_raises_when_unset() | test_current_or_none_returns_none_when_unset() | test_request_id_returns_none_when_unset() | test_bind_sets_and_resets_tenant() | test_bind_sets_and_resets_request_id() | test_bind_resets_on_exception() | test_middleware_sets_tenant_from_header() | test_middleware_returns_401_when_missing() | test_middleware_returns_401_for_invalid_uuid() | test_middleware_skips_excluded_paths() | test_middleware_resets_contextvar_after_request() | test_middleware_generates_request_id_when_absent() | test_middleware_adds_request_id_to_response_headers() | test_set_rls_executes_set_config() | test_set_rls_raises_outside_transaction() | test_set_rls_raises_without_tenant() | test_async_bind_sets_and_resets() | test_async_bind_resets_on_exception() | test_async_bind_nested() | test_set_rls_conn_runs_set_config() | (+7 more)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module relies heavily on `contextvars` for tenant and request ID management, meaning all async and sync operations must properly propagate context to maintain correctness.  
+Any changes to the tenant binding or middleware logic must ensure thread-safety and proper cleanup to prevent context leakage or interference between tests.  
+The module assumes a PostgreSQL backend with RLS (Row Level Security) support, and all database-related tests depend on transactional integrity and proper session handling.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -14,7 +16,10 @@ from omur_sdk import tenant
 
 
 def test_require_raises_when_unset():
-    """require() must raise RuntimeError outside tenant context."""
+    """require() must raise RuntimeError outside tenant context.
+
+    Rules:   require() raises RuntimeError when no tenant is set, ensuring strict context enforcement.
+    """
     with pytest.raises(RuntimeError, match="No tenant"):
         tenant.require()
 
@@ -28,6 +33,9 @@ def test_request_id_returns_none_when_unset():
 
 
 def test_bind_sets_and_resets_tenant():
+    """
+    Rules:   The bind context manager ensures tenant is properly set and reset, even on exceptions.
+    """
     tid = str(uuid4())
     assert tenant.current_or_none() is None
     with tenant.bind(tid):
@@ -44,6 +52,9 @@ def test_bind_sets_and_resets_request_id():
 
 
 def test_bind_resets_on_exception():
+    """
+    Rules:   The bind context manager guarantees reset of tenant context even if an exception occurs inside the block.
+    """
     tid = str(uuid4())
     with pytest.raises(ValueError):
         with tenant.bind(tid):
@@ -59,6 +70,9 @@ from uuid import uuid4 as _uuid4_alias
 
 @pytest.mark.asyncio
 async def test_middleware_sets_tenant_from_header():
+    """
+    Rules:   The middleware extracts tenant ID from HTTP header and sets it in the context.
+    """
     tid = str(_uuid4_alias())
 
     async def app(scope, receive, send):
@@ -75,6 +89,9 @@ async def test_middleware_sets_tenant_from_header():
 
 @pytest.mark.asyncio
 async def test_middleware_returns_401_when_missing():
+    """
+    Rules:   The middleware returns a 401 status if the required tenant header is missing.
+    """
     responses = []
 
     async def capture_send(msg):
@@ -94,6 +111,9 @@ async def test_middleware_returns_401_when_missing():
 
 @pytest.mark.asyncio
 async def test_middleware_returns_401_for_invalid_uuid():
+    """
+    Rules:   The middleware returns a 401 status if the tenant ID in the header is not a valid UUID.
+    """
     responses = []
 
     async def capture_send(msg):
@@ -115,6 +135,9 @@ async def test_middleware_returns_401_for_invalid_uuid():
 
 @pytest.mark.asyncio
 async def test_middleware_skips_excluded_paths():
+    """
+    Rules:   The middleware skips tenant context setting for specified excluded paths.
+    """
     called = False
 
     async def app(scope, receive, send):
@@ -132,6 +155,9 @@ async def test_middleware_skips_excluded_paths():
 
 @pytest.mark.asyncio
 async def test_middleware_resets_contextvar_after_request():
+    """
+    Rules:   The middleware ensures that the context variable is reset after each request completes.
+    """
     tid = str(_uuid4_alias())
 
     async def app(scope, receive, send):
@@ -151,6 +177,9 @@ async def test_middleware_resets_contextvar_after_request():
 
 @pytest.mark.asyncio
 async def test_middleware_generates_request_id_when_absent():
+    """
+    Rules:   The middleware automatically generates a request ID if one is not provided in the header.
+    """
     tid = str(_uuid4_alias())
     captured_rid = None
 
@@ -200,6 +229,9 @@ from unittest.mock import MagicMock
 
 @pytest.mark.asyncio
 async def test_set_rls_executes_set_config():
+    """
+    Rules:   Tenant must be bound before calling set_rls, and the session must be in an active transaction.
+    """
     tid = str(uuid4())
     session = AsyncMock()
     session.in_transaction = MagicMock(return_value=True)
@@ -217,6 +249,9 @@ async def test_set_rls_executes_set_config():
 
 @pytest.mark.asyncio
 async def test_set_rls_raises_outside_transaction():
+    """
+    Rules:   Tenant must be bound and session must be in an active transaction to call set_rls.
+    """
     tid = str(uuid4())
     session = AsyncMock()
     session.in_transaction = MagicMock(return_value=False)
@@ -228,6 +263,9 @@ async def test_set_rls_raises_outside_transaction():
 
 @pytest.mark.asyncio
 async def test_set_rls_raises_without_tenant():
+    """
+    Rules:   A tenant must be bound before calling set_rls.
+    """
     session = AsyncMock()
     session.in_transaction = MagicMock(return_value=True)
 
@@ -275,6 +313,9 @@ async def test_async_bind_nested():
 
 @pytest.mark.asyncio
 async def test_set_rls_conn_runs_set_config():
+    """
+    Rules:   Tenant must be bound and connection must be in an active transaction to call set_rls_conn.
+    """
     tid = str(uuid4())
     conn = MagicMock()
     conn.is_in_transaction = MagicMock(return_value=True)
@@ -290,6 +331,9 @@ async def test_set_rls_conn_runs_set_config():
 
 @pytest.mark.asyncio
 async def test_set_rls_conn_requires_transaction():
+    """
+    Rules:   Tenant must be bound and connection must be in an active transaction to call set_rls_conn.
+    """
     tid = str(uuid4())
     conn = MagicMock()
     conn.is_in_transaction = MagicMock(return_value=False)
@@ -303,6 +347,9 @@ async def test_set_rls_conn_requires_transaction():
 
 @pytest.mark.asyncio
 async def test_set_rls_conn_requires_tenant():
+    """
+    Rules:   A tenant must be bound before calling set_rls_conn.
+    """
     conn = MagicMock()
     conn.is_in_transaction = MagicMock(return_value=True)
     conn.execute = AsyncMock()
@@ -332,6 +379,9 @@ def test_hashed_for_log_reads_env_hex(monkeypatch):
 
 
 def test_hashed_for_log_rejects_non_hex_env(monkeypatch):
+    """
+    Rules:   Environment variable OMUR_LOG_HMAC_KEY must contain only valid hexadecimal characters. Invalid characters will raise a RuntimeError with 'hex string' in the message.
+    """
     tid = str(uuid4())
     monkeypatch.setenv("OMUR_LOG_HMAC_KEY", "not-hex-zzz!")
     with pytest.raises(RuntimeError, match="hex string"):
@@ -339,6 +389,9 @@ def test_hashed_for_log_rejects_non_hex_env(monkeypatch):
 
 
 def test_hashed_for_log_rejects_short_env(monkeypatch):
+    """
+    Rules:   Environment variable OMUR_LOG_HMAC_KEY must be at least 16 hexadecimal characters long (8 bytes). Shorter values will raise a RuntimeError with 'too short' in the message.
+    """
     tid = str(uuid4())
     # Only 8 hex chars = 4 bytes
     monkeypatch.setenv("OMUR_LOG_HMAC_KEY", "deadbeef")
@@ -347,6 +400,9 @@ def test_hashed_for_log_rejects_short_env(monkeypatch):
 
 
 def test_hashed_for_log_requires_key(monkeypatch):
+    """
+    Rules:   Environment variable OMUR_LOG_HMAC_KEY must be set. Missing environment variable will raise a RuntimeError with 'OMUR_LOG_HMAC_KEY' in the message.
+    """
     tid = str(uuid4())
     monkeypatch.delenv("OMUR_LOG_HMAC_KEY", raising=False)
     with pytest.raises(RuntimeError, match="OMUR_LOG_HMAC_KEY"):

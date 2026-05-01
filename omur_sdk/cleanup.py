@@ -7,8 +7,8 @@ contention turns the tick into a silent no-op.
 
 exports: class Loop
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The Loop class must maintain a single persistent connection pool instance throughout its lifetime and cannot be instantiated without a valid pool argument. The run() method implements a blocking infinite loop that should only be called once per Loop instance and cannot be interrupted without external process termination. All database operations within the loop must use async context management to ensure proper connection handling and automatic release back to the pool.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -38,6 +38,9 @@ class Loop:
         self._name = name
 
     async def run(self) -> None:
+        """
+        Rules:   The function runs an infinite loop that must be properly cancelled or stopped to prevent resource leaks. The _tick() method and _interval attribute must be properly initialized before calling this function.
+        """
         while True:
             try:
                 await self._tick()

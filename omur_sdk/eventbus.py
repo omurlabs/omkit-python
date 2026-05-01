@@ -11,8 +11,8 @@ Implementations:
 
 exports: class Event | class EventBus | class PostgresEventBus | class RedisEventBus | backend_from_env() | new_bus()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The EventBus module must support both PostgreSQL and Redis backends, with PostgreSQL as the default, and all implementations must adhere to the provided `EventBus` protocol interface.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -39,12 +39,28 @@ Handler = Callable[[Event], Awaitable[None]]
 
 
 class EventBus(Protocol):
-    async def publish(self, topic: str, payload: Any) -> None: ...
+    async def publish(self, topic: str, payload: Any) -> None:
+        """
+        Rules:   The publish method must asynchronously send the given payload to the specified topic and return immediately without blocking. Implementations must handle any necessary serialization of the payload and ensure the topic parameter is a valid string identifier.
+        """
+        ...
     async def publish_tenant(
         self, tenant_id: str, topic: str, payload: Any
-    ) -> None: ...
-    async def subscribe(self, topic: str, handler: Handler) -> None: ...
-    async def close(self) -> None: ...
+    ) -> None:
+        """
+        Rules:   The tenant_id must correspond to an existing tenant, topic must be a valid publishable topic string, and payload must be serializable. The function asynchronously publishes the payload to the specified topic for the given tenant without returning a value.
+        """
+        ...
+    async def subscribe(self, topic: str, handler: Handler) -> None:
+        """
+        Rules:   The subscribe method must register the handler to receive messages from the specified topic, with the handler being called asynchronously when messages arrive. The topic parameter must be a valid string identifying the message source, and the handler must be a callable that accepts the message content as its only argument.
+        """
+        ...
+    async def close(self) -> None:
+        """
+        Rules:   Async close method must be idempotent and handle concurrent calls gracefully, ensuring all resources are properly released and no further operations should be performed after calling close. Implementations must not raise exceptions during cleanup, and the method should complete within a reasonable timeout period.
+        """
+        ...
 
 
 def _parse_payload(value: Any) -> Any:
@@ -84,6 +100,9 @@ class PostgresEventBus:
         await conn.execute("SET LOCAL row_security = off")
 
     async def publish(self, topic: str, payload: Any) -> None:
+        """
+        Rules:   Function requires topic string and payload any object that serializes to JSON, uses connection pool for database operations, and executes within a transaction that sets bus role. Function must be called within an async context and handles JSON serialization internally.
+        """
         async with self._pool.acquire() as conn:
             async with conn.transaction():
                 await self._as_bus_role(conn)
@@ -96,6 +115,9 @@ class PostgresEventBus:
     async def publish_tenant(
         self, tenant_id: str, topic: str, payload: Any
     ) -> None:
+        """
+        Rules:   Function requires tenant_id to be a valid UUID string when provided, otherwise publishes to the topic directly without tenant isolation. Function must be called within an async context and requires a valid database connection pool with proper transaction handling. The payload must be JSON serializable, and the function assumes the database schema includes an events table with tenant_id, topic, and payload columns.
+        """
         if not tenant_id:
             await self.publish(topic, payload)
             return
@@ -111,6 +133,9 @@ class PostgresEventBus:
                 )
 
     async def subscribe(self, topic: str, handler: Handler) -> None:
+        """
+        Rules:   The subscribe method requires a valid topic string and handler function, performs database operations to register the consumer-topic relationship, and may raise exceptions during initial polling or subsequent periodic polling. The method runs asynchronously and will continue polling until the internal stop event is set, with exceptions during polling silently ignored.
+        """
         async with self._pool.acquire() as conn:
             async with conn.transaction():
                 await self._as_bus_role(conn)
@@ -176,6 +201,9 @@ class PostgresEventBus:
                     )
 
     async def close(self) -> None:
+        """
+        Rules:   The close method must be called to signal the async operation to stop, and it should only be called once per instance. The method is not thread-safe and should only be called from the same thread that started the async operation.
+        """
         self._stop.set()
 
 
@@ -200,17 +228,26 @@ class RedisEventBus:
         return self._prefix + topic
 
     async def publish(self, topic: str, payload: Any) -> None:
+        """
+        Rules:   The publish method requires a valid topic string and serializable payload, performs asynchronous Redis stream insertion with JSON-encoded data, and must be called on an initialized instance with active Redis connection. The method has no side effects beyond the Redis operation and assumes the underlying Redis stream and connection are properly configured.
+        """
         await self._r.xadd(self._stream(topic), {"payload": json.dumps(payload)})
 
     async def publish_tenant(
         self, tenant_id: str, topic: str, payload: Any
     ) -> None:
+        """
+        Rules:   Function requires tenant_id and topic to be non-empty strings, payload can be any JSON-serializable object, and must not be called with None values for tenant_id or topic. The function performs an asynchronous Redis stream write operation with no side effects beyond the Redis storage modification.
+        """
         await self._r.xadd(
             self._stream(topic),
             {"tenant_id": tenant_id, "payload": json.dumps(payload)},
         )
 
     async def subscribe(self, topic: str, handler: Handler) -> None:
+        """
+        Rules:   The subscribe method asynchronously subscribes to a Redis stream topic and processes messages using the provided handler, with the handler expected to be an async callable that accepts an Event object. The method creates a Redis stream group if it doesn't exist and acknowledges processed messages, while gracefully handling connection issues and message processing errors without stopping the subscription loop.
+        """
         stream = self._stream(topic)
         try:
             await self._r.xgroup_create(stream, self._group, id="0", mkstream=True)
@@ -250,11 +287,17 @@ class RedisEventBus:
                         continue
 
     async def close(self) -> None:
+        """
+        Rules:   The close method must be called to properly terminate the async iterator and clean up resources, and it should only be called once per instance. The method sets an internal stop flag and asynchronously closes the underlying resource, ensuring proper cleanup of the async context.
+        """
         self._stop.set()
         await self._r.aclose()
 
 
 def backend_from_env() -> str:
+    """
+    Rules:   Function reads OMUR_EVENTBUS_BACKEND environment variable and returns "postgres" or "redis" string, raising ValueError for invalid values. If environment variable is not set, it defaults to "postgres".
+    """
     v = os.getenv("OMUR_EVENTBUS_BACKEND", "postgres")
     if v not in {"postgres", "redis"}:
         raise ValueError(f"unknown OMUR_EVENTBUS_BACKEND: {v}")
@@ -268,6 +311,9 @@ async def new_bus(
     consumer_name: str,
     group: Optional[str] = None,
 ) -> EventBus:
+    """
+    Rules:   Function requires either pool parameter for postgres backend or redis_client parameter for redis backend, with redis_client being optional only when backend is redis and environment variables are set for connection. Function raises ValueError for postgres backend when pool is None, and RuntimeError for unreachable backend cases. Returns EventBus instance configured for the specified backend type.
+    """
     backend = backend_from_env()
     if backend == "postgres":
         if pool is None:

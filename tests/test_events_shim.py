@@ -2,8 +2,8 @@
 
 exports: test_events_reexports_eventbus() | test_events_emits_deprecation_warning_on_import()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module must maintain backward compatibility with existing eventbus reexports while ensuring all imports properly handle deprecation warnings. Any changes to the events shim must preserve the exact public API surface and import behavior. The test suite must continue to validate both the reexport functionality and deprecation warning emission on import.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -17,6 +17,9 @@ def test_events_reexports_eventbus():
 
 
 def test_events_emits_deprecation_warning_on_import():
+    """
+    Rules:   Future developers must know that importing omur_sdk.events triggers a DeprecationWarning, and that the warning is specifically tested for in this function to ensure backward compatibility is maintained during the deprecation period.
+    """
     import importlib
     import omur_sdk.events as _preload  # noqa: F401
 

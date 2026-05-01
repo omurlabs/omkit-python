@@ -8,8 +8,8 @@ Notifications are best-effort: failures are logged but never block the caller.
 
 exports: class SyncNotifier
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The SyncNotifier module must maintain a persistent HTTP client connection for all notification operations and cannot be instantiated without a valid base_url and token. All notification methods are non-blocking and use asyncio task creation, requiring the event loop to be properly initialized. The module is designed for single-threaded use and does not support concurrent access patterns.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -34,15 +34,24 @@ class SyncNotifier:
         return self._client
 
     async def notify(self, resource_type: str, resource_id: str, data: dict) -> None:
-        """Fire-and-forget sync notification. Never raises."""
+        """Fire-and-forget sync notification. Never raises.
+
+        Rules:   resource_type and resource_id should not be None or empty strings, as they are used to identify resources in the sync system
+        """
         asyncio.create_task(self._send(resource_type, resource_id, data))
 
     async def notify_delete(self, resource_type: str, resource_id: str) -> None:
-        """Fire-and-forget delete notification. Never raises."""
+        """Fire-and-forget delete notification. Never raises.
+
+        Rules:   resource_type and resource_id should not be None or empty strings, as they are used to identify resources in the sync system
+        """
         asyncio.create_task(self._send_delete(resource_type, resource_id))
 
     async def notify_metrics(self, metric_name: str, date: str, rows: list[dict]) -> None:
-        """Fire-and-forget metrics sync notification. Never raises."""
+        """Fire-and-forget metrics sync notification. Never raises.
+
+        Rules:   metric_name should not be None or empty string, date should be a valid date string, and rows should be a non-empty list of dictionaries
+        """
         asyncio.create_task(self._send_metrics(metric_name, date, rows))
 
     async def _send(self, resource_type: str, resource_id: str, data: dict) -> None:
@@ -95,5 +104,8 @@ class SyncNotifier:
             log.warning("sync_notifier.metrics_failed", metric=metric_name, error=str(e))
 
     async def close(self) -> None:
+        """
+        Rules:   close should only be called when the client has been initialized, otherwise it will raise an AttributeError
+        """
         if self._client and not self._client.is_closed:
             await self._client.aclose()

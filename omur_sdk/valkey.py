@@ -11,8 +11,8 @@ directly from `settings.valkey_url`.
 
 exports: new_client(settings)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module must maintain backward compatibility with existing Redis connection patterns while ensuring all async operations are properly awaited. The client initialization must respect the settings structure defined in the SDK's configuration schema. All Redis operations must be wrapped with appropriate timeout and retry logic to prevent service disruptions.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -38,6 +38,8 @@ def new_client(
 
     Extra kwargs pass through to redis.asyncio.from_url (decode_responses,
     socket_timeout, etc.).
+
+    Rules:   The function relies on settings.valkey_url being properly configured with a valid Redis connection string. It assumes that password handling and host/port logic are correctly implemented in the BaseServiceSettings, and that the VALKEY_PASSWORD environment variable is enforced at startup to prevent empty passwords.
     """
     import redis.asyncio as aioredis
 

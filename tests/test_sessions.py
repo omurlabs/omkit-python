@@ -2,8 +2,8 @@
 
 exports: pool() | test_postgres_store_put_get_delete(pool) | test_postgres_store_expired(pool) | test_postgres_store_list(pool) | test_backend_from_env(monkeypatch) | test_new_store_postgres_requires_pool(monkeypatch) | test_redis_store_put_get_delete()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module requires explicit environment configuration for database connections and does not support implicit fallbacks or default configurations for session backends.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 import os
@@ -24,6 +24,9 @@ from omur_sdk.sessions import (
 
 @pytest.fixture
 async def pool():
+    """
+    Rules:   The TEST_POSTGRES_DSN environment variable must be set for the test to run, otherwise it will be skipped. The database table 'sessions' is created with specific constraints (e.g., token as primary key, tenant_id and payload as NOT NULL).
+    """
     dsn = os.getenv("TEST_POSTGRES_DSN")
     if not dsn:
         pytest.skip("TEST_POSTGRES_DSN not set")
@@ -48,6 +51,9 @@ async def pool():
 
 @pytest.mark.asyncio
 async def test_postgres_store_put_get_delete(pool):
+    """
+    Rules:   The session token must be unique in the database; inserting a duplicate token will cause a database constraint violation.
+    """
     store = PostgresSessionStore(pool)
     s = Session(
         token="ptest-1",
@@ -66,6 +72,9 @@ async def test_postgres_store_put_get_delete(pool):
 
 @pytest.mark.asyncio
 async def test_postgres_store_expired(pool):
+    """
+    Rules:   Expired sessions (where expires_at is in the past) are automatically rejected by the store and raise a NotFound exception when attempting to retrieve them.
+    """
     store = PostgresSessionStore(pool)
     s = Session(
         token="ptest-expired",
@@ -80,6 +89,9 @@ async def test_postgres_store_expired(pool):
 
 @pytest.mark.asyncio
 async def test_postgres_store_list(pool):
+    """
+    Rules:   The list function filters sessions by tenant_id, so only sessions belonging to the specified tenant will be returned.
+    """
     store = PostgresSessionStore(pool)
     tenant = "00000000-0000-0000-0000-000000000002"
     for tok in ("ptest-list-a", "ptest-list-b"):
@@ -97,6 +109,9 @@ async def test_postgres_store_list(pool):
 
 
 def test_backend_from_env(monkeypatch):
+    """
+    Rules:   The OMUR_SESSION_BACKEND environment variable must be one of 'postgres', 'redis', or unset (defaults to 'postgres'). Any other value will raise a ValueError.
+    """
     monkeypatch.delenv("OMUR_SESSION_BACKEND", raising=False)
     assert backend_from_env() == "postgres"
     monkeypatch.setenv("OMUR_SESSION_BACKEND", "redis")
@@ -108,6 +123,9 @@ def test_backend_from_env(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_new_store_postgres_requires_pool(monkeypatch):
+    """
+    Rules:   When OMUR_SESSION_BACKEND is set to 'postgres', the new_store function requires a valid pool argument; passing None will raise a ValueError.
+    """
     monkeypatch.setenv("OMUR_SESSION_BACKEND", "postgres")
     with pytest.raises(ValueError):
         await new_store(pool=None)
@@ -115,6 +133,9 @@ async def test_new_store_postgres_requires_pool(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_redis_store_put_get_delete():
+    """
+    Rules:   The TEST_REDIS_ADDR environment variable must be set for the test to run, otherwise it will be skipped. The Redis client must be properly configured with host, port, and optional password.
+    """
     addr = os.getenv("TEST_REDIS_ADDR")
     if not addr:
         pytest.skip("TEST_REDIS_ADDR not set")

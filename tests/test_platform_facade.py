@@ -2,8 +2,8 @@
 
 exports: EXPECTED_EXPORTS | test_platform_facade_identity_matches_underlying() | test_platform_facade_types() | test_platform_facade_all_matches_imports_exactly() | test_platform_facade_does_not_leak_internals()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The platform facade must maintain exact identity and type compatibility with the underlying platform implementation to ensure transparent substitution. All public interfaces must be fully exported through the facade without internal module leakage. The facade cannot alter or obscure the fundamental behavior of the underlying platform components.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -58,6 +58,9 @@ def test_platform_facade_types():
 
 
 def test_platform_facade_all_matches_imports_exactly():
+    """
+    Rules:   The test assumes a constant EXPECTED_EXPORTS is defined globally, which future developers must know to maintain consistency.
+    """
     import omur_sdk.platform as facade
 
     declared = set(getattr(facade, "__all__", ()))
@@ -67,6 +70,9 @@ def test_platform_facade_all_matches_imports_exactly():
 
 
 def test_platform_facade_does_not_leak_internals():
+    """
+    Rules:   The test manipulates sys.modules directly, a non-obvious operation that requires understanding of Python's module system and potential side effects.
+    """
     to_purge = [m for m in sys.modules if m.startswith("omur_sdk.internal")]
     for m in to_purge:
         del sys.modules[m]

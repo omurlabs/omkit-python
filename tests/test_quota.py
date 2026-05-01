@@ -2,8 +2,8 @@
 
 exports: test_check_upload_rejects_over_docs() | test_check_upload_rejects_over_bytes() | test_check_upload_allows_when_under() | test_check_query_rejects_at_limit() | test_check_query_allows_when_under() | test_cap_at_32_days() | test_defaults_match_stage1_spec()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module must maintain strict compliance with defined limits for docs, storage_bytes, and queries_per_month as specified in the Limits class, and all test cases must validate behavior against these exact constraints without deviation.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 from __future__ import annotations
@@ -22,6 +22,9 @@ from omur_sdk.quota import (
 
 
 def test_check_upload_rejects_over_docs():
+    """
+    Rules:   Upload is rejected if the incoming document count would exceed the limit, even if storage and query limits are not exceeded.
+    """
     lim = Limits(docs=10, storage_bytes=1 << 30, queries_per_month=1000)
     usage = Usage(docs=10, storage_bytes=0, queries_this_month=0)
     d = check_upload(lim, usage, incoming_bytes=1)
@@ -30,6 +33,9 @@ def test_check_upload_rejects_over_docs():
 
 
 def test_check_upload_rejects_over_bytes():
+    """
+    Rules:   Upload is rejected if the total storage bytes would exceed the limit after adding the incoming bytes.
+    """
     lim = Limits(docs=100, storage_bytes=1000, queries_per_month=1000)
     usage = Usage(docs=0, storage_bytes=500, queries_this_month=0)
     d = check_upload(lim, usage, incoming_bytes=600)
@@ -38,6 +44,9 @@ def test_check_upload_rejects_over_bytes():
 
 
 def test_check_upload_allows_when_under():
+    """
+    Rules:   Upload is allowed if the total storage bytes remain under the limit after adding the incoming bytes.
+    """
     lim = Limits(docs=100, storage_bytes=1000, queries_per_month=1000)
     usage = Usage(docs=0, storage_bytes=500, queries_this_month=0)
     d = check_upload(lim, usage, incoming_bytes=499)
@@ -45,6 +54,9 @@ def test_check_upload_allows_when_under():
 
 
 def test_check_query_rejects_at_limit():
+    """
+    Rules:   Query is rejected if the monthly query count equals the limit, and retry_after is set to a positive value.
+    """
     lim = Limits(docs=100, storage_bytes=1 << 30, queries_per_month=5)
     usage = Usage(docs=0, storage_bytes=0, queries_this_month=5)
     d = check_query(lim, usage)
@@ -54,6 +66,9 @@ def test_check_query_rejects_at_limit():
 
 
 def test_check_query_allows_when_under():
+    """
+    Rules:   Query is allowed if the monthly query count is below the limit.
+    """
     lim = Limits(docs=100, storage_bytes=1 << 30, queries_per_month=5)
     usage = Usage(docs=0, storage_bytes=0, queries_this_month=4)
     d = check_query(lim, usage)
@@ -64,6 +79,9 @@ from omur_sdk.quota import _cap_at_32_days  # type: ignore[attr-defined]
 
 
 def test_cap_at_32_days():
+    """
+    Rules:   The retry_after duration is capped at 32 days, regardless of input value.
+    """
     cases = [
         (-5, 60),
         (0, 0),

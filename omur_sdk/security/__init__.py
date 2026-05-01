@@ -7,8 +7,8 @@ intentionally NOT re-exported here; continue to import from
 
 exports: none
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The security module must maintain a strict separation between authentication and authorization logic, with no direct dependencies on external SDKs or third-party libraries that could introduce security vulnerabilities. All security-related operations must be deterministic and not rely on external state or environment variables. The module's public API must remain stable and backward-compatible across all minor version updates.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 

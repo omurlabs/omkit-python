@@ -2,8 +2,8 @@
 
 exports: class TestWriteThroughCache
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The cache module must ensure atomic file operations to prevent corruption during concurrent access, maintain consistent file permissions across all cache files, and guarantee that sensitive data is never written to disk in plaintext format.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -15,6 +15,9 @@ import pytest
 
 class TestWriteThroughCache:
     def test_write_cache_creates_file(self, tmp_path):
+        """
+        Rules:   Cache file is created with correct JSON structure and content matching the internal cache state.
+        """
         from omur_sdk.settings import SettingsManager
 
         cache_path = str(tmp_path / "settings-cache.json")
@@ -29,6 +32,9 @@ class TestWriteThroughCache:
         assert data["models.chat_model"] == "gemma4:e2b"
 
     def test_write_cache_excludes_secrets(self, tmp_path):
+        """
+        Rules:   Secret keys are excluded from the cache file during write operations, ensuring sensitive data is not persisted.
+        """
         from omur_sdk.settings import SettingsManager
 
         cache_path = str(tmp_path / "settings-cache.json")
@@ -44,6 +50,9 @@ class TestWriteThroughCache:
         assert data["models.chat_model"] == "gemma4:e2b"
 
     def test_read_cache_fallback(self, tmp_path):
+        """
+        Rules:   If cache file exists, it's read and merged into the current cache; missing keys are not overwritten.
+        """
         from omur_sdk.settings import SettingsManager
 
         cache_path = str(tmp_path / "settings-cache.json")
@@ -58,6 +67,9 @@ class TestWriteThroughCache:
         assert mgr._cache["models.chat_model"] == "cached-model"
 
     def test_read_cache_missing_file(self, tmp_path):
+        """
+        Rules:   When cache file does not exist, the cache remains empty without raising an error.
+        """
         from omur_sdk.settings import SettingsManager
 
         mgr = SettingsManager.__new__(SettingsManager)
@@ -68,6 +80,9 @@ class TestWriteThroughCache:
         assert mgr._cache == {}
 
     def test_cache_file_permissions(self, tmp_path):
+        """
+        Rules:   Cache files are written with strict permissions (0o600) to prevent unauthorized access.
+        """
         from omur_sdk.settings import SettingsManager
 
         cache_path = str(tmp_path / "settings-cache.json")

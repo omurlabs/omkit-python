@@ -2,8 +2,8 @@
 
 exports: class NoopProvider | pool() | test_registry_polling_picks_up_providers(pool, monkeypatch)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module requires all provider implementations to inherit from ProviderBase and implement explicit run() and __init__() methods with specific signatures. The test suite depends on environment variable configuration for backend selection and expects specific class variable collections for observing tenant and config data during execution.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 import asyncio
@@ -36,6 +36,9 @@ class NoopProvider(ProviderBase):
 
 @pytest.fixture
 async def pool():
+    """
+    Rules:   Database connection string (TEST_POSTGRES_DSN) must be set in environment, otherwise test is skipped
+    """
     dsn = os.getenv("TEST_POSTGRES_DSN")
     if not dsn:
         pytest.skip("TEST_POSTGRES_DSN not set")
@@ -46,6 +49,9 @@ async def pool():
 
 @pytest.mark.asyncio
 async def test_registry_polling_picks_up_providers(pool, monkeypatch):
+    """
+    Rules:   Test requires POSTGRES backend to be configured via OMUR_PROVIDERS_BACKEND env var and assumes specific database schema with tenants and providers tables
+    """
     monkeypatch.setenv("OMUR_PROVIDERS_BACKEND", "postgres")
     NoopProvider.instances.clear()
 

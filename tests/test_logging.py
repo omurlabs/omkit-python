@@ -3,7 +3,7 @@
 exports: test_configure_logging_sets_processors() | test_configure_logging_is_idempotent() | test_default_is_json(monkeypatch) | test_console_format(monkeypatch)
 used_by: none
 rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 from __future__ import annotations
@@ -17,7 +17,10 @@ from omur_sdk.logging import configure_logging
 
 
 def test_configure_logging_sets_processors():
-    """configure_logging installs ISO timestamps and contextvars merge."""
+    """configure_logging installs ISO timestamps and contextvars merge.
+
+    Rules:   Logging configuration must be idempotent and should not raise exceptions when called multiple times with different service names.
+    """
     configure_logging("test-service")
     config = structlog.get_config()
     processor_types = [type(p).__name__ for p in config["processors"]]
@@ -63,6 +66,9 @@ def _capture_line(monkeypatch, env_value: str | None) -> str:
 
 
 def test_default_is_json(monkeypatch):
+    """
+    Rules:   The default logging format must produce valid JSON output with standard log fields like 'event', 'user', and 'level'.
+    """
     line = _capture_line(monkeypatch, None)
     payload = json.loads(line)
     assert payload["event"] == "hello"
@@ -71,6 +77,9 @@ def test_default_is_json(monkeypatch):
 
 
 def test_console_format(monkeypatch):
+    """
+    Rules:   Console format should output plain text logs that are not JSON encoded, while JSON format should be used for structured logging.
+    """
     line = _capture_line(monkeypatch, "console")
     assert "hello" in line
     try:

@@ -2,8 +2,8 @@
 
 exports: EXPECTED_EXPORTS | test_transport_facade_exports_are_callable_or_classes() | test_transport_facade_identity_matches_underlying() | test_transport_facade_all_matches_imports_exactly() | test_transport_facade_does_not_leak_internals()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The transport facade must maintain exact import parity with the omur_sdk package structure while preventing internal module leakage, ensuring all exported objects are either callable or class types, and preserving the identity mapping between facade and underlying modules.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 

@@ -9,8 +9,8 @@ they run without a live database.
 
 exports: test_log_security_event_calls_pool_execute() | test_log_security_event_block_emits_warning(caplog) | test_log_security_event_no_warning_below_block(caplog) | test_log_security_event_facade_export() | test_rls_tenant_isolation()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module must maintain strict separation between security event logging and database operations, with all database interactions routed through a dedicated connection pool. All security event logging must be synchronous to ensure proper ordering and prevent race conditions in event processing. The module cannot directly import or use any database-specific libraries outside of the established connection pool abstraction.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -32,6 +32,9 @@ from omur_sdk.security.events import log_security_event
 
 @pytest.mark.asyncio
 async def test_log_security_event_calls_pool_execute():
+    """
+    Rules:   The function assumes that the database connection's execute method is called exactly once, and that the call arguments are validated by the test. Future developers must ensure that the SQL query being executed is correctly formed and that the parameters passed (like tenant_id, kind, severity, etc.) are properly escaped or handled to prevent injection attacks.
+    """
     mock_conn = AsyncMock()
     mock_pool = MagicMock()
     mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
@@ -56,6 +59,9 @@ async def test_log_security_event_calls_pool_execute():
 
 @pytest.mark.asyncio
 async def test_log_security_event_block_emits_warning(caplog):
+    """
+    Rules:   When the severity is set to 'block', a warning must be emitted. Future developers must understand that this behavior is tied to the logging level and the specific logger name 'omur_sdk.security.events'.
+    """
     import logging
 
     mock_conn = AsyncMock()
@@ -77,6 +83,9 @@ async def test_log_security_event_block_emits_warning(caplog):
 
 @pytest.mark.asyncio
 async def test_log_security_event_no_warning_below_block(caplog):
+    """
+    Rules:   Warnings are only emitted for events with severity 'block' or higher. Future developers must know that lower severities like 'warn' do not trigger warnings in this context.
+    """
     import logging
 
     mock_conn = AsyncMock()
@@ -110,7 +119,10 @@ async def test_log_security_event_facade_export():
 
 @pytest.mark.asyncio
 async def test_rls_tenant_isolation():
-    """Rows inserted under tenant A must be invisible when GUC is tenant B."""
+    """Rows inserted under tenant A must be invisible when GUC is tenant B.
+
+    Rules:   The test requires a valid TEST_POSTGRES_DSN environment variable to run. Future developers must be aware that this test will be skipped if the environment variable is not set, and that it depends on PostgreSQL's Row Level Security (RLS) and GUC settings for proper tenant isolation.
+    """
     dsn = os.getenv("TEST_POSTGRES_DSN")
     if not dsn:
         pytest.skip("TEST_POSTGRES_DSN not set")

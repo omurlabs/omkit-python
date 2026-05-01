@@ -2,8 +2,8 @@
 
 exports: test_init_tracing_disabled_when_no_endpoint() | test_init_tracing_returns_provider() | test_init_tracing_sets_service_name() | test_instrument_fastapi_idempotent()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The tracing module must maintain backward compatibility with existing OpenTelemetry SDK versions and cannot introduce breaking changes to its public API. All tracing functionality must be conditionally enabled/disabled based on environment variables or configuration parameters without hardcoding behavior. The module cannot have circular dependencies with other SDK modules and must isolate its tracing setup logic from application startup code.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -36,14 +36,20 @@ def _make_otel_mocks():
 
 
 def test_init_tracing_disabled_when_no_endpoint():
-    """Returns None when endpoint is empty string."""
+    """Returns None when endpoint is empty string.
+
+    Rules:   When the endpoint is an empty string, init_tracing returns None, indicating tracing is disabled.
+    """
     from omur_sdk.tracing import init_tracing
     result = init_tracing("test-service", endpoint="")
     assert result is None
 
 
 def test_init_tracing_returns_provider():
-    """init_tracing returns a configured TracerProvider when endpoint is set."""
+    """init_tracing returns a configured TracerProvider when endpoint is set.
+
+    Rules:   The function returns a configured TracerProvider only when a valid endpoint is provided; otherwise it returns None.
+    """
     mocks, sdk_trace_mod, _, _, _, _ = _make_otel_mocks()
     provider = MagicMock()
     sdk_trace_mod.TracerProvider.return_value = provider
@@ -58,7 +64,10 @@ def test_init_tracing_returns_provider():
 
 
 def test_init_tracing_sets_service_name():
-    """Service name is passed as a resource attribute."""
+    """Service name is passed as a resource attribute.
+
+    Rules:   The service name must be passed as a resource attribute to the Resource.create() call for proper tracing configuration.
+    """
     mocks, sdk_trace_mod, sdk_resources_mod, _, _, _ = _make_otel_mocks()
     resource_instance = MagicMock()
     sdk_resources_mod.Resource.create.return_value = resource_instance
@@ -73,6 +82,9 @@ def test_init_tracing_sets_service_name():
 
 
 def test_instrument_fastapi_idempotent():
+    """
+    Rules:   Calling instrument_fastapi on the same FastAPI app multiple times must not raise an exception, ensuring idempotency.
+    """
     from fastapi import FastAPI
 
     from omur_sdk.tracing import instrument_fastapi

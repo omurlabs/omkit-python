@@ -2,8 +2,8 @@
 
 exports: MODEL_LOAD_DURATION | MODEL_LOAD_ERRORS | MODEL_UNLOAD_TOTAL | MODEL_LOADED | class ModelLifecycle | class ModelRegistry
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The `ModelLifecycle` class must ensure thread-safe access to `_model`, `_last_used`, and `_lock` attributes, as all methods that modify or read these shared state elements are intended to be concurrently accessible. The `ModelRegistry` class requires all `ModelLifecycle` instances it manages to be properly registered before any unload operations can occur, and the reaper task must be stopped before the registry is destroyed to prevent orphaned tasks. The `ensure_loaded()` and `unload()` methods in `ModelLifecycle` are designed to be called concurrently, so the internal `_lock` mechanism must prevent race conditions during model loading and unloading operations.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -62,6 +62,9 @@ class ModelLifecycle(abc.ABC):
 
     @property
     def is_loaded(self) -> bool:
+        """
+        Rules:   none
+        """
         return self._model is not None
 
     @property
@@ -73,9 +76,15 @@ class ModelLifecycle(abc.ABC):
         return self._last_used
 
     def touch(self) -> None:
+        """
+        Rules:   none
+        """
         self._last_used = time.monotonic()
 
     async def ensure_loaded(self) -> None:
+        """
+        Rules:   Model loading is async and uses a lock; concurrent calls may result in redundant loading if not properly synchronized.
+        """
         async with self._lock:
             if self._model is not None:
                 self._last_used = time.monotonic()
@@ -95,6 +104,9 @@ class ModelLifecycle(abc.ABC):
             log.info("model.loaded", model=self.name, duration_s=round(duration, 2))
 
     async def unload(self) -> None:
+        """
+        Rules:   Model unloading is async and uses a lock; calling unload on an already unloaded model is safe but does nothing.
+        """
         async with self._lock:
             if self._model is None:
                 return
@@ -117,16 +129,28 @@ class ModelRegistry:
         self._reaper_task: asyncio.Task | None = None
 
     def register(self, name: str, lifecycle: ModelLifecycle) -> None:
+        """
+        Rules:   none
+        """
         self._models[name] = lifecycle
 
     def status(self) -> dict[str, bool]:
+        """
+        Rules:   none
+        """
         return {name: lc.is_loaded for name, lc in self._models.items()}
 
     def set_ttl(self, ttl_seconds: int) -> None:
+        """
+        Rules:   none
+        """
         self._ttl = ttl_seconds
         log.info("registry.ttl_updated", ttl=ttl_seconds)
 
     def start_reaper(self, ttl_seconds: int, sweep_interval: float = 30) -> None:
+        """
+        Rules:   Starting a new reaper task cancels any existing one; ensure the registry is not used concurrently during this operation.
+        """
         self._ttl = ttl_seconds
         if self._reaper_task and not self._reaper_task.done():
             self._reaper_task.cancel()
@@ -135,11 +159,17 @@ class ModelRegistry:
         )
 
     def stop_reaper(self) -> None:
+        """
+        Rules:   none
+        """
         if self._reaper_task and not self._reaper_task.done():
             self._reaper_task.cancel()
             self._reaper_task = None
 
     async def unload_all(self) -> None:
+        """
+        Rules:   Unloading all models stops the reaper task and may cause a delay due to garbage collection and async I/O.
+        """
         self.stop_reaper()
         for name, lc in self._models.items():
             if lc.is_loaded:

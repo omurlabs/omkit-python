@@ -2,8 +2,8 @@
 
 exports: test_injects_tenant_header_from_context() | test_omits_tenant_header_when_no_context() | test_explicit_tenant_header_wins()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module must maintain backward compatibility with existing HTTP request handling while ensuring tenant header injection occurs only when context is explicitly provided. All test cases must validate header behavior in isolation without external dependencies. The transport mock implementation cannot alter global HTTP client configuration.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 from __future__ import annotations
@@ -25,6 +25,9 @@ def _mock_transport(captured: dict) -> httpx.MockTransport:
 
 @pytest.mark.asyncio
 async def test_injects_tenant_header_from_context():
+    """
+    Rules:   When a tenant context is active, the tenant header is automatically injected into outgoing requests. Future developers must know that this behavior depends on the active context and that the header name is 'x-tenant-id'.
+    """
     captured: dict = {}
     client = build_tenant_client(service_token="svc-tok", transport=_mock_transport(captured))
     try:
@@ -40,6 +43,9 @@ async def test_injects_tenant_header_from_context():
 
 @pytest.mark.asyncio
 async def test_omits_tenant_header_when_no_context():
+    """
+    Rules:   When no tenant context is active, the tenant header is omitted from outgoing requests. Future developers must know that the absence of context results in no tenant header being added.
+    """
     captured: dict = {}
     client = build_tenant_client(transport=_mock_transport(captured))
     try:
@@ -52,6 +58,9 @@ async def test_omits_tenant_header_when_no_context():
 
 @pytest.mark.asyncio
 async def test_explicit_tenant_header_wins():
+    """
+    Rules:   If an explicit 'X-Tenant-ID' header is provided in the request, it overrides the automatically injected tenant header from the context. Future developers must know that explicit headers take precedence over context-based ones.
+    """
     captured: dict = {}
     client = build_tenant_client(transport=_mock_transport(captured))
     try:

@@ -6,8 +6,8 @@ Usage:
 
 exports: mount_metrics(app, service_name)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The metrics module must maintain backward compatibility with all existing metric collection patterns and cannot introduce breaking changes to the public API. All metric collection must be thread-safe and non-blocking to prevent performance degradation of the main application. The module cannot have any external dependencies beyond what's already defined in the project's requirements.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -23,6 +23,8 @@ def mount_metrics(app: "FastAPI", service_name: str) -> None:
     """Wire prometheus-fastapi-instrumentator with default labels and a /metrics endpoint.
 
     Idempotent: calling twice on the same app is a no-op.
+
+    Rules:   The function requires the 'prometheus-fastapi-instrumentator' package to be installed, and the app parameter must be a FastAPI instance that supports the '_omur_metrics_mounted' attribute for idempotency checks.
     """
     try:
         from prometheus_fastapi_instrumentator import Instrumentator

@@ -2,8 +2,8 @@
 
 exports: pool() | test_polling_picks_up_updates(pool, monkeypatch)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module requires all environment configurations to be validated at startup and does not support runtime modification of backend settings. Any changes to the settings polling mechanism must maintain backward compatibility with existing PostgreSQL DSN handling and ensure thread-safe access to shared configuration state. The test suite depends on specific environment variable isolation and cannot run concurrently with other tests that modify global settings.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 import asyncio
@@ -28,6 +28,9 @@ async def pool():
 
 @pytest.mark.asyncio
 async def test_polling_picks_up_updates(pool, monkeypatch):
+    """
+    Rules:   SettingsManager must be started before testing updates, and the test relies on a specific poll interval (0.1 seconds) to ensure timely detection of database changes.
+    """
     monkeypatch.setenv("OMUR_SETTINGS_BACKEND", "postgres")
     key = f"test_polling_{uuid.uuid4().hex[:8]}"
     async with pool.acquire() as conn:

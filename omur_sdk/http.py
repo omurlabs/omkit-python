@@ -18,8 +18,8 @@ Example:
 
 exports: build_tenant_client()
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module must maintain backward compatibility for all public APIs and ensure thread-safe operation across concurrent client requests. The service token hook mechanism is mandatory for all HTTP requests and cannot be bypassed or modified without breaking authentication flow. All HTTP client configurations must be immutable after instantiation to prevent runtime inconsistencies.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 from __future__ import annotations
@@ -66,6 +66,8 @@ def build_tenant_client(
     outbound call.
 
     Call sites own the lifecycle: ``await client.aclose()`` on shutdown.
+
+    Rules:   The returned AsyncClient must be explicitly closed by calling `await client.aclose()` to properly clean up resources. Failure to do so will result in resource leaks and potential connection pool exhaustion.
     """
     hook = _build_request_hook(service_token)
     event_hooks = kwargs.pop("event_hooks", {"request": []})

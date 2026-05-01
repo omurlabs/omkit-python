@@ -2,8 +2,8 @@
 
 exports: client() | test_available_when_healthy(client) | test_circuit_opens_after_failures(client) | test_circuit_closes_after_cooldown(client) | test_batch_splitting() | test_embed_returns_none_when_unavailable(client) | test_disabled_returns_none() | test_post_sends_tenant_header_from_contextvar(client) | test_post_explicit_tenant_id_wins_over_contextvar(client) | test_post_omits_tenant_header_when_both_unset(client) | test_post_sends_service_token_header() | test_post_omits_service_token_when_unset() | test_rerank_returns_full_response_dict(client) | test_rerank_short_circuits_empty_passages(client) | test_rerank_returns_none_on_5xx(client) | test_rerank_returns_none_on_timeout(client) | test_rerank_returns_none_when_circuit_open(client)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The `CerebellumClient` must enforce circuit breaker logic across all HTTP operations, ensuring that failed requests trigger a cooldown period during which subsequent calls are short-circuited. All tenant and service token headers must be managed through context variables and explicit parameters, with strict precedence rules applied during request construction. The client is expected to handle timeout and 5xx errors gracefully by returning `None` and transitioning the circuit state accordingly.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -30,7 +30,10 @@ async def test_available_when_healthy(client):
 
 @pytest.mark.asyncio
 async def test_circuit_opens_after_failures(client):
-    """Circuit should open after N consecutive failures."""
+    """Circuit should open after N consecutive failures.
+
+    Rules:   Circuit opens after exactly 3 consecutive failures, as defined by failure_threshold parameter.
+    """
     for _ in range(3):
         client._record_failure()
     assert client.available is False
@@ -38,6 +41,9 @@ async def test_circuit_opens_after_failures(client):
 
 @pytest.mark.asyncio
 async def test_circuit_closes_after_cooldown(client):
+    """
+    Rules:   After cooldown expires (circuit_opened_at set to epoch), the client transitions to half-open state and becomes available.
+    """
     for _ in range(3):
         client._record_failure()
     assert client.available is False
@@ -47,7 +53,10 @@ async def test_circuit_closes_after_cooldown(client):
 
 
 def test_batch_splitting():
-    """Batches > 32 should be split."""
+    """Batches > 32 should be split.
+
+    Rules:   Batches larger than max_size (32) are split into multiple sub-batches of equal or smaller size.
+    """
     client = CerebellumClient(base_url="http://cerebellum:8006")
     batches = client._split_batch(list(range(50)), max_size=32)
     assert len(batches) == 2
@@ -57,7 +66,10 @@ def test_batch_splitting():
 
 @pytest.mark.asyncio
 async def test_embed_returns_none_when_unavailable(client):
-    """When circuit is open, embed should return None."""
+    """When circuit is open, embed should return None.
+
+    Rules:   When circuit is open, embed returns None without attempting the request.
+    """
     for _ in range(3):
         client._record_failure()
     result = await client.embed(["test"])
@@ -66,6 +78,9 @@ async def test_embed_returns_none_when_unavailable(client):
 
 @pytest.mark.asyncio
 async def test_disabled_returns_none():
+    """
+    Rules:   If client is disabled at initialization, all embed calls return None immediately.
+    """
     client = CerebellumClient(base_url="http://cerebellum:8006", enabled=False)
     result = await client.embed(["test"])
     assert result is None
@@ -83,7 +98,10 @@ def _mock_response(payload: dict):
 
 @pytest.mark.asyncio
 async def test_post_sends_tenant_header_from_contextvar(client):
-    """When no tenant_id is passed, _post should pull it from the SDK contextvar."""
+    """When no tenant_id is passed, _post should pull it from the SDK contextvar.
+
+    Rules:   The tenant ID is pulled from the contextvar if no explicit tenant_id is provided to _post.
+    """
     from omur_sdk.tenant import _tenant_id_var
 
     tid = "11111111-1111-1111-1111-111111111111"
@@ -102,7 +120,10 @@ async def test_post_sends_tenant_header_from_contextvar(client):
 
 @pytest.mark.asyncio
 async def test_post_explicit_tenant_id_wins_over_contextvar(client):
-    """Explicit tenant_id argument should override the contextvar."""
+    """Explicit tenant_id argument should override the contextvar.
+
+    Rules:   An explicit tenant_id argument overrides the value in the contextvar when calling _post.
+    """
     from omur_sdk.tenant import _tenant_id_var
 
     ctx_tid = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
@@ -121,7 +142,10 @@ async def test_post_explicit_tenant_id_wins_over_contextvar(client):
 
 @pytest.mark.asyncio
 async def test_post_omits_tenant_header_when_both_unset(client):
-    """No contextvar and no explicit arg => no X-Tenant-ID header (caller handles 401)."""
+    """No contextvar and no explicit arg => no X-Tenant-ID header (caller handles 401).
+
+    Rules:   If no tenant ID is provided via contextvar or explicit argument, no X-Tenant-ID header is sent.
+    """
     from omur_sdk.tenant import _tenant_id_var
 
     # Defensively ensure contextvar is unset for this test.
@@ -142,7 +166,10 @@ async def test_post_omits_tenant_header_when_both_unset(client):
 
 @pytest.mark.asyncio
 async def test_post_sends_service_token_header():
-    """When constructed with service_token, _post should forward X-Service-Token."""
+    """When constructed with service_token, _post should forward X-Service-Token.
+
+    Rules:   When service_token is set during client construction, it is forwarded in the X-Service-Token header.
+    """
     client = CerebellumClient(base_url="http://cb.test", service_token="secret-abc")
     mock_post = AsyncMock(return_value=_mock_response({"results": []}))
     with patch.object(client, "_get_client") as mock_get_client:
@@ -155,7 +182,10 @@ async def test_post_sends_service_token_header():
 
 @pytest.mark.asyncio
 async def test_post_omits_service_token_when_unset():
-    """No service_token on constructor => no X-Service-Token header."""
+    """No service_token on constructor => no X-Service-Token header.
+
+    Rules:   If no service_token is provided at initialization, no X-Service-Token header is included in requests.
+    """
     client = CerebellumClient(base_url="http://cb.test")
     mock_post = AsyncMock(return_value=_mock_response({"results": []}))
     with patch.object(client, "_get_client") as mock_get_client:
@@ -190,7 +220,10 @@ async def test_rerank_returns_full_response_dict(client):
 
 @pytest.mark.asyncio
 async def test_rerank_short_circuits_empty_passages(client):
-    """Empty passages must NOT hit the wire — return an empty result locally."""
+    """Empty passages must NOT hit the wire — return an empty result locally.
+
+    Rules:   Empty passages list must return an empty result locally without making a network request.
+    """
     mock_post = AsyncMock()
     with patch.object(client, "_get_client") as mock_get_client:
         mock_get_client.return_value = MagicMock(post=mock_post)
@@ -202,6 +235,8 @@ async def test_rerank_short_circuits_empty_passages(client):
 @pytest.mark.asyncio
 async def test_rerank_returns_none_on_5xx(client):
     """A 5xx response must surface as None so frontal falls back to
+
+    Rules:   A 5xx HTTP status code must be handled by returning None to allow fallback behavior in the RAG pipeline.
     pre-rerank order rather than failing the RAG request."""
     import httpx
 
@@ -222,7 +257,10 @@ async def test_rerank_returns_none_on_5xx(client):
 
 @pytest.mark.asyncio
 async def test_rerank_returns_none_on_timeout(client):
-    """Timeout path must also surface as None (same fallback contract)."""
+    """Timeout path must also surface as None (same fallback contract).
+
+    Rules:   Timeout exceptions must be caught and return None to ensure fallback to pre-rerank ordering.
+    """
     import httpx
 
     mock_post = AsyncMock(side_effect=httpx.TimeoutException("slow"))
@@ -234,7 +272,10 @@ async def test_rerank_returns_none_on_timeout(client):
 
 @pytest.mark.asyncio
 async def test_rerank_returns_none_when_circuit_open(client):
-    """Circuit open => rerank returns None without issuing a request."""
+    """Circuit open => rerank returns None without issuing a request.
+
+    Rules:   If the circuit breaker is open (after 3 failures), rerank must return None without making a network request.
+    """
     for _ in range(3):
         client._record_failure()
     mock_post = AsyncMock()

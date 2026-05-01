@@ -27,8 +27,8 @@ Conventions:
 
 exports: DEFAULT_CONCURRENCY | DEFAULT_MAX_TRIES | DEFAULT_TIMEOUT_SECONDS | DEFAULT_TTL | make_worker(redis_url, queue_name) | tenant_middleware(next_handler) | enqueue(task, tenant_id, payload) | mount_streaq_ui(app, worker) | _STREAQ_COUNTER_KEYS | class StreaqPromCollector
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module requires all Redis-based job queue operations to be thread-safe and idempotent, as it's designed for high-concurrency worker environments where tasks may be retried or processed by multiple workers simultaneously.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -90,6 +90,8 @@ def make_worker(
 
     Extra keyword arguments are forwarded to `streaq.Worker(...)` for
     advanced cases (sentinel/cluster, custom serializers, etc.).
+
+    Rules:   The `redis_url` must be a valid Redis/Valkey URL, including password-encoded URLs if required. The `handle_signals` parameter should be set to `True` only if the worker is intended to handle OS signals for graceful shutdown.
     """
     import streaq
 
@@ -129,6 +131,8 @@ def tenant_middleware(next_handler: Callable[..., Awaitable[Any]]) -> Callable[.
     ensure all enqueues go through `enqueue()` below so envelopes are
     well-formed; a ValidationError at the worker boundary indicates a
     bug, not a transient fault.
+
+    Rules:   The `next_handler` function must accept the unwrapped payload as its first positional argument and must be used in conjunction with a worker that has `tenant_middleware` registered to ensure tenant context is correctly set.
     """
 
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -157,6 +161,8 @@ def enqueue(task: Any, tenant_id: str, payload: dict[str, Any], **opts: Any) -> 
     streaq returns from `task.enqueue(...)`.
 
     Caller is responsible for `await`-ing.
+
+    Rules:   The `task` must be a valid streaq task created using `@worker.task(...)`; otherwise, `task.enqueue(...)` will fail. The `tenant_id` must be a valid identifier for the tenant context.
     """
     envelope_bytes = wrap(tenant_id, payload)
     envelope_dict = json.loads(envelope_bytes)
@@ -175,6 +181,8 @@ def mount_streaq_ui(app: Any, worker: Any, *, prefix: str = "/queue/ui") -> None
     412 by default. Override it to return our worker so the UI can read
     queue state, results, and counters. The route is otherwise open —
     Caddy's oauth2-proxy forward-auth gates access (Zitadel SSO).
+
+    Rules:   The `app` must be a FastAPI application instance, and the `worker` must be a properly initialized streaq worker. The `prefix` should not conflict with existing routes in the application.
     """
     try:
         from streaq.ui.deps import get_worker
@@ -230,6 +238,9 @@ class StreaqPromCollector:
         return iter([])
 
     def collect(self) -> Any:
+        """
+        Rules:   The `_worker` object must have a `queue_name` attribute and a `counters` dictionary with keys matching `_STREAQ_COUNTER_KEYS`; otherwise, the Prometheus metrics will not be correctly populated.
+        """
         from prometheus_client.core import GaugeMetricFamily
 
         queue = getattr(self._worker, "queue_name", "default")

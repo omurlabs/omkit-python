@@ -6,8 +6,8 @@ tenant's RLS scope.
 
 exports: ENVELOPE_VERSION | class InvalidEnvelopeError | class Envelope | wrap(tenant_id, payload) | unwrap(data)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The Envelope class must maintain strict tenant isolation and never allow cross-tenant data leakage. All envelope validation must be immutable and deterministic to ensure consistent task processing across distributed workers. The wrap/unwrap functions must handle all serialization edge cases including nested data structures and preserve original payload integrity during transformation.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -79,6 +79,8 @@ def wrap(tenant_id: str, payload: dict[str, Any]) -> bytes:
     """Build an envelope and serialize to JSON bytes for streaq enqueue.
 
     Raises InvalidEnvelopeError if tenant_id is not a UUID.
+
+    Rules:   tenant_id must be a valid UUID string, otherwise InvalidEnvelopeError is raised
     """
     try:
         env = Envelope(

@@ -2,8 +2,8 @@
 
 exports: class StubProvider | TENANT_ID | STUB_DB_ROWS | registry() | test_start_loads_providers_from_db(registry) | test_stop_cancels_all_tasks(registry) | test_reload_tenant_replaces_tasks(registry) | test_reload_tenant_removes_disabled_providers(registry) | test_unknown_provider_name_is_skipped(registry)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The ProviderRegistry must maintain thread-safe operations when loading and reloading providers, as concurrent access during tenant reloads is expected. All provider lifecycle methods (start, stop, reload) must be idempotent and handle partial failures gracefully without leaving the registry in an inconsistent state. The registry's `_fetch_providers` method is the sole source of provider configuration and must be mocked consistently across all tests to ensure deterministic behavior.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -26,6 +26,9 @@ class StubProvider(ProviderBase):
         self.run_called = 0
 
     async def run(self):
+        """
+        Rules:   none
+        """
         self.run_called += 1
         await asyncio.sleep(9999)  # blocked until cancelled
 
@@ -39,6 +42,9 @@ STUB_DB_ROWS = [
 
 @pytest.fixture
 def registry():
+    """
+    Rules:   none
+    """
     return ProviderRegistry(
         kind="collector",
         provider_classes={"stub": StubProvider},
@@ -51,7 +57,10 @@ def registry():
 
 @pytest.mark.asyncio
 async def test_start_loads_providers_from_db(registry):
-    """Registry starts one task per enabled provider row returned by DB."""
+    """Registry starts one task per enabled provider row returned by DB.
+
+    Rules:   YES: The test assumes that _fetch_providers returns STUB_DB_ROWS, and that the provider name 'stub' exists in provider_classes. Future developers must ensure these dependencies align with actual implementation.
+    """
     with patch.object(registry, "_fetch_providers", new=AsyncMock(return_value=STUB_DB_ROWS)), \
          patch.object(registry, "_subscribe_valkey", new=AsyncMock()):
         await registry.start()
@@ -62,6 +71,9 @@ async def test_start_loads_providers_from_db(registry):
 
 @pytest.mark.asyncio
 async def test_stop_cancels_all_tasks(registry):
+    """
+    Rules:   YES: The test depends on the registry starting exactly one task; if more or fewer tasks are started, the assertion will fail. Developers must understand that the number of tasks is directly tied to the DB row count and provider configuration.
+    """
     with patch.object(registry, "_fetch_providers", new=AsyncMock(return_value=STUB_DB_ROWS)), \
          patch.object(registry, "_subscribe_valkey", new=AsyncMock()):
         await registry.start()
@@ -73,7 +85,10 @@ async def test_stop_cancels_all_tasks(registry):
 
 @pytest.mark.asyncio
 async def test_reload_tenant_replaces_tasks(registry):
-    """After reload, old task is cancelled and new task started."""
+    """After reload, old task is cancelled and new task started.
+
+    Rules:   YES: The test assumes that reloading a tenant cancels the old task and starts a new one. Developers must know that the task replacement logic relies on the internal structure of _tasks and how _reload_tenant is implemented.
+    """
     with patch.object(registry, "_fetch_providers", new=AsyncMock(return_value=STUB_DB_ROWS)), \
          patch.object(registry, "_subscribe_valkey", new=AsyncMock()):
         await registry.start()
@@ -91,7 +106,10 @@ async def test_reload_tenant_replaces_tasks(registry):
 
 @pytest.mark.asyncio
 async def test_reload_tenant_removes_disabled_providers(registry):
-    """If DB returns no rows for a tenant, all its tasks are cancelled."""
+    """If DB returns no rows for a tenant, all its tasks are cancelled.
+
+    Rules:   YES: The test assumes that when _fetch_providers returns an empty list, the corresponding tenant's tasks are removed from _tasks. Developers must know this behavior is tied to the reload logic and not just task cancellation.
+    """
     with patch.object(registry, "_fetch_providers", new=AsyncMock(return_value=STUB_DB_ROWS)), \
          patch.object(registry, "_subscribe_valkey", new=AsyncMock()):
         await registry.start()
@@ -105,7 +123,10 @@ async def test_reload_tenant_removes_disabled_providers(registry):
 
 @pytest.mark.asyncio
 async def test_unknown_provider_name_is_skipped(registry):
-    """Rows with names not in provider_classes are silently skipped."""
+    """Rows with names not in provider_classes are silently skipped.
+
+    Rules:   YES: The test assumes that unknown provider names in DB rows are silently skipped. Developers must understand that this behavior is handled by checking provider_classes and not raising exceptions.
+    """
     unknown_rows = [{"tenant_id": TENANT_ID, "name": "unknown_thing", "config": {}}]
     with patch.object(registry, "_fetch_providers", new=AsyncMock(return_value=unknown_rows)), \
          patch.object(registry, "_subscribe_valkey", new=AsyncMock()):

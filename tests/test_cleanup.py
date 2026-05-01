@@ -3,7 +3,7 @@
 exports: test_loop_runs_task_when_lock_acquired() | test_loop_skips_when_lock_held_elsewhere()
 used_by: none
 rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 import asyncio
@@ -17,6 +17,9 @@ from omur_sdk.cleanup import Loop
 
 @pytest.mark.asyncio
 async def test_loop_runs_task_when_lock_acquired():
+    """
+    Rules:   Loop requires PostgreSQL connection via TEST_POSTGRES_DSN environment variable and uses advisory locking with key 9991 to ensure only one instance runs the task concurrently.
+    """
     dsn = os.getenv("TEST_POSTGRES_DSN")
     if not dsn:
         pytest.skip("TEST_POSTGRES_DSN not set")
@@ -43,6 +46,9 @@ async def test_loop_runs_task_when_lock_acquired():
 
 @pytest.mark.asyncio
 async def test_loop_skips_when_lock_held_elsewhere():
+    """
+    Rules:   Loop requires PostgreSQL connection via TEST_POSTGRES_DSN environment variable and uses advisory locking with key 8881; if another connection holds this lock via pg_advisory_lock, the loop will skip execution.
+    """
     dsn = os.getenv("TEST_POSTGRES_DSN")
     if not dsn:
         pytest.skip("TEST_POSTGRES_DSN not set")

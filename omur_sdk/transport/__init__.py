@@ -6,8 +6,8 @@ unchanged; new code is encouraged to import from this facade.
 
 exports: none
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The transport module must maintain backward compatibility for all existing API endpoints and response formats, as breaking changes will affect downstream services that depend on stable interfaces. All network communication must go through a centralized connection pooling mechanism to ensure resource efficiency and proper handling of concurrent requests. The module cannot introduce any synchronous blocking operations that would impact the overall performance of applications using the SDK.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 

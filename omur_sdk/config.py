@@ -2,8 +2,8 @@
 
 exports: class BaseServiceSettings
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module requires all backend services to share a common BaseSettings class for consistent environment variable handling, and all service configurations must be derived from this base with no deviation in the configuration inheritance structure.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -47,6 +47,9 @@ class BaseServiceSettings(BaseSettings):
 
     @property
     def postgres_dsn(self) -> str:
+        """
+        Rules:   none
+        """
         return (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -54,7 +57,10 @@ class BaseServiceSettings(BaseSettings):
 
     @property
     def postgres_dsn_raw(self) -> str:
-        """Plain postgresql:// DSN for drivers that don't accept asyncpg dialect."""
+        """Plain postgresql:// DSN for drivers that don't accept asyncpg dialect.
+
+        Rules:   none
+        """
         return (
             f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -62,6 +68,9 @@ class BaseServiceSettings(BaseSettings):
 
     @property
     def valkey_url(self) -> str:
+        """
+        Rules:   When VALKEY_PASSWORD is set, the Redis URL must include the password in the format redis://:password@host:port. If not set, the URL should omit the password field entirely.
+        """
         if self.VALKEY_PASSWORD:
             return f"redis://:{self.VALKEY_PASSWORD}@{self.VALKEY_HOST}:{self.VALKEY_PORT}"
         return f"redis://{self.VALKEY_HOST}:{self.VALKEY_PORT}"

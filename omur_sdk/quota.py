@@ -6,8 +6,8 @@ means "use defaults below". Limits are integers; bytes are BIGINT.
 
 exports: DEFAULT_DOCS | DEFAULT_STORAGE_BYTES | DEFAULT_QUERIES_PER_MONTH | class Resource | class Limits | class Usage | class Decision | load(session) | get_usage(session) | check_upload(lim, usage, incoming_bytes) | check_query(lim, usage)
 used_by: none
-rules:   none
-agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+rules:   The module must maintain backward compatibility with existing quota enforcement logic and cannot modify the public API of `load`, `get_usage`, `check_upload`, or `check_query` functions.
+agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
@@ -59,6 +59,8 @@ async def load(session: AsyncSession) -> Limits:
 
     The caller is expected to have already invoked ``tenant.set_rls(session)``.
     Falls back to defaults when no row exists for the tenant.
+
+    Rules:   The function assumes that `tenant.set_rls(session)` has already been called, and explicitly filters by `app.tenant_id` to prevent cross-tenant data leakage since `tenant_quotas` has no RLS policy.
     """
     # ``tenant_quotas`` intentionally has no RLS policy (operators need
     # cross-tenant visibility for capacity planning), so we filter by
@@ -97,6 +99,8 @@ async def get_usage(session: AsyncSession) -> Usage:
     this helper — the upload-path checks never read that field, and the
     spine middleware that does enforce query quota will roll back and
     surface the real permission error instead.
+
+    Rules:   The function requires the caller to have already set RLS on the session, and services without SELECT permission on `usage_log` will get `queries_this_month=0`, which may mask real permission errors in query enforcement.
     """
     doc_row = (
         await session.execute(
@@ -131,6 +135,9 @@ async def get_usage(session: AsyncSession) -> Usage:
 
 
 def check_upload(lim: Limits, usage: Usage, incoming_bytes: int) -> Decision:
+    """
+    Rules:   The function does not validate that `incoming_bytes` is non-negative, which could lead to incorrect quota calculations if negative values are passed.
+    """
     if usage.docs + 1 > lim.docs:
         return Decision(
             allowed=False,
@@ -151,6 +158,9 @@ def check_upload(lim: Limits, usage: Usage, incoming_bytes: int) -> Decision:
 
 
 def check_query(lim: Limits, usage: Usage) -> Decision:
+    """
+    Rules:   The function relies on `_seconds_until_next_month()` to calculate retry_after, which may not be accurate if the system clock is skewed or if the function is called outside of normal monthly boundaries.
+    """
     if usage.queries_this_month + 1 > lim.queries_per_month:
         return Decision(
             allowed=False,
