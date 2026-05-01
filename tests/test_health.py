@@ -1,4 +1,11 @@
-"""Tests for shared health/ready endpoint helpers."""
+"""packages/omur-sdk/tests/test_health.py — Tests for shared health/ready endpoint helpers.
+
+exports: test_health_returns_ok() | test_healthz_alias_matches_health() | test_ready_returns_ready_when_check_passes() | test_ready_returns_503_when_check_fails() | test_ready_returns_ready_without_check()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

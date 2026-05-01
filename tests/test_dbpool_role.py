@@ -1,4 +1,5 @@
-"""Pure-function tests for the role plumbing in
+"""packages/omur-sdk/tests/test_dbpool_role.py — Pure-function tests for the role plumbing in.
+
 ``sqlalchemy_asyncpg_connect_args`` — no DB required.
 
 The SET ROLE switch was previously a SQLAlchemy sync "connect" event
@@ -8,6 +9,12 @@ connection and raise ``'NoneType' object has no attribute 'cursor'``.
 The fix moves the role switch into asyncpg's ``server_settings`` so it
 runs inside the connection handshake. These tests pin the contract of
 the helper so the fix can't silently regress.
+
+exports: test_connect_args_default_includes_omur_app_role() | test_connect_args_custom_role() | test_connect_args_role_none_omits_server_settings()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from omur_sdk.dbpool import sqlalchemy_asyncpg_connect_args

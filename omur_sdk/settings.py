@@ -1,3 +1,11 @@
+"""packages/omur-sdk/omur_sdk/settings.py — Settings manager with in-memory cache, Valkey pub/sub subscriber, and callbacks.
+
+exports: class SettingsManager
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 # packages/omur-sdk/omur_sdk/settings.py
 """Settings manager with in-memory cache, Valkey pub/sub subscriber, and callbacks."""
 

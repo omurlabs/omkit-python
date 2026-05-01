@@ -1,3 +1,11 @@
+"""packages/omur-sdk/tests/test_registry_polling.py — test_registry_polling module.
+
+exports: class NoopProvider | pool() | test_registry_polling_picks_up_providers(pool, monkeypatch)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 import asyncio
 import os
 

@@ -1,4 +1,4 @@
-"""Backend-agnostic event bus for cross-service pub/sub notifications.
+"""packages/omur-sdk/omur_sdk/eventbus.py — Backend-agnostic event bus for cross-service pub/sub notifications.
 
 Implementations:
 
@@ -8,6 +8,12 @@ Implementations:
 - ``RedisEventBus`` (opt-in via ``OMUR_EVENTBUS_BACKEND=redis``) uses Redis
   Streams consumer groups — the same wire-format used by the legacy
   ``omur_sdk.events.EventBus`` wrapper so both can coexist.
+
+exports: class Event | class EventBus | class PostgresEventBus | class RedisEventBus | backend_from_env() | new_bus()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations

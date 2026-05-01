@@ -1,4 +1,11 @@
-"""Tests for tenant context module."""
+"""packages/omur-sdk/tests/test_tenant.py — Tests for tenant context module.
+
+exports: test_require_raises_when_unset() | test_current_or_none_returns_none_when_unset() | test_request_id_returns_none_when_unset() | test_bind_sets_and_resets_tenant() | test_bind_sets_and_resets_request_id() | test_bind_resets_on_exception() | test_middleware_sets_tenant_from_header() | test_middleware_returns_401_when_missing() | test_middleware_returns_401_for_invalid_uuid() | test_middleware_skips_excluded_paths() | test_middleware_resets_contextvar_after_request() | test_middleware_generates_request_id_when_absent() | test_middleware_adds_request_id_to_response_headers() | test_set_rls_executes_set_config() | test_set_rls_raises_outside_transaction() | test_set_rls_raises_without_tenant() | test_async_bind_sets_and_resets() | test_async_bind_resets_on_exception() | test_async_bind_nested() | test_set_rls_conn_runs_set_config() | (+7 more)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import pytest
 from uuid import uuid4

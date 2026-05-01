@@ -1,6 +1,12 @@
-"""HTTP client for Cerebellum biomedical NLP service.
+"""packages/omur-sdk/omur_sdk/cerebellum_client.py — HTTP client for Cerebellum biomedical NLP service.
 
 Features: circuit breaker, batch splitting, header forwarding, graceful fallback.
+
+exports: _MAX_BATCH_SIZE | class CerebellumClient
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations

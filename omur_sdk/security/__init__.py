@@ -1,9 +1,15 @@
-"""Security facade — re-exports sanitation helpers and event logger.
+"""packages/omur-sdk/omur_sdk/security/__init__.py — re-exports sanitation helpers and event logger.
 
 The ``omur_sdk.encryption`` module has a mixed public surface and is
 intentionally NOT re-exported here; continue to import from
 ``omur_sdk.encryption`` directly. Private crypto primitives live in
 ``omur_sdk.internal.crypto`` and are never re-exported.
+
+exports: none
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from omur_sdk.sanitize import (

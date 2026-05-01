@@ -1,10 +1,16 @@
-"""asyncpg pool helper that enforces a Postgres role via the init coroutine.
+"""packages/omur-sdk/omur_sdk/dbpool.py — asyncpg pool helper that enforces a Postgres role via the init coroutine.
 
 Runs ``SET ROLE <role>`` on every new physical connection so the role is
 guaranteed even across reconnects — the async equivalent of pgx's
 ``AfterConnect`` hook. This is the defence-in-depth mechanism we rely on
 after removing PgBouncer (which previously took care of the role reset via
 ``server_reset_query``).
+
+exports: sqlalchemy_asyncpg_connect_args(role) | new_session_pool(dsn) | create_pool(dsn)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations

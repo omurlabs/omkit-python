@@ -1,4 +1,11 @@
-"""Fernet-based encryption utilities for Omur settings secrets."""
+"""packages/omur-sdk/omur_sdk/encryption.py — Fernet-based encryption utilities for Omur settings secrets.
+
+exports: generate_key() | encrypt_value(plaintext, key) | decrypt_value(ciphertext, key) | mask_secret(value)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 from cryptography.fernet import Fernet, InvalidToken
 

@@ -1,4 +1,11 @@
-"""Tests for build_tenant_client — tenant header auto-injection via event hook."""
+"""packages/omur-sdk/tests/test_http.py — tenant header auto-injection via event hook.
+
+exports: test_injects_tenant_header_from_context() | test_omits_tenant_header_when_no_context() | test_explicit_tenant_header_wins()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 from __future__ import annotations
 
 import pytest

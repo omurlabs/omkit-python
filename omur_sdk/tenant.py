@@ -1,7 +1,13 @@
-"""Per-request tenant isolation via contextvars.
+"""packages/omur-sdk/omur_sdk/tenant.py — Per-request tenant isolation via contextvars.
 
 Middleware sets the tenant on each request. Handlers call require() to access.
 Background tasks use bind() to establish context.
+
+exports: require() | current_or_none() | request_id() | _DEFAULT_EXCLUDE | class TenantMiddleware | middleware(exclude_paths) | set_rls(session) | set_rls_conn(conn) | bind(tenant_id, request_id) | async_bind(tenant_id, request_id) | hashed_for_log(tenant_id, key)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations

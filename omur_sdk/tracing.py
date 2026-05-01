@@ -1,4 +1,4 @@
-"""OpenTelemetry tracing bootstrap for Omur services.
+"""packages/omur-sdk/omur_sdk/tracing.py — OpenTelemetry tracing bootstrap for Omur services.
 
 Usage:
     from omur_sdk.tracing import init_tracing
@@ -7,6 +7,12 @@ Usage:
 Tracing is OFF by default since the 2026-04 infra consolidation (Alloy,
 Tempo, and VictoriaLogs were removed). Set OTEL_EXPORTER_OTLP_ENDPOINT
 to a reachable collector (e.g. ``http://alloy:4318``) to re-enable.
+
+exports: DEFAULT_ENDPOINT | init_tracing(service_name, endpoint) | instrument_fastapi(app)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations

@@ -1,4 +1,11 @@
-"""Tests for on-demand model loading with TTL-based idle unload."""
+"""packages/omur-sdk/tests/test_model_lifecycle.py — Tests for on-demand model loading with TTL-based idle unload.
+
+exports: class FakeLifecycle | test_ensure_loaded_loads_once() | test_ensure_loaded_updates_last_used() | test_unload_clears_model() | test_unload_when_not_loaded_is_noop() | test_reload_after_unload() | test_concurrent_ensure_loaded_loads_once() | test_touch_updates_last_used() | test_registry_status() | test_registry_unload_all() | test_reaper_unloads_idle_models() | test_reaper_does_not_unload_recently_used() | test_set_ttl_updates_reaper()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import asyncio
 import time

@@ -1,4 +1,11 @@
-"""Tests for valkey.new_client factory."""
+"""packages/omur-sdk/tests/test_valkey.py — Tests for valkey.new_client factory.
+
+exports: test_new_client_uses_settings_url() | test_new_client_passes_kwargs() | test_new_client_no_password()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 from __future__ import annotations
 

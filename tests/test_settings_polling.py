@@ -1,3 +1,11 @@
+"""packages/omur-sdk/tests/test_settings_polling.py — test_settings_polling module.
+
+exports: pool() | test_polling_picks_up_updates(pool, monkeypatch)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 import asyncio
 import os
 import uuid

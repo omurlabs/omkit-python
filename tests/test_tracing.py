@@ -1,4 +1,11 @@
-"""Tests for OpenTelemetry tracing bootstrap."""
+"""packages/omur-sdk/tests/test_tracing.py — Tests for OpenTelemetry tracing bootstrap.
+
+exports: test_init_tracing_disabled_when_no_endpoint() | test_init_tracing_returns_provider() | test_init_tracing_sets_service_name() | test_instrument_fastapi_idempotent()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import sys
 import pytest

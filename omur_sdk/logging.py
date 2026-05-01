@@ -1,4 +1,4 @@
-"""Shared structlog configuration for all Omur services.
+"""packages/omur-sdk/omur_sdk/logging.py — Shared structlog configuration for all Omur services.
 
 Default output is JSON, suitable for production log aggregation. Set
 ``LOG_FORMAT=console`` to switch to the human-readable renderer during dev.
@@ -6,6 +6,12 @@ Default output is JSON, suitable for production log aggregation. Set
 Usage:
     from omur_sdk.logging import configure_logging
     configure_logging("spine")  # Call once at startup, before get_logger()
+
+exports: configure_logging(service_name)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 from __future__ import annotations
 

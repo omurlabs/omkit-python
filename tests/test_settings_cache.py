@@ -1,4 +1,11 @@
-"""Tests for SettingsManager write-through cache."""
+"""packages/omur-sdk/tests/test_settings_cache.py — Tests for SettingsManager write-through cache.
+
+exports: class TestWriteThroughCache
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import json
 import os

@@ -1,4 +1,4 @@
-"""Tenant-aware httpx.AsyncClient factory.
+"""packages/omur-sdk/omur_sdk/http.py — Tenant-aware httpx.AsyncClient factory.
 
 Callers construct one long-lived client per service (NOT per request) via
 ``build_tenant_client`` and rely on the attached ``event_hook`` to inject
@@ -15,6 +15,12 @@ Example:
         resp = await client.post("http://svc:8080/q", json=body)
         resp.raise_for_status()
         return resp.json()
+
+exports: build_tenant_client()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 from __future__ import annotations
 

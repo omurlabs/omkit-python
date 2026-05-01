@@ -1,4 +1,11 @@
-"""Facade smoke test — omur_sdk.transport re-exports the expected surface."""
+"""packages/omur-sdk/tests/test_transport_facade.py — omur_sdk.transport re-exports the expected surface.
+
+exports: EXPECTED_EXPORTS | test_transport_facade_exports_are_callable_or_classes() | test_transport_facade_identity_matches_underlying() | test_transport_facade_all_matches_imports_exactly() | test_transport_facade_does_not_leak_internals()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import sys
 

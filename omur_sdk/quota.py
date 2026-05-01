@@ -1,8 +1,14 @@
-"""Per-tenant quota helpers (plan 1.7).
+"""packages/omur-sdk/omur_sdk/quota.py — Per-tenant quota helpers (plan 1.7).
 
 Mirrors ``packages/omur-go-sdk/quota/quota.go`` so marrow (Python) and
 spine (Go) enforce identical defaults. Absence of a ``tenant_quotas`` row
 means "use defaults below". Limits are integers; bytes are BIGINT.
+
+exports: DEFAULT_DOCS | DEFAULT_STORAGE_BYTES | DEFAULT_QUERIES_PER_MONTH | class Resource | class Limits | class Usage | class Decision | load(session) | get_usage(session) | check_upload(lim, usage, incoming_bytes) | check_query(lim, usage)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations

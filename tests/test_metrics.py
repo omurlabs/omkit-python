@@ -1,3 +1,11 @@
+"""packages/omur-sdk/tests/test_metrics.py — test_metrics module.
+
+exports: test_mount_metrics_exposes_endpoint() | test_mount_metrics_idempotent()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 

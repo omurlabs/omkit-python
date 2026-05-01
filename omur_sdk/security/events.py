@@ -1,8 +1,14 @@
-"""Security event logger — write-side helper for the security_events table.
+"""packages/omur-sdk/omur_sdk/security/events.py — write-side helper for the security_events table.
 
 Evidence must be structured metadata (pattern names, classifier verdicts,
 stripped URLs). Never pass full document content — the column comment in
 the migration is the canonical reminder.
+
+exports: log_security_event()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations

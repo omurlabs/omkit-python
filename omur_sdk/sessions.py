@@ -1,4 +1,5 @@
-"""Session store abstractions for services that persist short-lived per-user
+"""packages/omur-sdk/omur_sdk/sessions.py — Session store abstractions for services that persist short-lived per-user.
+
 sessions. Two backends are provided:
 
 - ``PostgresSessionStore`` (default) — stores sessions in the ``sessions``
@@ -8,6 +9,12 @@ sessions. Two backends are provided:
 
 The ``Session`` dataclass is the wire shape exchanged between Store
 implementations and callers.
+
+exports: class NotFound | class Session | class SessionStore | class PostgresSessionStore | class RedisSessionStore | backend_from_env() | new_store()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations

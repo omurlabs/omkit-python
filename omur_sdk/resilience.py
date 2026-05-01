@@ -1,4 +1,11 @@
-"""HTTP resilience primitives: circuit breaker + retry with exponential backoff."""
+"""packages/omur-sdk/omur_sdk/resilience.py — HTTP resilience primitives: circuit breaker + retry with exponential backoff.
+
+exports: T | class CircuitOpen | class CircuitBreaker | resilient(breaker)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 from __future__ import annotations
 
 import functools

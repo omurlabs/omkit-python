@@ -1,4 +1,4 @@
-"""Shared sanitisation helpers for LLM output and HTML.
+"""packages/omur-sdk/omur_sdk/sanitize.py — Shared sanitisation helpers for LLM output and HTML.
 
 ``sanitize_llm_output`` is the minimal form used by Frontal: strip
 ``<think>...</think>`` blocks and trim whitespace. ``sanitize_llm_response``
@@ -9,6 +9,12 @@ escapes the rest).
 
 These helpers are presentation-layer sanitisation. They are **not** a PHI/PII
 scrubber — do not rely on them for compliance.
+
+exports: sanitize_llm_output(text) | sanitize_llm_response(text) | sanitize_html(text) | extract_json(text)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 from __future__ import annotations
 

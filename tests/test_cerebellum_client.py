@@ -1,4 +1,11 @@
-"""Tests for CerebellumClient — circuit breaker, batch splitting, fallback."""
+"""packages/omur-sdk/tests/test_cerebellum_client.py — circuit breaker, batch splitting, fallback.
+
+exports: client() | test_available_when_healthy(client) | test_circuit_opens_after_failures(client) | test_circuit_closes_after_cooldown(client) | test_batch_splitting() | test_embed_returns_none_when_unavailable(client) | test_disabled_returns_none() | test_post_sends_tenant_header_from_contextvar(client) | test_post_explicit_tenant_id_wins_over_contextvar(client) | test_post_omits_tenant_header_when_both_unset(client) | test_post_sends_service_token_header() | test_post_omits_service_token_when_unset() | test_rerank_returns_full_response_dict(client) | test_rerank_short_circuits_empty_passages(client) | test_rerank_returns_none_on_5xx(client) | test_rerank_returns_none_on_timeout(client) | test_rerank_returns_none_when_circuit_open(client)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock

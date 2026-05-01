@@ -1,4 +1,11 @@
-"""Tests for shared structlog configuration."""
+"""packages/omur-sdk/tests/test_logging.py — Tests for shared structlog configuration.
+
+exports: test_configure_logging_sets_processors() | test_configure_logging_is_idempotent() | test_default_is_json(monkeypatch) | test_console_format(monkeypatch)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 from __future__ import annotations
 
 import json

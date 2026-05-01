@@ -1,4 +1,11 @@
-"""On-demand model loading with TTL-based idle unloading."""
+"""packages/omur-sdk/omur_sdk/model_lifecycle.py — On-demand model loading with TTL-based idle unloading.
+
+exports: MODEL_LOAD_DURATION | MODEL_LOAD_ERRORS | MODEL_UNLOAD_TOTAL | MODEL_LOADED | class ModelLifecycle | class ModelRegistry
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 from __future__ import annotations
 

@@ -1,10 +1,16 @@
-"""Fire-and-forget notifier for solid-sync Pod synchronization.
+"""packages/omur-sdk/omur_sdk/sync_notifier.py — Fire-and-forget notifier for solid-sync Pod synchronization.
 
 Usage:
     notifier = SyncNotifier(base_url="http://solid-sync:8000", token="...")
     await notifier.notify("medication", "med-001", {...data...})
 
 Notifications are best-effort: failures are logged but never block the caller.
+
+exports: class SyncNotifier
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 import asyncio

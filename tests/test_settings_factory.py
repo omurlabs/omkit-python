@@ -1,4 +1,11 @@
-"""Tests for SettingsManager.create() factory."""
+"""packages/omur-sdk/tests/test_settings_factory.py — Tests for SettingsManager.create() factory.
+
+exports: test_create_factory_returns_settings_manager()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 from unittest.mock import MagicMock, AsyncMock
 

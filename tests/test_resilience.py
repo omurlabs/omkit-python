@@ -1,3 +1,11 @@
+"""packages/omur-sdk/tests/test_resilience.py — test_resilience module.
+
+exports: test_circuit_opens_after_fail_max() | test_open_circuit_raises_circuit_open_immediately() | test_success_resets_failure_count() | test_half_open_after_reset_timeout() | test_non_transient_errors_are_not_retried() | test_half_open_probe_success_closes_circuit()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 import pytest
 import httpx
 from unittest.mock import MagicMock

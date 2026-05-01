@@ -1,3 +1,11 @@
+"""packages/omur-sdk/tests/test_eventbus.py — test_eventbus module.
+
+exports: pool() | test_postgres_bus_publish_subscribe(pool) | test_backend_from_env(monkeypatch) | test_redis_bus_publish_subscribe()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 import asyncio
 import os
 

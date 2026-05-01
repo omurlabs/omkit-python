@@ -1,4 +1,11 @@
-"""Facade smoke test — omur_sdk.platform re-exports platform primitives."""
+"""packages/omur-sdk/tests/test_platform_facade.py — omur_sdk.platform re-exports platform primitives.
+
+exports: EXPECTED_EXPORTS | test_platform_facade_identity_matches_underlying() | test_platform_facade_types() | test_platform_facade_all_matches_imports_exactly() | test_platform_facade_does_not_leak_internals()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import sys
 

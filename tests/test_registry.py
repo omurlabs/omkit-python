@@ -1,4 +1,11 @@
-"""Tests for ProviderRegistry — all DB and Valkey calls are mocked."""
+"""packages/omur-sdk/tests/test_registry.py — all DB and Valkey calls are mocked.
+
+exports: class StubProvider | TENANT_ID | STUB_DB_ROWS | registry() | test_start_loads_providers_from_db(registry) | test_stop_cancels_all_tasks(registry) | test_reload_tenant_replaces_tasks(registry) | test_reload_tenant_removes_disabled_providers(registry) | test_unknown_provider_name_is_skipped(registry)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import asyncio
 import pytest

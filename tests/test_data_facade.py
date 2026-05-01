@@ -1,4 +1,11 @@
-"""Facade smoke test — omur_sdk.data re-exports DB + session primitives."""
+"""packages/omur-sdk/tests/test_data_facade.py — omur_sdk.data re-exports DB + session primitives.
+
+exports: EXPECTED_EXPORTS | test_data_facade_identity_matches_underlying() | test_data_facade_types() | test_data_facade_all_matches_imports_exactly() | test_data_facade_does_not_leak_internals()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import sys
 

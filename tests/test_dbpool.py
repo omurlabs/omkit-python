@@ -1,3 +1,11 @@
+"""packages/omur-sdk/tests/test_dbpool.py — test_dbpool module.
+
+exports: test_sqlalchemy_connect_args_disables_prepared_statements() | test_role_set_on_acquire() | test_role_set_after_txn_error() | test_no_role_leaves_pool_behaviour_unchanged()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 import os
 
 import pytest

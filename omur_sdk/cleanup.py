@@ -1,9 +1,15 @@
-"""Coordinated periodic cleanup task runner.
+"""packages/omur-sdk/omur_sdk/cleanup.py — Coordinated periodic cleanup task runner.
 
 Loop.run() fires the provided ``task`` coroutine every ``interval`` seconds
 while holding ``pg_try_advisory_lock(lock_key)`` — horizontally scaled
 replicas of the same service won't double-execute the cleanup. Lock
 contention turns the tick into a silent no-op.
+
+exports: class Loop
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations

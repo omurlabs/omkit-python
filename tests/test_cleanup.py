@@ -1,3 +1,11 @@
+"""packages/omur-sdk/tests/test_cleanup.py — test_cleanup module.
+
+exports: test_loop_runs_task_when_lock_acquired() | test_loop_skips_when_lock_held_elsewhere()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 import asyncio
 import os
 

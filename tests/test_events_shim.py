@@ -1,4 +1,11 @@
-"""omur_sdk.events is a DeprecationWarning shim for omur_sdk.eventbus."""
+"""packages/omur-sdk/tests/test_events_shim.py — omur_sdk.events is a DeprecationWarning shim for omur_sdk.eventbus.
+
+exports: test_events_reexports_eventbus() | test_events_emits_deprecation_warning_on_import()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import warnings
 

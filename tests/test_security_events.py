@@ -1,4 +1,4 @@
-"""Tests for omur_sdk.security.events.log_security_event.
+"""packages/omur-sdk/tests/test_security_events.py — Tests for omur_sdk.security.events.log_security_event.
 
 Integration tests (gated by TEST_POSTGRES_DSN) exercise the full
 RLS tenant-isolation contract: rows inserted under tenant A are
@@ -6,6 +6,12 @@ invisible when the GUC is set to tenant B.
 
 Unit tests exercise the happy-path call path with a mock pool so
 they run without a live database.
+
+exports: test_log_security_event_calls_pool_execute() | test_log_security_event_block_emits_warning(caplog) | test_log_security_event_no_warning_below_block(caplog) | test_log_security_event_facade_export() | test_rls_tenant_isolation()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Shared health and readiness endpoints for Omur services.
+"""packages/omur-sdk/omur_sdk/health.py — Shared health and readiness endpoints for Omur services.
 
 Usage:
     from omur_sdk.health import mount_health_endpoints
@@ -6,6 +6,12 @@ Usage:
 
 The ready_check is an async callable returning dict[str, str].
 Values of "ok" mean healthy; anything else is treated as an error message.
+
+exports: mount_health_endpoints(app, service_name, version, ready_check)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from typing import Awaitable, Callable

@@ -1,4 +1,11 @@
-"""Tests for omur_sdk.encryption."""
+"""packages/omur-sdk/tests/test_encryption.py — Tests for omur_sdk.encryption.
+
+exports: test_roundtrip() | test_different_keys_fail() | test_encrypt_empty_string() | test_mask_secret_long() | test_mask_secret_medium() | test_mask_secret_very_short() | test_mask_secret_none() | test_mask_secret_empty() | test_mask_secret_exactly_4() | test_mask_secret_exactly_10()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import pytest
 from cryptography.fernet import InvalidToken

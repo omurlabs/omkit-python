@@ -1,4 +1,11 @@
-"""Shared base settings for all Omur services."""
+"""packages/omur-sdk/omur_sdk/config.py — Shared base settings for all Omur services.
+
+exports: class BaseServiceSettings
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict

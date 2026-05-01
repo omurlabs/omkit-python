@@ -1,8 +1,14 @@
-"""Transport facade — re-exports cross-cutting wire / observability primitives.
+"""packages/omur-sdk/omur_sdk/transport/__init__.py — re-exports cross-cutting wire / observability primitives.
 
 This is an additive grouping for discoverability. Existing imports from the
 flat modules (``omur_sdk.http``, ``omur_sdk.tracing``, etc.) continue to work
 unchanged; new code is encouraged to import from this facade.
+
+exports: none
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from omur_sdk.health import mount_health_endpoints

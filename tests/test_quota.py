@@ -1,3 +1,11 @@
+"""packages/omur-sdk/tests/test_quota.py — test_quota module.
+
+exports: test_check_upload_rejects_over_docs() | test_check_upload_rejects_over_bytes() | test_check_upload_allows_when_under() | test_check_query_rejects_at_limit() | test_check_query_allows_when_under() | test_cap_at_32_days() | test_defaults_match_stage1_spec()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 from __future__ import annotations
 
 from omur_sdk.quota import (

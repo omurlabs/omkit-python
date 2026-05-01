@@ -1,4 +1,11 @@
-"""Facade smoke test — omur_sdk.security re-exports sanitation helpers."""
+"""packages/omur-sdk/tests/test_security_facade.py — omur_sdk.security re-exports sanitation helpers.
+
+exports: EXPECTED_EXPORTS | test_security_facade_identity_matches_sanitize() | test_security_facade_sanitize_callables() | test_security_facade_all_matches_imports_exactly() | test_security_facade_does_not_leak_internals()
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 import sys
 

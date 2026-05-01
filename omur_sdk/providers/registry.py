@@ -1,4 +1,11 @@
-"""ProviderRegistry — loads providers from DB, manages asyncio tasks, hot-reloads via Valkey."""
+"""packages/omur-sdk/omur_sdk/providers/registry.py — loads providers from DB, manages asyncio tasks, hot-reloads via Valkey.
+
+exports: DEFAULT_PROVIDERS_POLL_INTERVAL | class ProviderRegistry
+used_by: packages/omur-sdk/omur_sdk/providers/__init__.py → ProviderRegistry
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
+"""
 
 from __future__ import annotations
 

@@ -1,8 +1,14 @@
-"""Cross-SDK envelope contract for job-queue payloads.
+"""packages/omur-sdk/omur_sdk/jobqueue/envelope.py — Cross-SDK envelope contract for job-queue payloads.
 
 Every task enqueued via streaq (Python) or Asynq (Go) is wrapped in this
 envelope. Workers unwrap on receive, validate, and run the handler under the
 tenant's RLS scope.
+
+exports: ENVELOPE_VERSION | class InvalidEnvelopeError | class Envelope | wrap(tenant_id, payload) | unwrap(data)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations

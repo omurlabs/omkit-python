@@ -1,8 +1,14 @@
-"""Shared Prometheus metrics wiring for FastAPI services.
+"""packages/omur-sdk/omur_sdk/metrics.py — Shared Prometheus metrics wiring for FastAPI services.
 
 Usage:
     from omur_sdk.metrics import mount_metrics
     mount_metrics(app, "spine")  # exposes /metrics, instruments all routes
+
+exports: mount_metrics(app, service_name)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 
 from __future__ import annotations
