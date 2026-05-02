@@ -15,6 +15,7 @@ from omur_sdk.platform import (
     ModelLifecycle,
     ModelRegistry,
     CerebellumClient,
+    CortexClient,
     SyncNotifier,
 )
 
@@ -24,6 +25,7 @@ EXPECTED_EXPORTS = {
     "ModelLifecycle",
     "ModelRegistry",
     "CerebellumClient",
+    "CortexClient",
     "SyncNotifier",
 }
 
@@ -32,6 +34,7 @@ def test_platform_facade_identity_matches_underlying():
     from omur_sdk import (
         cerebellum_client,
         config,
+        cortex,
         model_lifecycle,
         settings,
         sync_notifier,
@@ -42,6 +45,7 @@ def test_platform_facade_identity_matches_underlying():
     assert ModelLifecycle is model_lifecycle.ModelLifecycle
     assert ModelRegistry is model_lifecycle.ModelRegistry
     assert CerebellumClient is cerebellum_client.CerebellumClient
+    assert CortexClient is cortex.CortexClient
     assert SyncNotifier is sync_notifier.SyncNotifier
 
 
@@ -52,6 +56,7 @@ def test_platform_facade_types():
         ModelLifecycle,
         ModelRegistry,
         CerebellumClient,
+        CortexClient,
         SyncNotifier,
     ):
         assert isinstance(cls, type), f"{cls!r} should be a class"

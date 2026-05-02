@@ -12,6 +12,7 @@ message:
 
 from omur_sdk.cerebellum_client import CerebellumClient
 from omur_sdk.config import BaseServiceSettings
+from omur_sdk.cortex import CortexClient
 from omur_sdk.model_lifecycle import ModelLifecycle, ModelRegistry
 from omur_sdk.settings import SettingsManager
 from omur_sdk.sync_notifier import SyncNotifier
@@ -22,5 +23,6 @@ __all__ = [
     "ModelLifecycle",
     "ModelRegistry",
     "CerebellumClient",
+    "CortexClient",
     "SyncNotifier",
 ]
