@@ -87,3 +87,73 @@ def test_console_format(monkeypatch):
     except json.JSONDecodeError:
         return
     raise AssertionError("console format produced JSON unexpectedly")
+
+
+def test_service_name_bound_to_records(monkeypatch):
+    """Every log record must carry the configured service name."""
+    line = _capture_line(monkeypatch, None)
+    payload = json.loads(line)
+    assert payload["service"] == "test-svc"
+
+
+def test_correlation_fields_emitted_when_tenant_bound(monkeypatch):
+    """When tenant + request_id are bound, logs auto-carry both fields."""
+    from omur_sdk import tenant
+
+    monkeypatch.delenv("LOG_FORMAT", raising=False)
+    buf = StringIO()
+
+    class _StreamLoggerFactory:
+        def __call__(self, *args, **kwargs):
+            logger = logging.Logger("test")
+            handler = logging.StreamHandler(buf)
+            handler.setFormatter(logging.Formatter("%(message)s"))
+            logger.addHandler(handler)
+            logger.setLevel(logging.INFO)
+            return logger
+
+    structlog.reset_defaults()
+    configure_logging("test-svc")
+    structlog.configure(
+        processors=structlog.get_config()["processors"],
+        wrapper_class=structlog.get_config()["wrapper_class"],
+        context_class=structlog.get_config()["context_class"],
+        logger_factory=_StreamLoggerFactory(),
+        cache_logger_on_first_use=False,
+    )
+
+    with tenant.bind("11111111-1111-4111-8111-111111111111", "req-abc"):
+        log = structlog.get_logger()
+        log.info("hello")
+    payload = json.loads(buf.getvalue().strip())
+    assert payload["tenant_id"] == "11111111-1111-4111-8111-111111111111"
+    assert payload["request_id"] == "req-abc"
+
+
+def test_service_name_can_be_overridden_per_call(monkeypatch):
+    """Explicit service kwarg on a log call wins over default."""
+    monkeypatch.delenv("LOG_FORMAT", raising=False)
+    buf = StringIO()
+
+    class _StreamLoggerFactory:
+        def __call__(self, *args, **kwargs):
+            logger = logging.Logger("test")
+            handler = logging.StreamHandler(buf)
+            handler.setFormatter(logging.Formatter("%(message)s"))
+            logger.addHandler(handler)
+            logger.setLevel(logging.INFO)
+            return logger
+
+    structlog.reset_defaults()
+    configure_logging("default-svc")
+    structlog.configure(
+        processors=structlog.get_config()["processors"],
+        wrapper_class=structlog.get_config()["wrapper_class"],
+        context_class=structlog.get_config()["context_class"],
+        logger_factory=_StreamLoggerFactory(),
+        cache_logger_on_first_use=False,
+    )
+    log = structlog.get_logger()
+    log.info("hello", service="override-svc")
+    payload = json.loads(buf.getvalue().strip())
+    assert payload["service"] == "override-svc"
