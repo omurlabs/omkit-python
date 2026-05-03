@@ -4,14 +4,19 @@ Usage:
     from omur_sdk.health import mount_health_endpoints
     mount_health_endpoints(app, "spine", APP_VERSION, ready_check=_check_db)
 
-The ready_check is an async callable returning dict[str, str].
-Values of "ok" mean healthy; anything else is treated as an error message.
+Mounted paths:
+    /health, /healthz  — liveness (process up; never depends on external deps)
+    /ready,  /readyz   — readiness (deps reachable; orchestrator routes traffic when 200)
+
+`ready_check` is an async callable returning `dict[str, str]`.
+Values of "ok" mean healthy; anything else is an error message and the
+endpoint returns HTTP 503 with status="not_ready".
 
 exports: mount_health_endpoints(app, service_name, version, ready_check)
-used_by: none
-rules:   The health endpoint mounting function must be called exactly once during application startup and cannot be reconfigured or called again. The `ready_check` parameter must be a synchronous function that returns a boolean value indicating service readiness. All health endpoints must be registered under the `/health` path prefix and follow the standard Kubernetes liveness/readiness probe response format.
-agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
-message: 
+used_by: services/frontal/main.py | services/marrow/main.py | services/cerebellum/main.py | services/auris/main.py
+rules:   Liveness handlers must never call external dependencies — they only confirm the process is running. Readiness handlers may call dependencies but must complete fast (under 3s); a slow dependency must surface as not_ready, not as a hung probe. Both /health/ and /healthz/ paths must always be 200 once the process accepts connections, even when readiness is failing.
+agent:   claude-opus-4-7 | anthropic | 2026-05-03 | track-9-health-ready-audit | extend with /readyz alias and clarify liveness vs readiness contract
+message:
 """
 
 from typing import Awaitable, Callable
@@ -26,21 +31,17 @@ def mount_health_endpoints(
     version: str,
     ready_check: Callable[[], Awaitable[dict[str, str]]] | None = None,
 ) -> None:
-    """Mount /health, /healthz (liveness alias) and /ready endpoints.
+    """Mount /health, /healthz (liveness) and /ready, /readyz (readiness) endpoints.
 
-    Rules:   Service name must be unique across deployments to avoid conflicts in health monitoring. Ready check function must return a dict with string values to ensure proper health status reporting.
+    Liveness paths return 200 unconditionally — they only signal the process is
+    up. Readiness paths run the optional ready_check and return 503 if any
+    component reports anything other than "ok".
     """
 
     async def _liveness() -> dict:
         return {"status": "ok", "service": service_name, "version": version}
 
-    # /health and /healthz are aliases — /healthz matches k8s liveness-probe
-    # convention; /health is retained for callers that pre-date that.
-    app.add_api_route("/health", _liveness, methods=["GET"], tags=["meta"])
-    app.add_api_route("/healthz", _liveness, methods=["GET"], tags=["meta"])
-
-    @app.get("/ready", tags=["meta"])
-    async def readiness():
+    async def _readiness():
         if ready_check is None:
             return {"status": "ready", "service": service_name, "version": version}
 
@@ -52,3 +53,13 @@ def mount_health_endpoints(
             {"status": status, "service": service_name, "version": version, "checks": checks},
             status_code=status_code,
         )
+
+    # /health + /healthz are liveness aliases. /healthz matches the k8s
+    # convention; /health is retained for callers that pre-date that.
+    app.add_api_route("/health", _liveness, methods=["GET"], tags=["meta"])
+    app.add_api_route("/healthz", _liveness, methods=["GET"], tags=["meta"])
+
+    # /ready + /readyz are readiness aliases. /readyz matches the k8s
+    # convention; /ready is retained for callers that pre-date that.
+    app.add_api_route("/ready", _readiness, methods=["GET"], tags=["meta"])
+    app.add_api_route("/readyz", _readiness, methods=["GET"], tags=["meta"])
