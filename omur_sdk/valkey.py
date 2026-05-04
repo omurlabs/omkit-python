@@ -10,7 +10,6 @@ different async Redis client. Services that use streaq construct the Worker
 directly from `settings.valkey_url`.
 
 exports: new_client(settings)
-used_by: none
 rules:   The module must maintain backward compatibility with existing Redis connection patterns while ensuring all async operations are properly awaited. The client initialization must respect the settings structure defined in the SDK's configuration schema. All Redis operations must be wrapped with appropriate timeout and retry logic to prevent service disruptions.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

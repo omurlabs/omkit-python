@@ -11,7 +11,6 @@ runs inside the connection handshake. These tests pin the contract of
 the helper so the fix can't silently regress.
 
 exports: test_connect_args_default_includes_omur_app_role() | test_connect_args_custom_role() | test_connect_args_role_none_omits_server_settings()
-used_by: none
 rules:   The module must maintain backward compatibility with existing database connection patterns and cannot alter the default role behavior without explicit version bumping. All connection arguments must be validated at import time to prevent runtime failures. The module's public API cannot introduce breaking changes to the `sqlalchemy_asyncpg_connect_args` function signature or its returned argument structure.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

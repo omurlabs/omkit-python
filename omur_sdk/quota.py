@@ -5,7 +5,6 @@ spine (Go) enforce identical defaults. Absence of a ``tenant_quotas`` row
 means "use defaults below". Limits are integers; bytes are BIGINT.
 
 exports: DEFAULT_DOCS | DEFAULT_STORAGE_BYTES | DEFAULT_QUERIES_PER_MONTH | class Resource | class Limits | class Usage | class Decision | load(session) | get_usage(session) | check_upload(lim, usage, incoming_bytes) | check_query(lim, usage)
-used_by: none
 rules:   The module must maintain backward compatibility with existing quota enforcement logic and cannot modify the public API of `load`, `get_usage`, `check_upload`, or `check_query` functions.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

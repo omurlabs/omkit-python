@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_model_lifecycle.py — Tests for on-demand model loading with TTL-based idle unload.
 
 exports: class FakeLifecycle | test_ensure_loaded_loads_once() | test_ensure_loaded_updates_last_used() | test_unload_clears_model() | test_unload_when_not_loaded_is_noop() | test_reload_after_unload() | test_concurrent_ensure_loaded_loads_once() | test_touch_updates_last_used() | test_registry_status() | test_registry_unload_all() | test_reaper_unloads_idle_models() | test_reaper_does_not_unload_recently_used() | test_set_ttl_updates_reaper()
-used_by: none
 rules:   The `FakeLifecycle` class must not modify the `load_time` parameter during `_do_load()` execution, and all test methods must instantiate fresh `FakeLifecycle` or `ModelRegistry` objects to ensure test isolation. The module's lifecycle management logic must handle concurrent access without race conditions, and the reaper mechanism must accurately track model last-used timestamps to prevent premature unloading.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

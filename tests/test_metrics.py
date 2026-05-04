@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_metrics.py — test_metrics module.
 
 exports: test_mount_metrics_exposes_endpoint() | test_mount_metrics_idempotent()
-used_by: none
 rules:   The module must maintain backward compatibility with existing FastAPI application integrations and cannot introduce breaking changes to the metrics endpoint exposure pattern. The test suite must remain fully self-contained without external dependencies and should not modify global application state during test execution. All metrics endpoint tests must validate against the standard FastAPI testing client interface and cannot rely on custom middleware or external service mocks.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

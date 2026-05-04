@@ -6,7 +6,6 @@ replicas of the same service won't double-execute the cleanup. Lock
 contention turns the tick into a silent no-op.
 
 exports: class Loop
-used_by: none
 rules:   The Loop class must maintain a single persistent connection pool instance throughout its lifetime and cannot be instantiated without a valid pool argument. The run() method implements a blocking infinite loop that should only be called once per Loop instance and cannot be interrupted without external process termination. All database operations within the loop must use async context management to ensure proper connection handling and automatic release back to the pool.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

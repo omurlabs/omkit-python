@@ -3,7 +3,6 @@
 Features: circuit breaker, batch splitting, header forwarding, graceful fallback.
 
 exports: _MAX_BATCH_SIZE | class CerebellumClient
-used_by: none
 rules:   The `CerebellumClient` must maintain thread safety across all asynchronous operations and ensure the circuit breaker logic is consistently applied to all external HTTP calls to prevent cascading failures.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

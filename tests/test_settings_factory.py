@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_settings_factory.py — Tests for SettingsManager.create() factory.
 
 exports: test_create_factory_returns_settings_manager()
-used_by: none
 rules:   The test module must maintain strict isolation between test cases, with no shared mutable state between test methods. All mock objects must be properly configured with realistic return values that match the expected interface of the SettingsFactory. The module must not import any production code directly, only test utilities and the module under test.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

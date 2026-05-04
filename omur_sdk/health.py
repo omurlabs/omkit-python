@@ -13,7 +13,6 @@ Values of "ok" mean healthy; anything else is an error message and the
 endpoint returns HTTP 503 with status="not_ready".
 
 exports: mount_health_endpoints(app, service_name, version, ready_check)
-used_by: services/frontal/main.py | services/marrow/main.py | services/cerebellum/main.py | services/auris/main.py
 rules:   Liveness handlers must never call external dependencies — they only confirm the process is running. Readiness handlers may call dependencies but must complete fast (under 3s); a slow dependency must surface as not_ready, not as a hung probe. Both /health/ and /healthz/ paths must always be 200 once the process accepts connections, even when readiness is failing.
 agent:   claude-opus-4-7 | anthropic | 2026-05-03 | track-9-health-ready-audit | extend with /readyz alias and clarify liveness vs readiness contract
 message:

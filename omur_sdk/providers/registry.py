@@ -1,7 +1,6 @@
 """packages/omur-sdk/omur_sdk/providers/registry.py — loads providers from DB, manages asyncio tasks, hot-reloads via Valkey.
 
 exports: DEFAULT_PROVIDERS_POLL_INTERVAL | class ProviderRegistry
-used_by: packages/omur-sdk/omur_sdk/providers/__init__.py → ProviderRegistry
 rules:   The module must maintain thread safety across all asyncio task management and ensure consistent state synchronization between PostgreSQL and Valkey for tenant-provider configurations.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

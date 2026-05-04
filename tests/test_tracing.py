@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_tracing.py — Tests for OpenTelemetry tracing bootstrap.
 
 exports: test_init_tracing_disabled_when_no_endpoint() | test_init_tracing_returns_provider() | test_init_tracing_sets_service_name() | test_instrument_fastapi_idempotent()
-used_by: none
 rules:   The tracing module must maintain backward compatibility with existing OpenTelemetry SDK versions and cannot introduce breaking changes to its public API. All tracing functionality must be conditionally enabled/disabled based on environment variables or configuration parameters without hardcoding behavior. The module cannot have circular dependencies with other SDK modules and must isolate its tracing setup logic from application startup code.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

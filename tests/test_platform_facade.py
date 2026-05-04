@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_platform_facade.py — omur_sdk.platform re-exports platform primitives.
 
 exports: EXPECTED_EXPORTS | test_platform_facade_identity_matches_underlying() | test_platform_facade_types() | test_platform_facade_all_matches_imports_exactly() | test_platform_facade_does_not_leak_internals()
-used_by: none
 rules:   The platform facade must maintain exact identity and type compatibility with the underlying platform implementation to ensure transparent substitution. All public interfaces must be fully exported through the facade without internal module leakage. The facade cannot alter or obscure the fundamental behavior of the underlying platform components.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

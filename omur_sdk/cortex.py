@@ -5,7 +5,6 @@ translate/detect-language through cortex, which proxies to cloud providers
 (Voyage for embed, Anthropic for text ops).
 
 exports: CortexClient
-used_by: services/marrow/core/*
 rules:   Never call cerebellum. Raise on HTTP error — no silent None returns.
          All methods are coroutines; callers must await them.
 """

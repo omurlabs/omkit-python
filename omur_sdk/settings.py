@@ -1,7 +1,6 @@
 """packages/omur-sdk/omur_sdk/settings.py — Settings manager with in-memory cache, Valkey pub/sub subscriber, and callbacks.
 
 exports: class SettingsManager
-used_by: none
 rules:   The SettingsManager must maintain thread-safe cache access and ensure all database and Redis operations are properly synchronized to prevent race conditions during concurrent updates.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

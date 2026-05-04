@@ -5,7 +5,6 @@ middleware, enqueue helper, and Prometheus collector in isolation. The
 full Worker contract is covered upstream in streaq's own tests.
 
 exports: TENANT | test_defaults_match_spec() | test_tenant_middleware_unwraps_and_binds() | test_tenant_middleware_unbinds_after_handler() | test_tenant_middleware_rejects_no_args() | test_tenant_middleware_rejects_malformed_envelope() | test_tenant_middleware_rejects_non_uuid_tenant() | test_tenant_middleware_passes_extra_args() | test_enqueue_wraps_payload_in_envelope() | test_enqueue_rejects_invalid_tenant() | test_prom_collector_emits_six_gauges() | test_prom_collector_handles_missing_counters() | test_prom_collector_describe_is_empty() | test_envelope_roundtrip_through_middleware()
-used_by: none
 rules:   none
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

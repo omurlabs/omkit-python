@@ -5,7 +5,6 @@ Usage:
     mount_metrics(app, "spine")  # exposes /metrics, instruments all routes
 
 exports: mount_metrics(app, service_name)
-used_by: none
 rules:   The metrics module must maintain backward compatibility with all existing metric collection patterns and cannot introduce breaking changes to the public API. All metric collection must be thread-safe and non-blocking to prevent performance degradation of the main application. The module cannot have any external dependencies beyond what's already defined in the project's requirements.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

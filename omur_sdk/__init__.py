@@ -4,7 +4,6 @@ Internal helpers (encryption primitives) are available via
 ``omur_sdk.internal.crypto``; they are intentionally NOT re-exported here.
 
 exports: none
-used_by: none
 rules:   The module must maintain backward compatibility with all existing API endpoints and data structures, as breaking changes will affect multiple downstream services that depend on this SDK. All public interfaces must be thread-safe and support concurrent access without external synchronization. The SDK cannot introduce any external dependencies beyond those already declared in the project's requirements.txt, and all imports must be absolute within the omur_sdk package namespace.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

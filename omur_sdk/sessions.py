@@ -11,7 +11,6 @@ The ``Session`` dataclass is the wire shape exchanged between Store
 implementations and callers.
 
 exports: class NotFound | class Session | class SessionStore | class PostgresSessionStore | class RedisSessionStore | backend_from_env() | new_store()
-used_by: none
 rules:   The session store implementation must support both PostgreSQL and Redis backends, with the backend selection determined at runtime via the `OMUR_SESSION_BACKEND` environment variable. Any new session store implementation must conform to the `SessionStore` protocol and handle asynchronous operations correctly. The `Session` class and `NotFound` exception are central to the module's behavior and must remain consistent across all store implementations.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

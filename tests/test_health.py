@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_health.py — Tests for shared health/ready endpoint helpers.
 
 exports: test_health_returns_ok | test_healthz_alias_matches_health | test_ready_returns_ready_when_check_passes | test_ready_returns_503_when_check_fails | test_ready_returns_ready_without_check | test_readyz_alias_matches_ready | test_liveness_ignores_failing_ready_check
-used_by: none
 rules:   The test suite must validate both liveness aliases (/health, /healthz) and readiness aliases (/ready, /readyz), and must enforce the invariant that liveness probes are unaffected by failing readiness checks. All test cases operate independently without shared mutable state.
 agent:   claude-opus-4-7 | anthropic | 2026-05-03 | track-9-health-ready-audit | added /readyz coverage + liveness-vs-readiness independence
 message:

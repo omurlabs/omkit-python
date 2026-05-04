@@ -8,7 +8,6 @@ Unit tests exercise the happy-path call path with a mock pool so
 they run without a live database.
 
 exports: test_log_security_event_calls_pool_execute() | test_log_security_event_block_emits_warning(caplog) | test_log_security_event_no_warning_below_block(caplog) | test_log_security_event_facade_export() | test_rls_tenant_isolation()
-used_by: none
 rules:   The module must maintain strict separation between security event logging and database operations, with all database interactions routed through a dedicated connection pool. All security event logging must be synchronous to ensure proper ordering and prevent race conditions in event processing. The module cannot directly import or use any database-specific libraries outside of the established connection pool abstraction.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

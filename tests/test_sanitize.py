@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_sanitize.py — presentation-layer sanitisation helpers.
 
 exports: test_sanitize_llm_output_strips_think() | test_sanitize_llm_response_strips_code_fence() | test_sanitize_llm_response_removes_base64_image() | test_sanitize_html_removes_script_tag() | test_extract_json_object() | test_extract_json_array() | test_extract_json_returns_none_on_garbage()
-used_by: none
 rules:   The sanitize module must preserve all original data integrity while removing only explicitly defined unsafe content patterns. Any transformation applied must be reversible or lossless for valid inputs. The module must handle all edge cases of malformed input without crashing or altering non-malformed data.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

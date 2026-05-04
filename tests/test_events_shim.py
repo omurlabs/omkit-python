@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_events_shim.py — omur_sdk.events is a DeprecationWarning shim for omur_sdk.eventbus.
 
 exports: test_events_reexports_eventbus() | test_events_emits_deprecation_warning_on_import()
-used_by: none
 rules:   The module must maintain backward compatibility with existing eventbus reexports while ensuring all imports properly handle deprecation warnings. Any changes to the events shim must preserve the exact public API surface and import behavior. The test suite must continue to validate both the reexport functionality and deprecation warning emission on import.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

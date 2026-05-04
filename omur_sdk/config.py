@@ -1,7 +1,6 @@
 """packages/omur-sdk/omur_sdk/config.py — Shared base settings for all Omur services.
 
 exports: class BaseServiceSettings
-used_by: none
 rules:   The module requires all backend services to share a common BaseSettings class for consistent environment variable handling, and all service configurations must be derived from this base with no deviation in the configuration inheritance structure.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

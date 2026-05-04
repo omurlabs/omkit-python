@@ -9,7 +9,6 @@ Tempo were removed). Set OTEL_EXPORTER_OTLP_ENDPOINT to a reachable OTLP/HTTP
 collector (e.g. ``http://otel-collector:4318``) to re-enable span export.
 
 exports: DEFAULT_ENDPOINT | init_tracing(service_name, endpoint) | instrument_fastapi(app)
-used_by: none
 rules:   The tracing module must maintain backward compatibility with all existing FastAPI instrumentation patterns and cannot introduce breaking changes to the existing service_name and endpoint parameter signatures. The module requires explicit error handling for endpoint connection failures and must not modify global tracing state outside of the init_tracing and instrument_fastapi functions. All tracing operations must be thread-safe and support concurrent FastAPI application instances.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

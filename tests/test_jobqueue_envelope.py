@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_jobqueue_envelope.py — Tests for jobqueue envelope contract.
 
 exports: TID | test_wrap_round_trip() | test_wrap_rejects_bad_tenant() | test_unwrap_accepts_dict() | test_unwrap_rejects_bad_json() | test_unwrap_rejects_non_object() | test_unwrap_rejects_bad_tenant_id() | test_unwrap_rejects_missing_version() | test_unwrap_rejects_empty_payload() | test_wrap_rejects_empty_payload() | test_unwrap_rejects_future_version() | test_unwrap_rejects_negative_version() | test_unwrap_rejects_extra_fields() | test_envelope_frozen()
-used_by: none
 rules:   The envelope format must always include a valid UUID tenant_id, a positive integer version, and a non-empty payload. Any deviation from this structure must raise an InvalidEnvelopeError. The module does not support backward compatibility for version changes or extra fields in the envelope.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

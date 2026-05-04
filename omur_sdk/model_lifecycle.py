@@ -1,7 +1,6 @@
 """packages/omur-sdk/omur_sdk/model_lifecycle.py — On-demand model loading with TTL-based idle unloading.
 
 exports: MODEL_LOAD_DURATION | MODEL_LOAD_ERRORS | MODEL_UNLOAD_TOTAL | MODEL_LOADED | class ModelLifecycle | class ModelRegistry
-used_by: none
 rules:   The `ModelLifecycle` class must ensure thread-safe access to `_model`, `_last_used`, and `_lock` attributes, as all methods that modify or read these shared state elements are intended to be concurrently accessible. The `ModelRegistry` class requires all `ModelLifecycle` instances it manages to be properly registered before any unload operations can occur, and the reaper task must be stopped before the registry is destroyed to prevent orphaned tasks. The `ensure_loaded()` and `unload()` methods in `ModelLifecycle` are designed to be called concurrently, so the internal `_lock` mechanism must prevent race conditions during model loading and unloading operations.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

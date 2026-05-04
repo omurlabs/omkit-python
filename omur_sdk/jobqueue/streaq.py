@@ -26,7 +26,6 @@ Conventions:
   concurrency=4, max_tries=3, task_timeout=300s, ttl=48h.
 
 exports: DEFAULT_CONCURRENCY | DEFAULT_MAX_TRIES | DEFAULT_TIMEOUT_SECONDS | DEFAULT_TTL | make_worker(redis_url, queue_name) | tenant_middleware(next_handler) | enqueue(task, tenant_id, payload) | mount_streaq_ui(app, worker) | _STREAQ_COUNTER_KEYS | class StreaqPromCollector
-used_by: none
 rules:   The module requires all Redis-based job queue operations to be thread-safe and idempotent, as it's designed for high-concurrency worker environments where tasks may be retried or processed by multiple workers simultaneously.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

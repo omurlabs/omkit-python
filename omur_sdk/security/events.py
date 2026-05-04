@@ -5,7 +5,6 @@ stripped URLs). Never pass full document content — the column comment in
 the migration is the canonical reminder.
 
 exports: log_security_event()
-used_by: none
 rules:   The security events module must maintain immutable evidence logging to ensure audit trail integrity and cannot allow external modification of logged security events after creation.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

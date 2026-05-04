@@ -10,7 +10,6 @@ Implementations:
   ``omur_sdk.events.EventBus`` wrapper so both can coexist.
 
 exports: class Event | class EventBus | class PostgresEventBus | class RedisEventBus | backend_from_env() | new_bus()
-used_by: none
 rules:   The EventBus module must support both PostgreSQL and Redis backends, with PostgreSQL as the default, and all implementations must adhere to the provided `EventBus` protocol interface.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

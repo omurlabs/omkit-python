@@ -3,7 +3,6 @@
 Additive grouping. Flat-module imports continue to work.
 
 exports: none
-used_by: none
 rules:   The module must maintain backward compatibility for all existing data import paths and cannot introduce breaking changes to the public API surface. All data processing functions must be thread-safe and handle concurrent access without race conditions. The module cannot depend on external packages beyond the standard library and explicitly declared dependencies in the package manifest.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

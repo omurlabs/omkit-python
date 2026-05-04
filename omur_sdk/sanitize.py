@@ -11,7 +11,6 @@ These helpers are presentation-layer sanitisation. They are **not** a PHI/PII
 scrubber — do not rely on them for compliance.
 
 exports: sanitize_llm_output(text) | sanitize_llm_response(text) | sanitize_html(text) | extract_json(text)
-used_by: none
 rules:   The sanitize module must maintain backward compatibility for all existing function signatures and return types. All sanitization functions must handle None and empty string inputs gracefully without raising exceptions. The module cannot introduce external dependencies or modify global state during execution.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

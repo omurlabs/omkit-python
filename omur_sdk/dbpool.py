@@ -7,7 +7,6 @@ after removing PgBouncer (which previously took care of the role reset via
 ``server_reset_query``).
 
 exports: sqlalchemy_asyncpg_connect_args(role) | new_session_pool(dsn) | create_pool(dsn)
-used_by: none
 rules:   The module must maintain backward compatibility with existing SQLAlchemy and asyncpg integration patterns, and all database connection handling must adhere to async/await semantics throughout.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

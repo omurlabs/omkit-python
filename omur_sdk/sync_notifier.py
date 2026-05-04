@@ -7,7 +7,6 @@ Usage:
 Notifications are best-effort: failures are logged but never block the caller.
 
 exports: class SyncNotifier
-used_by: none
 rules:   The SyncNotifier module must maintain a persistent HTTP client connection for all notification operations and cannot be instantiated without a valid base_url and token. All notification methods are non-blocking and use asyncio task creation, requiring the event loop to be properly initialized. The module is designed for single-threaded use and does not support concurrent access patterns.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

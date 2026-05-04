@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_security_facade.py — omur_sdk.security re-exports sanitation helpers.
 
 exports: EXPECTED_EXPORTS | test_security_facade_identity_matches_sanitize() | test_security_facade_sanitize_callables() | test_security_facade_all_matches_imports_exactly() | test_security_facade_does_not_leak_internals()
-used_by: none
 rules:   The security facade must maintain exact import parity with all public functions from `omur_sdk.security` and must not expose any internal module references or leak implementation details through its public interface.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

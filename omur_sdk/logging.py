@@ -8,7 +8,6 @@ Usage:
     configure_logging("spine")  # Call once at startup, before get_logger()
 
 exports: configure_logging(service_name)
-used_by: none
 rules:   The logging module must maintain backward compatibility with existing log format configurations and service name resolution patterns across all SDK versions. The module cannot introduce breaking changes to its public API or alter the default logging behavior without explicit versioned migration paths. All logging configurations must remain thread-safe and support concurrent service initialization without race conditions.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

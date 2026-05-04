@@ -1,7 +1,6 @@
 """packages/omur-sdk/omur_sdk/resilience.py — HTTP resilience primitives: circuit breaker + retry with exponential backoff.
 
 exports: T | class CircuitOpen | class CircuitBreaker | resilient(breaker)
-used_by: none
 rules:   The circuit breaker must maintain thread safety across all state transitions and failure tracking operations. The breaker's state must be consistent between concurrent calls and failures, with proper synchronization to prevent race conditions during state changes. All external dependencies like httpx exceptions must be handled with specific type checking to ensure transient error detection works correctly.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

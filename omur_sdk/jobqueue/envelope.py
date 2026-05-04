@@ -5,7 +5,6 @@ envelope. Workers unwrap on receive, validate, and run the handler under the
 tenant's RLS scope.
 
 exports: ENVELOPE_VERSION | class InvalidEnvelopeError | class Envelope | wrap(tenant_id, payload) | unwrap(data)
-used_by: none
 rules:   The Envelope class must maintain strict tenant isolation and never allow cross-tenant data leakage. All envelope validation must be immutable and deterministic to ensure consistent task processing across distributed workers. The wrap/unwrap functions must handle all serialization edge cases including nested data structures and preserve original payload integrity during transformation.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

@@ -4,7 +4,6 @@ Middleware sets the tenant on each request. Handlers call require() to access.
 Background tasks use bind() to establish context.
 
 exports: require() | current_or_none() | request_id() | _DEFAULT_EXCLUDE | class TenantMiddleware | middleware(exclude_paths) | set_rls(session) | set_rls_conn(conn) | bind(tenant_id, request_id) | async_bind(tenant_id, request_id) | hashed_for_log(tenant_id, key)
-used_by: none
 rules:   The tenant middleware must be applied before any database operations to ensure RLS policies are properly set, and all tenant context must be bound to the current request scope to maintain isolation between concurrent requests.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_settings_cache.py — Tests for SettingsManager write-through cache.
 
 exports: class TestWriteThroughCache
-used_by: none
 rules:   The cache module must ensure atomic file operations to prevent corruption during concurrent access, maintain consistent file permissions across all cache files, and guarantee that sensitive data is never written to disk in plaintext format.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

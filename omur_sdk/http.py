@@ -17,7 +17,6 @@ Example:
         return resp.json()
 
 exports: build_tenant_client()
-used_by: none
 rules:   The module must maintain backward compatibility for all public APIs and ensure thread-safe operation across concurrent client requests. The service token hook mechanism is mandatory for all HTTP requests and cannot be bypassed or modified without breaking authentication flow. All HTTP client configurations must be immutable after instantiation to prevent runtime inconsistencies.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 

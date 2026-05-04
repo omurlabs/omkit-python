@@ -1,7 +1,6 @@
 """packages/omur-sdk/tests/test_registry_polling.py — test_registry_polling module.
 
 exports: class NoopProvider | pool() | test_registry_polling_picks_up_providers(pool, monkeypatch)
-used_by: none
 rules:   The module requires all provider implementations to inherit from ProviderBase and implement explicit run() and __init__() methods with specific signatures. The test suite depends on environment variable configuration for backend selection and expects specific class variable collections for observing tenant and config data during execution.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
