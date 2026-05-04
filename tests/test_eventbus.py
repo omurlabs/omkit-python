@@ -17,6 +17,9 @@ from omur_sdk.eventbus import PostgresEventBus, RedisEventBus, backend_from_env
 
 @pytest.fixture
 async def pool():
+    """
+    Rules:   Database connection requires TEST_POSTGRES_DSN environment variable to be set. If not set, the test will be skipped. The function creates a PostgreSQL table with specific schema constraints including primary key, not null constraints, and default values.
+    """
     dsn = os.getenv("TEST_POSTGRES_DSN")
     if not dsn:
         pytest.skip("TEST_POSTGRES_DSN not set")

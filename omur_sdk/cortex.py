@@ -192,5 +192,8 @@ class CortexClient:
             return {}
 
     async def close(self) -> None:
+        """
+        Rules:   Client must be properly initialized before calling close, otherwise it will raise AttributeError. The function only closes the client if it exists and is not already closed.
+        """
         if self._client and not self._client.is_closed:
             await self._client.aclose()

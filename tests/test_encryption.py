@@ -19,6 +19,9 @@ from omur_sdk.encryption import (
 
 
 def test_roundtrip():
+    """
+    Rules:   Encryption and decryption functions must handle arbitrary string inputs consistently. The key generation function should produce keys compatible with both encrypt and decrypt operations.
+    """
     key = generate_key()
     plaintext = "super-secret-value"
     assert decrypt_value(encrypt_value(plaintext, key), key) == plaintext
@@ -36,6 +39,9 @@ def test_different_keys_fail():
 
 
 def test_encrypt_empty_string():
+    """
+    Rules:   The encryption/decryption implementation must properly handle empty string inputs without throwing exceptions or returning incorrect results.
+    """
     key = generate_key()
     assert decrypt_value(encrypt_value("", key), key) == ""
 
