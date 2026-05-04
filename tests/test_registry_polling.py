@@ -28,6 +28,9 @@ class NoopProvider(ProviderBase):
         NoopProvider.instances.append((tenant_id, config))
 
     async def run(self) -> None:
+        """
+        Rules:   NO
+        """
         try:
             await asyncio.Event().wait()
         except asyncio.CancelledError:

@@ -36,6 +36,8 @@ def mount_health_endpoints(
     Liveness paths return 200 unconditionally — they only signal the process is
     up. Readiness paths run the optional ready_check and return 503 if any
     component reports anything other than "ok".
+
+    Rules:   The ready_check function must return a dict[str, str] where each value should indicate the health status of a component, and any value other than 'ok' will result in a 503 response for readiness endpoints.
     """
 
     async def _liveness() -> dict:

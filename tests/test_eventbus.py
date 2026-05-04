@@ -85,6 +85,9 @@ async def test_postgres_bus_publish_subscribe(pool):
 
 
 def test_backend_from_env(monkeypatch):
+    """
+    Rules:   Function assumes environment variable 'OMUR_EVENTBUS_BACKEND' controls backend selection, with 'postgres' as default and only 'redis' or 'postgres' as valid values, raising ValueError for invalid inputs.
+    """
     monkeypatch.delenv("OMUR_EVENTBUS_BACKEND", raising=False)
     assert backend_from_env() == "postgres"
     monkeypatch.setenv("OMUR_EVENTBUS_BACKEND", "redis")

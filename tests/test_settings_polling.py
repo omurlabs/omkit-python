@@ -18,6 +18,9 @@ from omur_sdk.settings import SettingsManager
 
 @pytest.fixture
 async def pool():
+    """
+    Rules:   Database connection pool must be properly closed after use to prevent resource leaks. The TEST_POSTGRES_DSN environment variable is required and will cause test skipping if not present.
+    """
     dsn = os.getenv("TEST_POSTGRES_DSN")
     if not dsn:
         pytest.skip("TEST_POSTGRES_DSN not set")

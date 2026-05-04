@@ -71,5 +71,8 @@ class ProviderBase(ABC):
 
     @abstractmethod
     async def run(self) -> None:
-        """Main loop. Must handle asyncio.CancelledError for clean shutdown."""
+        """Main loop. Must handle asyncio.CancelledError for clean shutdown.
+
+        Rules:   Must handle asyncio.CancelledError for clean shutdown. Future developers MUST know that this function is the main execution loop and any cleanup logic should be implemented in response to cancellation.
+        """
         ...

@@ -32,6 +32,9 @@ def test_connect_args_default_includes_omur_app_role():
 
 
 def test_connect_args_custom_role():
+    """
+    Rules:   The role parameter in sqlalchemy_asyncpg_connect_args must be a valid PostgreSQL role that exists on the database server, otherwise the connection will fail with an authentication error.
+    """
     args = sqlalchemy_asyncpg_connect_args(role="readonly_app")
     assert args["server_settings"] == {"role": "readonly_app"}
 

@@ -11,6 +11,9 @@ import warnings
 
 
 def test_events_reexports_eventbus():
+    """
+    Rules:   The test assumes that the events module directly re-exports the EventBus class from the eventbus module, meaning any changes to the import structure or aliasing in the events module will break this test. Future developers must understand the module's re-export behavior and maintain compatibility.
+    """
     from omur_sdk import events, eventbus
 
     assert events.EventBus is eventbus.EventBus

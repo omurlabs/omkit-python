@@ -359,6 +359,9 @@ async def test_set_rls_conn_requires_tenant():
 
 
 def test_hashed_for_log_with_explicit_key():
+    """
+    Rules:   The HMAC key must be 32 bytes long for consistent hashing; using a different key length will produce different outputs.
+    """
     tid = str(uuid4())
     h1 = tenant.hashed_for_log(tid, key=b"secret-bytes-key-1234567890abcdef")
     h2 = tenant.hashed_for_log(tid, key=b"secret-bytes-key-1234567890abcdef")
@@ -369,6 +372,9 @@ def test_hashed_for_log_with_explicit_key():
 
 
 def test_hashed_for_log_reads_env_hex(monkeypatch):
+    """
+    Rules:   The environment variable OMUR_LOG_HMAC_KEY must be a 64-character hex string representing 32 bytes, or the function will raise an error on conversion.
+    """
     tid = str(uuid4())
     # openssl rand -hex 32 produces 64-char hex string
     hex_key = "0123456789abcdef" * 4

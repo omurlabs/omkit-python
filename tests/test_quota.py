@@ -94,6 +94,9 @@ def test_cap_at_32_days():
 
 
 def test_defaults_match_stage1_spec():
+    """
+    Rules:   DEFAULT_DOCS must equal 100, DEFAULT_STORAGE_BYTES must equal 500MB, and DEFAULT_QUERIES_PER_MONTH must equal 1000 to match the Stage 1 specification requirements.
+    """
     assert DEFAULT_DOCS == 100
     assert DEFAULT_STORAGE_BYTES == 500 * 1024 * 1024
     assert DEFAULT_QUERIES_PER_MONTH == 1000

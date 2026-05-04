@@ -200,7 +200,10 @@ async def test_post_omits_service_token_when_unset():
 
 @pytest.mark.asyncio
 async def test_rerank_returns_full_response_dict(client):
-    """Happy path: rerank returns the server payload verbatim."""
+    """Happy path: rerank returns the server payload verbatim.
+
+    Rules:   The test mocks the HTTP client to return a specific payload, so future developers must know that the actual server response structure (with 'results' and 'model' keys) is assumed to match this mock format for the test to pass.
+    """
     payload = {
         "results": [
             {"index": 1, "score": 0.9, "truncated": False},

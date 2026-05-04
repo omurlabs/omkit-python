@@ -29,6 +29,9 @@ def client():
 @respx.mock
 @pytest.mark.asyncio
 async def test_embed_returns_vector(client):
+    """
+    Rules:   The test assumes the API returns a specific JSON structure with 'embedding' and 'index' fields. Future developers must know that the response format is tightly coupled to this expectation.
+    """
     respx.post(f"{BASE}/v1/embeddings").mock(
         return_value=httpx.Response(
             200,
@@ -42,6 +45,9 @@ async def test_embed_returns_vector(client):
 @respx.mock
 @pytest.mark.asyncio
 async def test_embed_sends_correct_payload(client):
+    """
+    Rules:   The test assumes the API expects a specific payload format with 'model' and 'input' fields. Future developers must know that the request structure is fixed and must match the API contract.
+    """
     route = respx.post(f"{BASE}/v1/embeddings").mock(
         return_value=httpx.Response(
             200,
@@ -57,6 +63,9 @@ async def test_embed_sends_correct_payload(client):
 @respx.mock
 @pytest.mark.asyncio
 async def test_classify_returns_dict(client):
+    """
+    Rules:   The test assumes the API returns a specific JSON structure with a 'category' and 'confidence' field inside a 'content' string. Future developers must know that the response parsing logic depends on this exact format.
+    """
     respx.post(f"{BASE}/v1/chat/completions").mock(
         return_value=httpx.Response(
             200,
@@ -72,6 +81,9 @@ async def test_classify_returns_dict(client):
 @respx.mock
 @pytest.mark.asyncio
 async def test_detect_language_returns_bcp47(client):
+    """
+    Rules:   The test assumes the API returns a language code in BCP 47 format as a string. Future developers must know that the response format must match this expectation.
+    """
     respx.post(f"{BASE}/v1/chat/completions").mock(
         return_value=httpx.Response(
             200,
@@ -87,6 +99,9 @@ async def test_detect_language_returns_bcp47(client):
 @respx.mock
 @pytest.mark.asyncio
 async def test_translate_returns_string(client):
+    """
+    Rules:   The test assumes the API returns a translated string inside a JSON object with a 'translated' key. Future developers must know that the response format is tightly coupled to this structure.
+    """
     respx.post(f"{BASE}/v1/chat/completions").mock(
         return_value=httpx.Response(
             200,
@@ -102,6 +117,9 @@ async def test_translate_returns_string(client):
 @respx.mock
 @pytest.mark.asyncio
 async def test_embed_raises_on_http_error(client):
+    """
+    Rules:   The test assumes that any HTTP error (like 502) will raise a generic Exception. Future developers must know that the exception type and handling logic may need to be updated if the client changes its error behavior.
+    """
     respx.post(f"{BASE}/v1/embeddings").mock(
         return_value=httpx.Response(502, text="bad gateway")
     )
@@ -112,6 +130,9 @@ async def test_embed_raises_on_http_error(client):
 @respx.mock
 @pytest.mark.asyncio
 async def test_tenant_id_sent_as_header(client):
+    """
+    Rules:   The test assumes the client sends the tenant ID in a specific header 'x-tenant-id'. Future developers must know that the header name and value are hardcoded and must match the API's expectations.
+    """
     route = respx.post(f"{BASE}/v1/embeddings").mock(
         return_value=httpx.Response(
             200,

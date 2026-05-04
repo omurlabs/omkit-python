@@ -102,6 +102,8 @@ class CortexClient:
         """Return a single embedding vector for *text*.
 
         Raises httpx.HTTPStatusError on failure.
+
+        Rules:   The input text is limited to 3000 characters when passed to the LLM backend, although the function itself does not enforce this limit. Future developers should be aware that very long texts may be truncated by the backend.
         """
         client = self._get_client()
         resp = await client.post(
@@ -119,6 +121,8 @@ class CortexClient:
 
         *schema* is optional; when provided it is serialised and appended to
         the prompt so the model returns the expected fields.
+
+        Rules:   The function uses a fixed prompt template (_CLASSIFY_PROMPT) and truncates input text to 3000 characters. Developers should know that large inputs may be silently truncated and that the schema hint is appended to the prompt, which could affect model behavior.
         """
         schema_hint = ""
         if schema:
@@ -127,7 +131,10 @@ class CortexClient:
         return await self._chat_json("classify", prompt, tenant_id)
 
     async def detect_language(self, text: str, tenant_id: str | None = None) -> str:
-        """Return BCP-47 language code for *text* (e.g. 'en', 'ru')."""
+        """Return BCP-47 language code for *text* (e.g. 'en', 'ru').
+
+        Rules:   The function truncates input text to 1000 characters. Developers should be aware that longer texts will be silently truncated, potentially affecting accuracy.
+        """
         prompt = _DETECT_LANG_PROMPT.format(text=text[:1000])
         result = await self._chat_json("classify", prompt, tenant_id)
         lang = result.get("language", "")
@@ -140,6 +147,8 @@ class CortexClient:
         """Translate *text* to *target_lang* (default: English).
 
         Returns the translated string.
+
+        Rules:   The function truncates input text to 8000 characters. Developers should know that very long texts may be truncated by the backend and that the target language must be a valid BCP-47 code.
         """
         prompt = _TRANSLATE_PROMPT.format(text=text[:8000])
         result = await self._chat_json("translate", prompt, tenant_id)
@@ -147,7 +156,10 @@ class CortexClient:
 
     async def ner(self, text: str, schema: dict | None = None,
                   tenant_id: str | None = None) -> dict:
-        """Run NER on *text* using the classify cap with a structured prompt."""
+        """Run NER on *text* using the classify cap with a structured prompt.
+
+        Rules:   The function truncates input text to 3000 characters and uses a default schema if none is provided. Developers should be aware of the truncation limit and that the schema is used to constrain the output format, which may affect model performance if not properly defined.
+        """
         default_schema = {
             "entities": [{"text": "string", "label": "string", "start": 0, "end": 0}]
         }

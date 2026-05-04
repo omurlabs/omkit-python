@@ -99,6 +99,8 @@ def unwrap(data: bytes | str | dict[str, Any]) -> Envelope:
     Accepts raw JSON bytes/str or a pre-parsed dict (streaq sometimes hands
     handlers the decoded payload directly). Raises InvalidEnvelopeError on
     any validation failure — callers must dead-letter, not retry.
+
+    Rules:   Input must be valid JSON bytes/str or a pre-parsed dict. If pre-parsed dict is provided, it must already be validated and contain the expected envelope structure. The function raises InvalidEnvelopeError for any validation failure, which should be handled by dead-lettering rather than retrying.
     """
     if isinstance(data, (bytes, str)):
         try:

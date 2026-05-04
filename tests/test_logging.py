@@ -28,7 +28,10 @@ def test_configure_logging_sets_processors():
 
 
 def test_configure_logging_is_idempotent():
-    """Calling configure_logging twice doesn't raise."""
+    """Calling configure_logging twice doesn't raise.
+
+    Rules:   Calling configure_logging multiple times with different service names should not raise an exception, but the last call's service name will be used.
+    """
     configure_logging("svc-a")
     configure_logging("svc-b")
 
@@ -90,14 +93,20 @@ def test_console_format(monkeypatch):
 
 
 def test_service_name_bound_to_records(monkeypatch):
-    """Every log record must carry the configured service name."""
+    """Every log record must carry the configured service name.
+
+    Rules:   The service name must be consistently attached to all log records, and this test verifies that the default service name 'test-svc' is correctly set in the log output.
+    """
     line = _capture_line(monkeypatch, None)
     payload = json.loads(line)
     assert payload["service"] == "test-svc"
 
 
 def test_correlation_fields_emitted_when_tenant_bound(monkeypatch):
-    """When tenant + request_id are bound, logs auto-carry both fields."""
+    """When tenant + request_id are bound, logs auto-carry both fields.
+
+    Rules:   When tenant and request_id are bound to the logging context, they must automatically appear in all subsequent log records without explicit inclusion in the log message.
+    """
     from omur_sdk import tenant
 
     monkeypatch.delenv("LOG_FORMAT", raising=False)
@@ -131,7 +140,10 @@ def test_correlation_fields_emitted_when_tenant_bound(monkeypatch):
 
 
 def test_service_name_can_be_overridden_per_call(monkeypatch):
-    """Explicit service kwarg on a log call wins over default."""
+    """Explicit service kwarg on a log call wins over default.
+
+    Rules:   A service name passed explicitly as a keyword argument in a log call takes precedence over the default service name configured for the logger.
+    """
     monkeypatch.delenv("LOG_FORMAT", raising=False)
     buf = StringIO()
 

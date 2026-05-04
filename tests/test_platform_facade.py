@@ -31,6 +31,9 @@ EXPECTED_EXPORTS = {
 
 
 def test_platform_facade_identity_matches_underlying():
+    """
+    Rules:   Future developers must know that this test verifies identity assertions between facade classes and their underlying implementations, ensuring no accidental reassignment or import mismatches occur in the platform facade.
+    """
     from omur_sdk import (
         cerebellum_client,
         config,
@@ -50,6 +53,9 @@ def test_platform_facade_identity_matches_underlying():
 
 
 def test_platform_facade_types():
+    """
+    Rules:   Future developers must know that this test ensures all facade classes are actual Python classes (not instances or other types) to maintain proper type safety and expected behavior in the platform facade.
+    """
     for cls in (
         BaseServiceSettings,
         SettingsManager,

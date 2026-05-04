@@ -282,5 +282,8 @@ class CerebellumClient:
         return await self._post("/rerank", payload, request_id, tenant_id)
 
     async def close(self) -> None:
+        """
+        Rules:   Client must be properly initialized before calling close, otherwise it will raise an AttributeError. The function only closes the connection if the client exists and is not already closed.
+        """
         if self._client and not self._client.is_closed:
             await self._client.aclose()

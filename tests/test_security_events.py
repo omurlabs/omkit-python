@@ -106,6 +106,9 @@ async def test_log_security_event_no_warning_below_block(caplog):
 
 @pytest.mark.asyncio
 async def test_log_security_event_facade_export():
+    """
+    Rules:   The test assumes that the facade function and direct function are the same object, which means the security event logging module must maintain this specific API structure and not refactor the facade to be a separate implementation.
+    """
     from omur_sdk.security import log_security_event as facade_fn
     from omur_sdk.security.events import log_security_event as direct_fn
 

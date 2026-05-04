@@ -14,6 +14,9 @@ from omur_sdk.health import mount_health_endpoints
 
 
 def test_health_returns_ok():
+    """
+    Rules:   The health endpoint must return a 200 status code with a JSON response containing 'status', 'service', and 'version' fields.
+    """
     app = FastAPI()
     mount_health_endpoints(app, "test-svc", "1.0.0")
     client = TestClient(app)
@@ -26,6 +29,9 @@ def test_health_returns_ok():
 
 
 def test_healthz_alias_matches_health():
+    """
+    Rules:   The `/healthz` alias must return identical response data to `/health` endpoint.
+    """
     app = FastAPI()
     mount_health_endpoints(app, "test-svc", "1.0.0")
     client = TestClient(app)
@@ -35,6 +41,9 @@ def test_healthz_alias_matches_health():
 
 
 def test_ready_returns_ready_when_check_passes():
+    """
+    Rules:   The ready endpoint must return a 200 status code and a 'ready' status when the readiness check passes.
+    """
     async def check():
         return {"db": "ok"}
 
@@ -49,6 +58,9 @@ def test_ready_returns_ready_when_check_passes():
 
 
 def test_ready_returns_503_when_check_fails():
+    """
+    Rules:   The ready endpoint must return a 503 status code with 'not_ready' status when the readiness check fails.
+    """
     async def check():
         return {"db": "connection refused"}
 
@@ -61,6 +73,9 @@ def test_ready_returns_503_when_check_fails():
 
 
 def test_ready_returns_ready_without_check():
+    """
+    Rules:   If no ready check is provided, the `/ready` endpoint should default to returning a 200 status code with 'ready' status.
+    """
     app = FastAPI()
     mount_health_endpoints(app, "test-svc", "1.0.0")
     client = TestClient(app)
@@ -70,7 +85,10 @@ def test_ready_returns_ready_without_check():
 
 
 def test_readyz_alias_matches_ready():
-    """`/readyz` must behave identically to `/ready` (both pass and fail paths)."""
+    """`/readyz` must behave identically to `/ready` (both pass and fail paths).
+
+    Rules:   The `/readyz` alias must behave identically to `/ready` in both success and failure cases.
+    """
 
     async def passing():
         return {"db": "ok"}
@@ -100,6 +118,8 @@ def test_readyz_alias_matches_ready():
 def test_liveness_ignores_failing_ready_check():
     """Liveness must stay 200 even when readiness reports failure — the contract
     that lets orchestrators distinguish 'restart this pod' from 'don't route
+
+    Rules:   The liveness endpoint must always return 200, regardless of readiness check results, to distinguish pod restarts from traffic routing issues.
     traffic to it yet'."""
 
     async def failing():

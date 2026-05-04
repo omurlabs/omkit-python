@@ -25,6 +25,8 @@ import re
 
 def sanitize_llm_output(text: str) -> str:
     """Remove <think>...</think> blocks and trim. Matches the historical
+
+    Rules:   Removes all text enclosed in ... delimiters, including newlines, and trims whitespace. Future developers must know this is specifically for removing DeepSeek/Qwen thinking traces.
     ``services/frontal/sanitize.sanitize_llm_output`` behaviour."""
     if not text:
         return ""
@@ -42,6 +44,8 @@ def sanitize_llm_response(text: str) -> str:
 
     Matches the historical ``services/marrow/core/sanitize.sanitize_llm_response``
     behaviour exactly.
+
+    Rules:   Removes ... blocks, markdown code fences (```json ... ```), inline base64 images, and normalizes embedded JSON. Must preserve exact historical behavior for compatibility.
     """
     if not text:
         return ""
@@ -67,7 +71,10 @@ def sanitize_llm_response(text: str) -> str:
 
 
 def sanitize_html(text: str) -> str:
-    """Escape HTML and strip script tags / inline event handlers."""
+    """Escape HTML and strip script tags / inline event handlers.
+
+    Rules:   Escapes HTML and strips script tags and inline event handlers (e.g., onclick, onmouseover). Must ensure no XSS vulnerabilities are introduced.
+    """
     if not text:
         return ""
     text = re.sub(r"<script[\s\S]*?</script>", "", text, flags=re.IGNORECASE)
@@ -77,7 +84,10 @@ def sanitize_html(text: str) -> str:
 
 
 def extract_json(text: str) -> list | dict | None:
-    """Extract JSON array or object from messy LLM output, or None."""
+    """Extract JSON array or object from messy LLM output, or None.
+
+    Rules:   Attempts to extract a valid JSON object or array from text by stripping leading non-JSON characters and handling malformed JSON. Future developers must know it may return None if parsing fails or no JSON is found.
+    """
     if not text:
         return None
 

@@ -25,6 +25,9 @@ def test_roundtrip():
 
 
 def test_different_keys_fail():
+    """
+    Rules:   When using different keys for encryption and decryption, the decryption will fail with an InvalidToken exception. Future developers must understand that key consistency is required for successful decryption.
+    """
     key1 = generate_key()
     key2 = generate_key()
     ciphertext = encrypt_value("hello", key1)

@@ -47,6 +47,9 @@ class CircuitBreaker:
 
     @property
     def state(self) -> str:
+        """
+        Rules:   When the circuit breaker is in OPEN state, it transitions to HALF_OPEN only after the reset_timeout has elapsed since it was opened. The _open_observed flag is used to track whether the breaker has been observed in OPEN state during the current reset period.
+        """
         if self._state == _State.OPEN:
             if self._open_observed and time.monotonic() - self._opened_at >= self.reset_timeout:
                 self._state = _State.HALF_OPEN
@@ -55,11 +58,17 @@ class CircuitBreaker:
         return self._state.value
 
     def record_success(self) -> None:
+        """
+        Rules:   Calling this function resets the failure count and transitions the circuit breaker to CLOSED state, regardless of the current state. The _open_observed flag is reset to False to ensure proper behavior in subsequent state transitions.
+        """
         self._failures = 0
         self._state = _State.CLOSED
         self._open_observed = False
 
     def record_failure(self) -> None:
+        """
+        Rules:   Each call increments the failure count. When the failure count reaches the configured fail_max threshold, the circuit breaker transitions to OPEN state and records the current timestamp. The _open_observed flag is reset to False to ensure proper behavior in subsequent state transitions.
+        """
         self._failures += 1
         if self._failures >= self.fail_max:
             self._state = _State.OPEN

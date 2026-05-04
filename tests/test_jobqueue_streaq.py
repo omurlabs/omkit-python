@@ -40,6 +40,9 @@ TENANT = "11111111-1111-1111-1111-111111111111"
 
 
 def test_defaults_match_spec() -> None:
+    """
+    Rules:   DEFAULT_CONCURRENCY value of 4 indicates the system expects to handle up to 4 concurrent jobs, which may impact resource allocation and performance tuning decisions. DEFAULT_TIMEOUT_SECONDS of 300 seconds (5 minutes) represents a hard limit for job execution time that could affect job scheduling and retry logic behavior.
+    """
     assert DEFAULT_CONCURRENCY == 4
     assert DEFAULT_MAX_TRIES == 3
     assert DEFAULT_TIMEOUT_SECONDS == 300

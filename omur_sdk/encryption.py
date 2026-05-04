@@ -11,7 +11,10 @@ from cryptography.fernet import Fernet, InvalidToken
 
 
 def generate_key() -> str:
-    """Generate a new Fernet-compatible key (URL-safe base64)."""
+    """Generate a new Fernet-compatible key (URL-safe base64).
+
+    Rules:   Key must be stored securely and never logged or exposed in plaintext. The generated key is URL-safe base64 encoded and should be persisted in a secure key management system.
+    """
     return Fernet.generate_key().decode()
 
 

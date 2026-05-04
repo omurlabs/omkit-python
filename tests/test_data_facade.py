@@ -51,6 +51,9 @@ def test_data_facade_types():
 
 
 def test_data_facade_all_matches_imports_exactly():
+    """
+    Rules:   The test validates that the __all__ tuple in the data facade module exactly matches the EXPECTED_EXPORTS set, ensuring all public API exports are properly declared and no unexpected items are exposed.
+    """
     import omur_sdk.data as facade
 
     declared = set(getattr(facade, "__all__", ()))
