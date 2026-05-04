@@ -4,9 +4,9 @@ Usage:
     from omur_sdk.tracing import init_tracing
     init_tracing("spine")  # Call once at startup
 
-Tracing is OFF by default since the 2026-04 infra consolidation (Alloy,
-Tempo, and VictoriaLogs were removed). Set OTEL_EXPORTER_OTLP_ENDPOINT
-to a reachable collector (e.g. ``http://alloy:4318``) to re-enable.
+Tracing is OFF by default since the 2026-04 infra consolidation (Alloy and
+Tempo were removed). Set OTEL_EXPORTER_OTLP_ENDPOINT to a reachable OTLP/HTTP
+collector (e.g. ``http://otel-collector:4318``) to re-enable span export.
 
 exports: DEFAULT_ENDPOINT | init_tracing(service_name, endpoint) | instrument_fastapi(app)
 used_by: none
