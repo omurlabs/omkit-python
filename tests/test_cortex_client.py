@@ -1,5 +1,12 @@
-"""packages/omur-sdk/tests/test_cortex_client.py
+"""packages/omur-sdk/tests/test_cortex_client.py — packages/omur-sdk/tests/test_cortex_client.py.
+
 Tests for CortexClient — all HTTP stubbed with respx.
+
+exports: BASE | client() | test_embed_returns_vector(client) | test_embed_sends_correct_payload(client) | test_classify_returns_dict(client) | test_detect_language_returns_bcp47(client) | test_translate_returns_string(client) | test_embed_raises_on_http_error(client) | test_tenant_id_sent_as_header(client)
+used_by: none
+rules:   none
+agent:   codedna-cli (no-llm) | codedna-cli | 2026-05-04 | codedna-cli | initial CodeDNA annotation pass
+message: 
 """
 from __future__ import annotations
 
