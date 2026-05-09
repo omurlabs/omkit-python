@@ -42,7 +42,6 @@ class BaseServiceSettings(BaseSettings):
     # Ollama
     OLLAMA_HOST: str = "http://ollama:11434"
     OLLAMA_CHAT_MODEL: str = "qwen3:8b"
-    OLLAMA_EMBED_MODEL: str = "bge-m3"
 
     @property
     def postgres_dsn(self) -> str:
