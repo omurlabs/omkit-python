@@ -9,6 +9,7 @@ message:
 import sys
 
 from omur_sdk.data import (
+    build_retrieval_engine,
     create_pool,
     new_session_pool,
     sqlalchemy_asyncpg_connect_args,
@@ -19,6 +20,7 @@ from omur_sdk.data import (
 )
 
 EXPECTED_EXPORTS = {
+    "build_retrieval_engine",
     "create_pool",
     "new_session_pool",
     "sqlalchemy_asyncpg_connect_args",
@@ -32,6 +34,7 @@ EXPECTED_EXPORTS = {
 def test_data_facade_identity_matches_underlying():
     from omur_sdk import dbpool, sessions
 
+    assert build_retrieval_engine is dbpool.build_retrieval_engine
     assert create_pool is dbpool.create_pool
     assert new_session_pool is dbpool.new_session_pool
     assert sqlalchemy_asyncpg_connect_args is dbpool.sqlalchemy_asyncpg_connect_args
@@ -42,6 +45,7 @@ def test_data_facade_identity_matches_underlying():
 
 
 def test_data_facade_types():
+    assert callable(build_retrieval_engine)
     assert callable(create_pool)
     assert callable(new_session_pool)
     assert callable(new_store)

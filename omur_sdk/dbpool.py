@@ -6,7 +6,7 @@ guaranteed even across reconnects — the async equivalent of pgx's
 after removing PgBouncer (which previously took care of the role reset via
 ``server_reset_query``).
 
-exports: sqlalchemy_asyncpg_connect_args(role) | new_session_pool(dsn) | create_pool(dsn)
+exports: sqlalchemy_asyncpg_connect_args(role) | new_session_pool(dsn) | create_pool(dsn) | build_retrieval_engine(dsn)
 rules:   The module must maintain backward compatibility with existing SQLAlchemy and asyncpg integration patterns, and all database connection handling must adhere to async/await semantics throughout.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
@@ -50,6 +50,29 @@ def sqlalchemy_asyncpg_connect_args(role: str | None = "omur_app") -> dict[str, 
     if role:
         args["server_settings"] = {"role": role}
     return args
+
+
+def build_retrieval_engine(dsn: str):
+    """Build the dedicated SQLAlchemy retrieval engine shared by frontal + marrow.
+
+    Tuning matches Option A of the hybrid-search spec:
+    pool_size=10, max_overflow=0, pool_timeout=2 — pool exhaustion fast-fails as
+    TimeoutError so the caller can map to HTTP 503 instead of unbounded queue
+    waits. Keeps retrieval traffic isolated from the ingestion pool.
+
+    Returns an async engine; caller binds it to its own AsyncSession class
+    (sqlalchemy vs sqlmodel session subclass).
+    """
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    return create_async_engine(
+        dsn,
+        echo=False,
+        pool_size=10,
+        max_overflow=0,
+        pool_timeout=2,
+        connect_args=sqlalchemy_asyncpg_connect_args(),
+    )
 
 
 async def new_session_pool(dsn: str, **kwargs) -> asyncpg.Pool:

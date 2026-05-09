@@ -9,6 +9,7 @@ message:
 """
 
 from omur_sdk.dbpool import (
+    build_retrieval_engine,
     create_pool,
     new_session_pool,
     sqlalchemy_asyncpg_connect_args,
@@ -21,6 +22,7 @@ from omur_sdk.sessions import (
 )
 
 __all__ = [
+    "build_retrieval_engine",
     "create_pool",
     "new_session_pool",
     "sqlalchemy_asyncpg_connect_args",
