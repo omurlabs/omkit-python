@@ -173,39 +173,9 @@ class CerebellumClient:
             all_results.extend(result.get("results", []))
         return all_results
 
-    async def translate(
-        self,
-        texts: list[str],
-        source_lang: str | None = None,
-        request_id: str | None = None,
-        tenant_id: str | None = None,
-        split_strategy: str | None = None,
-        skip_strategy: str | None = None,
-        batch_size: int = 1,
-    ) -> list[dict] | None:
-        """Translate texts to English. Returns None on failure.
-
-        Rules:   Function returns None on failure and supports batch splitting; developers must understand that translation failures at any batch level result in a full None return.
-        """
-        if not self.available:
-            return None
-
-        all_results = []
-        for batch in self._split_batch(texts):
-            payload = {"texts": batch}
-            if source_lang:
-                payload["source_lang"] = source_lang
-            if split_strategy:
-                payload["split_strategy"] = split_strategy
-            if skip_strategy:
-                payload["skip_strategy"] = skip_strategy
-            if batch_size > 1:
-                payload["batch_size"] = batch_size
-            result = await self._post("/translate", payload, request_id, tenant_id)
-            if result is None:
-                return None
-            all_results.extend(result.get("translations", []))
-        return all_results
+    # translate() removed in PLAN_TEI_MIGRATION P5 cleanup; the cerebellum
+    # /translate endpoint retired in P0 (NLLB CC-BY-NC drop) and the
+    # spine proxy retired in this same PR.
 
     async def detect_language(
         self,
