@@ -179,3 +179,67 @@ class TestNoPlaintextLeak:
         for field in (env.schema, env.key_id, env.nonce, env.aad, env.alg, env.wrapped_dek):
             assert b"chest pain" not in field.encode()
             assert b"patient reports" not in field.encode()
+
+
+class TestEmbedWindow:
+    """ADR-029 amendment (2026-05-16): optional `content_for_embedding`
+    plaintext window for the gnokee cosine recall lane.
+
+    gnokee 0.8 contract (gnokeelabs/gnokee#132) guarantees the window
+    leaves gnokee only over the TEI socket and is dropped from gnokee
+    local scope before any persistence stage; here we exercise only the
+    SDK-side wire shape.
+    """
+
+    def test_default_is_none(self, kms: FakeKMS, ctx: dict[str, str]) -> None:
+        env = encrypt_episode_body(b"x", kms=kms, **ctx)
+        assert env.content_for_embedding is None
+
+    def test_dict_omits_field_when_none(self, kms: FakeKMS, ctx: dict[str, str]) -> None:
+        env = encrypt_episode_body(b"x", kms=kms, **ctx)
+        wire = env.to_dict()
+        assert "content_for_embedding" not in wire
+
+    def test_dict_includes_field_when_set(self, kms: FakeKMS, ctx: dict[str, str]) -> None:
+        env = encrypt_episode_body(b"x", kms=kms, embed_window="Hemoglobin: 13.5 g/dL", **ctx)
+        wire = env.to_dict()
+        assert wire["content_for_embedding"] == "Hemoglobin: 13.5 g/dL"
+
+    def test_from_dict_round_trip_preserves_window(self, kms: FakeKMS, ctx: dict[str, str]) -> None:
+        env = encrypt_episode_body(b"x", kms=kms, embed_window="window text", **ctx)
+        again = EncryptedBody.from_dict(env.to_dict())
+        assert again.content_for_embedding == "window text"
+        assert again == env
+
+    def test_from_dict_backward_compat_missing_field(self) -> None:
+        wire = {
+            "schema": SCHEMA_V1,
+            "key_id": "omur:tenant:t:k_user:v1",
+            "nonce": "AAAA",
+            "ciphertext": "BBBB",
+            "aad": "omur:gnokee:episode:e:t:lab_result",
+            "alg": "AES-256-GCM",
+            "wrapped_dek": "CCCC",
+        }
+        env = EncryptedBody.from_dict(wire)
+        assert env.content_for_embedding is None
+
+    def test_embed_window_rejects_bytes(self, kms: FakeKMS, ctx: dict[str, str]) -> None:
+        with pytest.raises(TypeError):
+            encrypt_episode_body(b"x", kms=kms, embed_window=b"oops bytes", **ctx)  # type: ignore[arg-type]
+
+    def test_window_does_not_alter_ciphertext_path(self, kms: FakeKMS, ctx: dict[str, str]) -> None:
+        """The window is an out-of-band hint; the ciphertext + AAD path
+        must round-trip identically whether or not the window is set."""
+        plaintext = b"baseline encrypted body content"
+        with_window = encrypt_episode_body(plaintext, kms=kms, embed_window="hint", **ctx)
+        assert decrypt_episode_body(with_window, kms=kms, **ctx) == plaintext
+
+    def test_window_visible_in_dict_does_not_leak_into_aad(
+        self, kms: FakeKMS, ctx: dict[str, str]
+    ) -> None:
+        """The window rides on the envelope as a separate field; it must
+        not be bound into AAD (that would change tamper-detection
+        semantics on recall when gnokee echoes the envelope back)."""
+        env = encrypt_episode_body(b"x", kms=kms, embed_window="window text", **ctx)
+        assert "window text" not in env.aad

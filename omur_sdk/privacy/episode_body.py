@@ -81,6 +81,16 @@ class EncryptedBody:
 
     All bytes-shaped fields are base64url strings on the wire. The dataclass
     keeps them as ``str`` to make JSON / dict round-trips total.
+
+    ``content_for_embedding`` is the ADR-029 opt-in embed window. When set,
+    gnokee passes it to the embedder (TEI socket only) and drops it from
+    local scope before any persistence stage runs — see gnokee
+    `models.EncryptedBody.content_for_embedding` docstring and gnokeelabs/
+    gnokee#132 for the contract hardening that makes this safe. When
+    ``None`` the encrypted episode is absent from the semantic-recall lane.
+    The field is omitted from ``to_dict()`` when unset to keep the wire
+    shape backward-compatible with consumers that ingested envelopes
+    written before this field existed.
     """
 
     schema: str
@@ -90,9 +100,10 @@ class EncryptedBody:
     aad: str
     alg: str
     wrapped_dek: str
+    content_for_embedding: str | None = None
 
     def to_dict(self) -> dict[str, str]:
-        return {
+        payload: dict[str, str] = {
             "schema": self.schema,
             "key_id": self.key_id,
             "nonce": self.nonce,
@@ -101,6 +112,9 @@ class EncryptedBody:
             "alg": self.alg,
             "wrapped_dek": self.wrapped_dek,
         }
+        if self.content_for_embedding is not None:
+            payload["content_for_embedding"] = self.content_for_embedding
+        return payload
 
     @classmethod
     def from_dict(cls, payload: dict[str, str]) -> EncryptedBody:
@@ -140,6 +154,7 @@ def encrypt_episode_body(
     tenant_id: str,
     episode_id: str,
     schema_label: str,
+    embed_window: str | None = None,
 ) -> EncryptedBody:
     """Encrypt ``plaintext`` for handoff to gnokee.
 
@@ -147,10 +162,22 @@ def encrypt_episode_body(
     nonce, wraps the DEK via ``kms``, returns the envelope. The unwrapped DEK
     is best-effort zeroised before return; callers should treat the envelope
     as the only output.
+
+    ``embed_window`` is the optional ADR-029 plaintext embed window. When
+    provided, the returned envelope carries it through ``content_for_embedding``
+    so gnokee's encrypted-body branch can populate the cosine recall lane.
+    The window is **not** encrypted — the contract relies on gnokee's
+    Stage-3-only handling (gnokeelabs/gnokee#132) to keep it off Neo4j /
+    `lab_record` / `med_record`. Callers control which sensitivities are
+    eligible (typically `personal`, `clinical`; never `private`); set the
+    full plaintext as the window when in doubt, since gnokee drops it
+    immediately after `embed()` returns.
     """
 
     if not isinstance(plaintext, (bytes, bytearray)):
         raise TypeError("plaintext must be bytes")
+    if embed_window is not None and not isinstance(embed_window, str):
+        raise TypeError("embed_window must be str or None")
     aad = build_aad(episode_id=episode_id, tenant_id=tenant_id, schema_label=schema_label)
     aad_bytes = aad.encode("ascii")
 
@@ -178,6 +205,7 @@ def encrypt_episode_body(
         aad=aad,
         alg=ALG_AES_256_GCM,
         wrapped_dek=_b64e(wrapped),
+        content_for_embedding=embed_window,
     )
 
 
