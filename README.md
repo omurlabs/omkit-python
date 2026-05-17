@@ -71,7 +71,7 @@ Tenant context is set by `TenantMiddleware` and read by everything downstream
 |-------------------------------|------------------------------------------------------------------------------|
 | `omkit.dbpool`                | Asyncpg pool that sets a Postgres role per connection so RLS policies apply. |
 | `omkit.sessions`              | `SessionStore` protocol with Postgres and Redis backends.                    |
-| `omkit.encryption`            | Fernet helpers — `generate_key`, `encrypt_value`, `decrypt_value`, `mask_secret`. |
+| `omkit.encryption`            | AES-256-GCM settings encryption — `generate_key`, `encrypt_value`, `decrypt_value`, `mask_secret`. Wire-compatible with `omkit-go/encryption`. |
 | `omkit.data` *(facade)*       | Re-exports pool + session primitives in one place.                           |
 
 ### Events & async

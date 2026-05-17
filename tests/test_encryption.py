@@ -1,15 +1,18 @@
-"""tests/test_encryption.py — Tests for omkit.encryption.
+"""tests/test_encryption.py — Tests for omkit.encryption (AES-256-GCM).
 
-exports: test_roundtrip() | test_different_keys_fail() | test_encrypt_empty_string() | test_mask_secret_long() | test_mask_secret_medium() | test_mask_secret_very_short() | test_mask_secret_none() | test_mask_secret_empty() | test_mask_secret_exactly_4() | test_mask_secret_exactly_10()
-rules:   The encryption module must maintain backward compatibility for all existing mask_secret behaviors and key generation methods. All test cases must continue to pass without modification to ensure consistent encryption handling. The module cannot introduce new dependencies or alter the public API of encryption functions.
-agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
-message: 
+exports: test_roundtrip | test_different_keys_fail | test_encrypt_empty_string | test_token_version_prefix | test_tamper_detection | test_invalid_key_size | test_mask_secret_*
+rules:   API surface (`generate_key`, `encrypt_value`, `decrypt_value`, `mask_secret`) is stable and must remain wire-compatible with omkit-go/encryption. AAD changes require a `v2` version prefix.
+agent:   claude-opus-4-7 | anthropic | 2026-05-17 | claude-code | replaced Fernet tests with AES-256-GCM
 """
 
+import base64
+
 import pytest
-from cryptography.fernet import InvalidToken
 
 from omkit.encryption import (
+    InvalidKey,
+    InvalidToken,
+    KEY_SIZE,
     decrypt_value,
     encrypt_value,
     generate_key,
@@ -38,11 +41,43 @@ def test_different_keys_fail():
 
 
 def test_encrypt_empty_string():
-    """
-    Rules:   The encryption/decryption implementation must properly handle empty string inputs without throwing exceptions or returning incorrect results.
-    """
+    """Empty plaintext round-trips."""
     key = generate_key()
     assert decrypt_value(encrypt_value("", key), key) == ""
+
+
+def test_token_version_prefix():
+    """Tokens carry the `v1` version prefix so future rotations remain detectable."""
+    key = generate_key()
+    token = encrypt_value("hello", key)
+    raw = base64.urlsafe_b64decode(token.encode("ascii"))
+    assert raw[:2] == b"v1"
+
+
+def test_tamper_detection():
+    """Mutating any byte in the ciphertext trips the GCM auth tag."""
+    key = generate_key()
+    token = encrypt_value("hello", key)
+    raw = bytearray(base64.urlsafe_b64decode(token.encode("ascii")))
+    raw[-1] ^= 0x01  # flip last byte of tag
+    tampered = base64.urlsafe_b64encode(bytes(raw)).decode("ascii")
+    with pytest.raises(InvalidToken):
+        decrypt_value(tampered, key)
+
+
+def test_invalid_key_size():
+    """Keys that don't decode to 32 bytes raise InvalidKey."""
+    short = base64.urlsafe_b64encode(b"too-short").decode("ascii")
+    with pytest.raises(InvalidKey):
+        encrypt_value("x", short)
+    with pytest.raises(InvalidKey):
+        decrypt_value(short, short)
+
+
+def test_key_size_constant():
+    """Generated keys decode to exactly KEY_SIZE raw bytes."""
+    raw = base64.urlsafe_b64decode(generate_key().encode("ascii"))
+    assert len(raw) == KEY_SIZE
 
 
 def test_mask_secret_long():
