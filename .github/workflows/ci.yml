@@ -1,0 +1,74 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: pytest + mypy (py${{ matrix.python-version }})
+    runs-on: [self-hosted, unraid]
+    timeout-minutes: 25
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: omkit
+          POSTGRES_PASSWORD: omkit
+          POSTGRES_DB: omkit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U omkit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      valkey:
+        image: valkey/valkey:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TEST_POSTGRES_DSN: postgres://omkit:omkit@127.0.0.1:5432/omkit
+      TEST_REDIS_ADDR: 127.0.0.1:6379
+      VALKEY_URL: redis://127.0.0.1:6379
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,tracing,metrics]"
+
+      - name: pytest
+        run: pytest -v --tb=short
+
+      - name: mypy
+        run: mypy omkit
