@@ -9,10 +9,10 @@ Implementations:
   Streams consumer groups — the same wire-format used by the legacy
   ``omur_sdk.events.EventBus`` wrapper so both can coexist.
 
-exports: class Event | class EventBus | class PostgresEventBus | class RedisEventBus | backend_from_env() | new_bus()
+exports: class Event | class EventBus | class PostgresEventBus | class RedisEventBus | backend_from_env() | new_bus() | NIL_TENANT_ID
 rules:   The EventBus module must support both PostgreSQL and Redis backends, with PostgreSQL as the default, and all implementations must adhere to the provided `EventBus` protocol interface.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
-message: 
+message:
 """
 
 from __future__ import annotations
@@ -23,6 +23,14 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Awaitable, Callable, Optional, Protocol
+
+# Nil-UUID sentinel for system-level events with no tenant context. Matches
+# the pattern used by ``security_events`` and the events RLS policy in
+# migration 0005: rows stamped with this sentinel are readable by sessions
+# that have ``SET app.role = 'admin'`` and writable by ``service`` role
+# sessions, but invisible to ordinary tenant connections. Mirrors
+# ``NilTenantID`` in packages/omur-go-sdk/eventbus/postgres.go.
+NIL_TENANT_ID = "00000000-0000-0000-0000-000000000000"
 
 
 @dataclass
@@ -99,14 +107,27 @@ class PostgresEventBus:
         await conn.execute("SET LOCAL row_security = off")
 
     async def publish(self, topic: str, payload: Any) -> None:
-        """
-        Rules:   Function requires topic string and payload any object that serializes to JSON, uses connection pool for database operations, and executes within a transaction that sets bus role. Function must be called within an async context and handles JSON serialization internally.
+        """Publish a system-level event with the nil-UUID tenant sentinel.
+
+        Before migration 0005 this wrote NULL tenant_id; the new RLS policy
+        hides NULL rows from every connection except the bus itself, which
+        left the table internally inconsistent. Writing ``NIL_TENANT_ID``
+        keeps the row admin-readable while preserving the cross-tenant leak
+        fix.
+
+        Rules: Function requires topic string and payload any object that
+        serializes to JSON, uses connection pool for database operations,
+        and executes within a transaction that sets bus role. Function
+        must be called within an async context and handles JSON
+        serialization internally.
         """
         async with self._pool.acquire() as conn:
             async with conn.transaction():
                 await self._as_bus_role(conn)
                 await conn.execute(
-                    "INSERT INTO events (topic, payload) VALUES ($1, $2::jsonb)",
+                    "INSERT INTO events (tenant_id, topic, payload) "
+                    "VALUES ($1::uuid, $2, $3::jsonb)",
+                    NIL_TENANT_ID,
                     topic,
                     json.dumps(payload),
                 )

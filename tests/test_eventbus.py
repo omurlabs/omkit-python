@@ -11,7 +11,12 @@ import os
 import asyncpg
 import pytest
 
-from omur_sdk.eventbus import PostgresEventBus, RedisEventBus, backend_from_env
+from omur_sdk.eventbus import (
+    NIL_TENANT_ID,
+    PostgresEventBus,
+    RedisEventBus,
+    backend_from_env,
+)
 
 
 @pytest.fixture
@@ -28,6 +33,7 @@ async def pool():
             """
             CREATE TABLE IF NOT EXISTS events (
                 id BIGSERIAL PRIMARY KEY,
+                tenant_id UUID,
                 topic TEXT NOT NULL,
                 payload JSONB NOT NULL,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -84,6 +90,18 @@ async def test_postgres_bus_publish_subscribe(pool):
         pass
     assert received, "expected at least one delivered event"
     assert received[0].payload == {"k": "v"}
+
+    # #549 — publish() must stamp the nil-UUID sentinel so admin-role
+    # readers can see the row under the migration-0005 RLS policy.
+    async with pool.acquire() as conn:
+        stored_tenant = await conn.fetchval(
+            "SELECT tenant_id::text FROM events "
+            "WHERE topic = 'test.py.topic' ORDER BY id DESC LIMIT 1"
+        )
+    assert stored_tenant == NIL_TENANT_ID, (
+        f"publish() stored tenant_id = {stored_tenant!r}, "
+        f"want NIL_TENANT_ID {NIL_TENANT_ID!r}"
+    )
 
 
 def test_backend_from_env(monkeypatch):

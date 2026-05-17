@@ -1,5 +1,23 @@
 # omur-sdk changelog
 
+## Unreleased
+
+### Changed
+
+- `omur_sdk.eventbus.PostgresEventBus.publish()` now stamps the nil-UUID
+  sentinel (`NIL_TENANT_ID = "00000000-0000-0000-0000-000000000000"`) on
+  system-level events instead of writing NULL `tenant_id`. Aligns the SDK
+  with the RLS policy introduced in migration
+  `0005_rls_with_check_and_events_sentinel` so admin-role readers can see
+  system events without re-opening the cross-tenant leak the migration
+  closed. Backfill of legacy NULL rows ships in migration
+  `0006_events_backfill_nil_tenant`. (#549)
+
+### Added
+
+- `omur_sdk.eventbus.NIL_TENANT_ID` constant. Mirrored by `NilTenantID`
+  in `packages/omur-go-sdk/eventbus/postgres.go`.
+
 ## [0.2.0] - 2026-04-17
 
 Added pluggable backends so services can keep Valkey/Redis as an opt-in and
