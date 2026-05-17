@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "omkit"
-version = "0.0.2"
+version = "0.1.0"
 description = "Multi-tenant SaaS scaffolding for Python services."
 requires-python = ">=3.12"
 authors = [{name = "Omur Labs"}]

@@ -9,7 +9,7 @@ pool that enforces Row-Level Security per connection, a pluggable event bus
 provider registry, BYOK encryption helpers, FastAPI observability middleware,
 and a cross-runtime job-queue envelope that interoperates with the Go sibling.
 
-- **Status:** `v0.0.2` — pre-stable. Expect renames before `v0.1`.
+- **Status:** `v0.1.0` — internal API stable.
 - **Python:** `>=3.12`
 - **License:** Apache-2.0
 - **Sibling:** [`omkit-go`](https://github.com/omurlabs/omkit-go) — same primitives, same envelope contract, same RLS conventions.
@@ -17,7 +17,7 @@ and a cross-runtime job-queue envelope that interoperates with the Go sibling.
 ## Install
 
 ```bash
-pip install git+https://github.com/omurlabs/omkit-python@v0.0.2
+pip install git+https://github.com/omurlabs/omkit-python@v0.1.0
 ```
 
 Optional extras:
@@ -29,7 +29,7 @@ Optional extras:
 | `dev`      | `fastapi`, `pytest`, `pytest-asyncio`, `respx`                    | Local development and tests            |
 
 ```bash
-pip install "omkit[tracing,metrics] @ git+https://github.com/omurlabs/omkit-python@v0.0.2"
+pip install "omkit[tracing,metrics] @ git+https://github.com/omurlabs/omkit-python@v0.1.0"
 ```
 
 ## Quickstart
