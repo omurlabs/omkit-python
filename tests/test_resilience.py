@@ -8,7 +8,7 @@ message:
 import pytest
 import httpx
 from unittest.mock import MagicMock
-from omur_sdk.resilience import CircuitBreaker, CircuitOpen, resilient
+from omkit.resilience import CircuitBreaker, CircuitOpen, resilient
 
 
 @pytest.mark.asyncio

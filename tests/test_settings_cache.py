@@ -17,7 +17,7 @@ class TestWriteThroughCache:
         """
         Rules:   Cache file is created with correct JSON structure and content matching the internal cache state.
         """
-        from omur_sdk.settings import SettingsManager
+        from omkit.settings import SettingsManager
 
         cache_path = str(tmp_path / "settings-cache.json")
         mgr = SettingsManager.__new__(SettingsManager)
@@ -34,7 +34,7 @@ class TestWriteThroughCache:
         """
         Rules:   Secret keys are excluded from the cache file during write operations, ensuring sensitive data is not persisted.
         """
-        from omur_sdk.settings import SettingsManager
+        from omkit.settings import SettingsManager
 
         cache_path = str(tmp_path / "settings-cache.json")
         mgr = SettingsManager.__new__(SettingsManager)
@@ -52,7 +52,7 @@ class TestWriteThroughCache:
         """
         Rules:   If cache file exists, it's read and merged into the current cache; missing keys are not overwritten.
         """
-        from omur_sdk.settings import SettingsManager
+        from omkit.settings import SettingsManager
 
         cache_path = str(tmp_path / "settings-cache.json")
         with open(cache_path, "w") as f:
@@ -69,7 +69,7 @@ class TestWriteThroughCache:
         """
         Rules:   When cache file does not exist, the cache remains empty without raising an error.
         """
-        from omur_sdk.settings import SettingsManager
+        from omkit.settings import SettingsManager
 
         mgr = SettingsManager.__new__(SettingsManager)
         mgr._cache = {}
@@ -82,7 +82,7 @@ class TestWriteThroughCache:
         """
         Rules:   Cache files are written with strict permissions (0o600) to prevent unauthorized access.
         """
-        from omur_sdk.settings import SettingsManager
+        from omkit.settings import SettingsManager
 
         cache_path = str(tmp_path / "settings-cache.json")
         mgr = SettingsManager.__new__(SettingsManager)

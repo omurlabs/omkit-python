@@ -11,7 +11,7 @@ import os
 import asyncpg
 import pytest
 
-from omur_sdk.eventbus import (
+from omkit.eventbus import (
     NIL_TENANT_ID,
     PostgresEventBus,
     RedisEventBus,
@@ -106,13 +106,13 @@ async def test_postgres_bus_publish_subscribe(pool):
 
 def test_backend_from_env(monkeypatch):
     """
-    Rules:   Function assumes environment variable 'OMUR_EVENTBUS_BACKEND' controls backend selection, with 'postgres' as default and only 'redis' or 'postgres' as valid values, raising ValueError for invalid inputs.
+    Rules:   Function assumes environment variable 'EVENTBUS_BACKEND' controls backend selection, with 'postgres' as default and only 'redis' or 'postgres' as valid values, raising ValueError for invalid inputs.
     """
-    monkeypatch.delenv("OMUR_EVENTBUS_BACKEND", raising=False)
+    monkeypatch.delenv("EVENTBUS_BACKEND", raising=False)
     assert backend_from_env() == "postgres"
-    monkeypatch.setenv("OMUR_EVENTBUS_BACKEND", "redis")
+    monkeypatch.setenv("EVENTBUS_BACKEND", "redis")
     assert backend_from_env() == "redis"
-    monkeypatch.setenv("OMUR_EVENTBUS_BACKEND", "garbage")
+    monkeypatch.setenv("EVENTBUS_BACKEND", "garbage")
     with pytest.raises(ValueError):
         backend_from_env()
 

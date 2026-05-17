@@ -11,8 +11,8 @@ import os
 import asyncpg
 import pytest
 
-from omur_sdk.providers.base import ProviderBase
-from omur_sdk.providers.registry import ProviderRegistry
+from omkit.providers.base import ProviderBase
+from omkit.providers.registry import ProviderRegistry
 
 
 class NoopProvider(ProviderBase):
@@ -52,9 +52,9 @@ async def pool():
 @pytest.mark.asyncio
 async def test_registry_polling_picks_up_providers(pool, monkeypatch):
     """
-    Rules:   Test requires POSTGRES backend to be configured via OMUR_PROVIDERS_BACKEND env var and assumes specific database schema with tenants and providers tables
+    Rules:   Test requires POSTGRES backend to be configured via PROVIDERS_BACKEND env var and assumes specific database schema with tenants and providers tables
     """
-    monkeypatch.setenv("OMUR_PROVIDERS_BACKEND", "postgres")
+    monkeypatch.setenv("PROVIDERS_BACKEND", "postgres")
     NoopProvider.instances.clear()
 
     tenant_id = "00000000-0000-0000-0000-0000000000cc"

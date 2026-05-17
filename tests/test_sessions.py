@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 import asyncpg
 import pytest
 
-from omur_sdk.sessions import (
+from omkit.sessions import (
     NotFound,
     PostgresSessionStore,
     RedisSessionStore,
@@ -109,13 +109,13 @@ async def test_postgres_store_list(pool):
 
 def test_backend_from_env(monkeypatch):
     """
-    Rules:   The OMUR_SESSION_BACKEND environment variable must be one of 'postgres', 'redis', or unset (defaults to 'postgres'). Any other value will raise a ValueError.
+    Rules:   The SESSION_BACKEND environment variable must be one of 'postgres', 'redis', or unset (defaults to 'postgres'). Any other value will raise a ValueError.
     """
-    monkeypatch.delenv("OMUR_SESSION_BACKEND", raising=False)
+    monkeypatch.delenv("SESSION_BACKEND", raising=False)
     assert backend_from_env() == "postgres"
-    monkeypatch.setenv("OMUR_SESSION_BACKEND", "redis")
+    monkeypatch.setenv("SESSION_BACKEND", "redis")
     assert backend_from_env() == "redis"
-    monkeypatch.setenv("OMUR_SESSION_BACKEND", "garbage")
+    monkeypatch.setenv("SESSION_BACKEND", "garbage")
     with pytest.raises(ValueError):
         backend_from_env()
 
@@ -123,9 +123,9 @@ def test_backend_from_env(monkeypatch):
 @pytest.mark.asyncio
 async def test_new_store_postgres_requires_pool(monkeypatch):
     """
-    Rules:   When OMUR_SESSION_BACKEND is set to 'postgres', the new_store function requires a valid pool argument; passing None will raise a ValueError.
+    Rules:   When SESSION_BACKEND is set to 'postgres', the new_store function requires a valid pool argument; passing None will raise a ValueError.
     """
-    monkeypatch.setenv("OMUR_SESSION_BACKEND", "postgres")
+    monkeypatch.setenv("SESSION_BACKEND", "postgres")
     with pytest.raises(ValueError):
         await new_store(pool=None)
 

@@ -12,7 +12,7 @@ import json
 
 import pytest
 
-from omur_sdk.jobqueue import (
+from omkit.jobqueue import (
     ENVELOPE_VERSION,
     Envelope,
     InvalidEnvelopeError,

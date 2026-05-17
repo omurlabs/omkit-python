@@ -1,16 +1,16 @@
-"""Tests for omur_sdk.cost — Track 3 of cloud-readiness-prep."""
+"""Tests for omkit.cost — Track 3 of cloud-readiness-prep."""
 
 from __future__ import annotations
 
 import pytest
 from prometheus_client import REGISTRY
 
-from omur_sdk.cost import COST_UNITS_TOTAL, record_cost
+from omkit.cost import COST_UNITS_TOTAL, record_cost
 
 
 def _value(service: str, provider: str, op: str, tenant_bucket: str) -> float:
     return REGISTRY.get_sample_value(
-        "omur_cost_units_total",
+        "cost_units_total",
         {"service": service, "provider": provider, "op": op, "tenant_bucket": tenant_bucket},
     ) or 0.0
 
@@ -41,7 +41,7 @@ def test_record_cost_swallows_emission_errors(monkeypatch):
                     raise RuntimeError("registry blew up")
             return L()
 
-    monkeypatch.setattr("omur_sdk.cost.COST_UNITS_TOTAL", Boom())
+    monkeypatch.setattr("omkit.cost.COST_UNITS_TOTAL", Boom())
     # Must not raise — best-effort emission.
     record_cost(service="x", provider="y", op="z", units=1, tenant_bucket="paid")
 

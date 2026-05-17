@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_security_events.py — Tests for omur_sdk.security.events.log_security_event.
+"""packages/omur-sdk/tests/test_security_events.py — Tests for omkit.security.events.log_security_event.
 
 Integration tests (gated by TEST_POSTGRES_DSN) exercise the full
 RLS tenant-isolation contract: rows inserted under tenant A are
@@ -21,7 +21,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from omur_sdk.security.events import log_security_event
+from omkit.security.events import log_security_event
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +59,7 @@ async def test_log_security_event_calls_pool_execute():
 @pytest.mark.asyncio
 async def test_log_security_event_block_emits_warning(caplog):
     """
-    Rules:   When the severity is set to 'block', a warning must be emitted. Future developers must understand that this behavior is tied to the logging level and the specific logger name 'omur_sdk.security.events'.
+    Rules:   When the severity is set to 'block', a warning must be emitted. Future developers must understand that this behavior is tied to the logging level and the specific logger name 'omkit.security.events'.
     """
     import logging
 
@@ -69,7 +69,7 @@ async def test_log_security_event_block_emits_warning(caplog):
     mock_pool.acquire.return_value.__aexit__ = AsyncMock(return_value=False)
 
     tenant = uuid.uuid4()
-    with caplog.at_level(logging.WARNING, logger="omur_sdk.security.events"):
+    with caplog.at_level(logging.WARNING, logger="omkit.security.events"):
         await log_security_event(
             pool=mock_pool,
             tenant_id=tenant,
@@ -92,7 +92,7 @@ async def test_log_security_event_no_warning_below_block(caplog):
     mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
     mock_pool.acquire.return_value.__aexit__ = AsyncMock(return_value=False)
 
-    with caplog.at_level(logging.WARNING, logger="omur_sdk.security.events"):
+    with caplog.at_level(logging.WARNING, logger="omkit.security.events"):
         await log_security_event(
             pool=mock_pool,
             tenant_id=uuid.uuid4(),
@@ -108,8 +108,8 @@ async def test_log_security_event_facade_export():
     """
     Rules:   The test assumes that the facade function and direct function are the same object, which means the security event logging module must maintain this specific API structure and not refactor the facade to be a separate implementation.
     """
-    from omur_sdk.security import log_security_event as facade_fn
-    from omur_sdk.security.events import log_security_event as direct_fn
+    from omkit.security import log_security_event as facade_fn
+    from omkit.security.events import log_security_event as direct_fn
 
     assert facade_fn is direct_fn
 
@@ -129,7 +129,7 @@ async def test_rls_tenant_isolation():
     if not dsn:
         pytest.skip("TEST_POSTGRES_DSN not set")
 
-    from omur_sdk.dbpool import create_pool
+    from omkit.dbpool import create_pool
 
     pool = await create_pool(dsn, role=None)  # superuser for GUC control
     try:

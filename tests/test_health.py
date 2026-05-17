@@ -9,7 +9,7 @@ message:
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from omur_sdk.health import mount_health_endpoints
+from omkit.health import mount_health_endpoints
 
 
 def test_health_returns_ok():

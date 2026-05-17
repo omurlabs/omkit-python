@@ -10,8 +10,8 @@ from __future__ import annotations
 import pytest
 import httpx
 
-from omur_sdk.http import build_tenant_client
-from omur_sdk.tenant import bind
+from omkit.http import build_tenant_client
+from omkit.tenant import bind
 
 
 def _mock_transport(captured: dict) -> httpx.MockTransport:

@@ -12,7 +12,7 @@ import uuid
 import asyncpg
 import pytest
 
-from omur_sdk.settings import SettingsManager
+from omkit.settings import SettingsManager
 
 
 @pytest.fixture
@@ -33,7 +33,7 @@ async def test_polling_picks_up_updates(pool, monkeypatch):
     """
     Rules:   SettingsManager must be started before testing updates, and the test relies on a specific poll interval (0.1 seconds) to ensure timely detection of database changes.
     """
-    monkeypatch.setenv("OMUR_SETTINGS_BACKEND", "postgres")
+    monkeypatch.setenv("SETTINGS_BACKEND", "postgres")
     key = f"test_polling_{uuid.uuid4().hex[:8]}"
     async with pool.acquire() as conn:
         await conn.execute("DELETE FROM app_settings WHERE key = $1", key)

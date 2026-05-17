@@ -11,7 +11,7 @@ import os
 import asyncpg
 import pytest
 
-from omur_sdk.cleanup import Loop
+from omkit.cleanup import Loop
 
 
 @pytest.mark.asyncio

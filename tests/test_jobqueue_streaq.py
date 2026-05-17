@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_jobqueue_streaq.py — Unit tests for omur_sdk.jobqueue.streaq.
+"""packages/omur-sdk/tests/test_jobqueue_streaq.py — Unit tests for omkit.jobqueue.streaq.
 
 Avoids spinning up an actual streaq Worker / Valkey by exercising the
 middleware, enqueue helper, and Prometheus collector in isolation. The
@@ -18,10 +18,10 @@ import uuid
 
 import pytest
 
-from omur_sdk import tenant
-from omur_sdk.jobqueue import wrap
-from omur_sdk.jobqueue.envelope import InvalidEnvelopeError
-from omur_sdk.jobqueue.streaq import (
+from omkit import tenant
+from omkit.jobqueue import wrap
+from omkit.jobqueue.envelope import InvalidEnvelopeError
+from omkit.jobqueue.streaq import (
     DEFAULT_CONCURRENCY,
     DEFAULT_MAX_TRIES,
     DEFAULT_TIMEOUT_SECONDS,

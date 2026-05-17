@@ -39,7 +39,7 @@ def test_init_tracing_disabled_when_no_endpoint():
 
     Rules:   When the endpoint is an empty string, init_tracing returns None, indicating tracing is disabled.
     """
-    from omur_sdk.tracing import init_tracing
+    from omkit.tracing import init_tracing
     result = init_tracing("test-service", endpoint="")
     assert result is None
 
@@ -56,7 +56,7 @@ def test_init_tracing_returns_provider():
     with patch.dict(sys.modules, mocks):
         # Force reload so lazy imports pick up mocked modules
         import importlib
-        import omur_sdk.tracing as tracing_mod
+        import omkit.tracing as tracing_mod
         importlib.reload(tracing_mod)
         result = tracing_mod.init_tracing("test-service", endpoint="http://localhost:4318")
         assert result is provider
@@ -73,7 +73,7 @@ def test_init_tracing_sets_service_name():
 
     with patch.dict(sys.modules, mocks):
         import importlib
-        import omur_sdk.tracing as tracing_mod
+        import omkit.tracing as tracing_mod
         importlib.reload(tracing_mod)
         tracing_mod.init_tracing("spine", endpoint="http://localhost:4318")
         attrs = sdk_resources_mod.Resource.create.call_args[0][0]
@@ -86,7 +86,7 @@ def test_instrument_fastapi_idempotent():
     """
     from fastapi import FastAPI
 
-    from omur_sdk.tracing import instrument_fastapi
+    from omkit.tracing import instrument_fastapi
 
     app = FastAPI()
     instrument_fastapi(app)

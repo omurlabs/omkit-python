@@ -12,12 +12,12 @@ from unittest.mock import patch
 
 import pytest
 
-from omur_sdk import valkey
-from omur_sdk.config import BaseServiceSettings
+from omkit import valkey
+from omkit.config import BaseServiceSettings
 
 
 class _Settings(BaseServiceSettings):
-    OMUR_SERVICE_NAME: str = "test-svc"
+    SERVICE_NAME: str = "test-svc"
 
 
 def test_new_client_uses_settings_url():

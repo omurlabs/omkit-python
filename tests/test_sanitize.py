@@ -5,7 +5,7 @@ rules:   The sanitize module must preserve all original data integrity while rem
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
-from omur_sdk.sanitize import (
+from omkit.sanitize import (
     extract_json,
     sanitize_html,
     sanitize_llm_output,

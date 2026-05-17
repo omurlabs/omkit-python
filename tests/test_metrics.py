@@ -8,7 +8,7 @@ message:
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from omur_sdk.metrics import mount_metrics
+from omkit.metrics import mount_metrics
 
 
 def test_mount_metrics_exposes_endpoint():

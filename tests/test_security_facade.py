@@ -1,14 +1,14 @@
-"""packages/omur-sdk/tests/test_security_facade.py — omur_sdk.security re-exports sanitation helpers.
+"""packages/omur-sdk/tests/test_security_facade.py — omkit.security re-exports sanitation helpers.
 
 exports: EXPECTED_EXPORTS | test_security_facade_identity_matches_sanitize() | test_security_facade_sanitize_callables() | test_security_facade_all_matches_imports_exactly() | test_security_facade_does_not_leak_internals()
-rules:   The security facade must maintain exact import parity with all public functions from `omur_sdk.security` and must not expose any internal module references or leak implementation details through its public interface.
+rules:   The security facade must maintain exact import parity with all public functions from `omkit.security` and must not expose any internal module references or leak implementation details through its public interface.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
 
 import sys
 
-from omur_sdk.security import (
+from omkit.security import (
     sanitize_llm_output,
     sanitize_html,
     sanitize_llm_response,
@@ -26,7 +26,7 @@ EXPECTED_EXPORTS = {
 
 
 def test_security_facade_identity_matches_sanitize():
-    from omur_sdk import sanitize
+    from omkit import sanitize
 
     assert sanitize_llm_output is sanitize.sanitize_llm_output
     assert sanitize_html is sanitize.sanitize_html
@@ -40,7 +40,7 @@ def test_security_facade_sanitize_callables():
 
 
 def test_security_facade_all_matches_imports_exactly():
-    import omur_sdk.security as facade
+    import omkit.security as facade
 
     declared = set(getattr(facade, "__all__", ()))
     assert declared == EXPECTED_EXPORTS, (
@@ -49,11 +49,11 @@ def test_security_facade_all_matches_imports_exactly():
 
 
 def test_security_facade_does_not_leak_internals():
-    to_purge = [m for m in sys.modules if m.startswith("omur_sdk.internal")]
+    to_purge = [m for m in sys.modules if m.startswith("omkit.internal")]
     for m in to_purge:
         del sys.modules[m]
 
-    import omur_sdk.security  # noqa: F401
+    import omkit.security  # noqa: F401
 
-    leaked = [m for m in sys.modules if m.startswith("omur_sdk.internal")]
+    leaked = [m for m in sys.modules if m.startswith("omkit.internal")]
     assert not leaked, f"facade leaked private modules: {leaked}"

@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_data_facade.py — omur_sdk.data re-exports DB + session primitives.
+"""packages/omur-sdk/tests/test_data_facade.py — omkit.data re-exports DB + session primitives.
 
 exports: EXPECTED_EXPORTS | test_data_facade_identity_matches_underlying() | test_data_facade_types() | test_data_facade_all_matches_imports_exactly() | test_data_facade_does_not_leak_internals()
 rules:   The data facade must maintain exact import equivalence with direct module imports, cannot expose internal implementation details through sys.modules, and must preserve identity consistency between facade and underlying components.
@@ -8,7 +8,7 @@ message:
 
 import sys
 
-from omur_sdk.data import (
+from omkit.data import (
     build_retrieval_engine,
     create_pool,
     new_session_pool,
@@ -32,7 +32,7 @@ EXPECTED_EXPORTS = {
 
 
 def test_data_facade_identity_matches_underlying():
-    from omur_sdk import dbpool, sessions
+    from omkit import dbpool, sessions
 
     assert build_retrieval_engine is dbpool.build_retrieval_engine
     assert create_pool is dbpool.create_pool
@@ -57,7 +57,7 @@ def test_data_facade_all_matches_imports_exactly():
     """
     Rules:   The test validates that the __all__ tuple in the data facade module exactly matches the EXPECTED_EXPORTS set, ensuring all public API exports are properly declared and no unexpected items are exposed.
     """
-    import omur_sdk.data as facade
+    import omkit.data as facade
 
     declared = set(getattr(facade, "__all__", ()))
     assert declared == EXPECTED_EXPORTS, (
@@ -69,11 +69,11 @@ def test_data_facade_does_not_leak_internals():
     """
     Rules:   Future developers must ensure that internal modules are properly purged from sys.modules to prevent leakage, as this test verifies the facade doesn't expose private implementation details.
     """
-    to_purge = [m for m in sys.modules if m.startswith("omur_sdk.internal")]
+    to_purge = [m for m in sys.modules if m.startswith("omkit.internal")]
     for m in to_purge:
         del sys.modules[m]
 
-    import omur_sdk.data  # noqa: F401
+    import omkit.data  # noqa: F401
 
-    leaked = [m for m in sys.modules if m.startswith("omur_sdk.internal")]
+    leaked = [m for m in sys.modules if m.startswith("omkit.internal")]
     assert not leaked, f"facade leaked private modules: {leaked}"

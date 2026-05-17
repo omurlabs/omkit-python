@@ -16,7 +16,7 @@ agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial
 message: 
 """
 
-from omur_sdk.dbpool import sqlalchemy_asyncpg_connect_args
+from omkit.dbpool import sqlalchemy_asyncpg_connect_args
 
 
 def test_connect_args_default_includes_omur_app_role():

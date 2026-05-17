@@ -10,7 +10,7 @@ import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from omur_sdk.settings import SettingsManager
+from omkit.settings import SettingsManager
 
 
 @pytest.fixture

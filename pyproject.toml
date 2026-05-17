@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "omur-sdk"
-version = "0.3.1"
-description = "Shared provider framework for Omur services"
+name = "omkit"
+version = "0.0.1"
+description = "Multi-tenant SaaS scaffolding for Python services."
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.13",
@@ -41,10 +41,10 @@ metrics = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["omur_sdk*"]
+include = ["omkit*"]
 
 [tool.setuptools.package-data]
-omur_sdk = ["py.typed"]
+omkit = ["py.typed"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

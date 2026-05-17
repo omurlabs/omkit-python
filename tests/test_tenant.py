@@ -11,7 +11,7 @@ message:
 import pytest
 from uuid import uuid4
 
-from omur_sdk import tenant
+from omkit import tenant
 
 
 def test_require_raises_when_unset():
@@ -372,12 +372,12 @@ def test_hashed_for_log_with_explicit_key():
 
 def test_hashed_for_log_reads_env_hex(monkeypatch):
     """
-    Rules:   The environment variable OMUR_LOG_HMAC_KEY must be a 64-character hex string representing 32 bytes, or the function will raise an error on conversion.
+    Rules:   The environment variable LOG_HMAC_KEY must be a 64-character hex string representing 32 bytes, or the function will raise an error on conversion.
     """
     tid = str(uuid4())
     # openssl rand -hex 32 produces 64-char hex string
     hex_key = "0123456789abcdef" * 4
-    monkeypatch.setenv("OMUR_LOG_HMAC_KEY", hex_key)
+    monkeypatch.setenv("LOG_HMAC_KEY", hex_key)
     h_env = tenant.hashed_for_log(tid)
     h_explicit = tenant.hashed_for_log(tid, key=bytes.fromhex(hex_key))
     assert h_env == h_explicit
@@ -385,30 +385,30 @@ def test_hashed_for_log_reads_env_hex(monkeypatch):
 
 def test_hashed_for_log_rejects_non_hex_env(monkeypatch):
     """
-    Rules:   Environment variable OMUR_LOG_HMAC_KEY must contain only valid hexadecimal characters. Invalid characters will raise a RuntimeError with 'hex string' in the message.
+    Rules:   Environment variable LOG_HMAC_KEY must contain only valid hexadecimal characters. Invalid characters will raise a RuntimeError with 'hex string' in the message.
     """
     tid = str(uuid4())
-    monkeypatch.setenv("OMUR_LOG_HMAC_KEY", "not-hex-zzz!")
+    monkeypatch.setenv("LOG_HMAC_KEY", "not-hex-zzz!")
     with pytest.raises(RuntimeError, match="hex string"):
         tenant.hashed_for_log(tid)
 
 
 def test_hashed_for_log_rejects_short_env(monkeypatch):
     """
-    Rules:   Environment variable OMUR_LOG_HMAC_KEY must be at least 16 hexadecimal characters long (8 bytes). Shorter values will raise a RuntimeError with 'too short' in the message.
+    Rules:   Environment variable LOG_HMAC_KEY must be at least 16 hexadecimal characters long (8 bytes). Shorter values will raise a RuntimeError with 'too short' in the message.
     """
     tid = str(uuid4())
     # Only 8 hex chars = 4 bytes
-    monkeypatch.setenv("OMUR_LOG_HMAC_KEY", "deadbeef")
+    monkeypatch.setenv("LOG_HMAC_KEY", "deadbeef")
     with pytest.raises(RuntimeError, match="too short"):
         tenant.hashed_for_log(tid)
 
 
 def test_hashed_for_log_requires_key(monkeypatch):
     """
-    Rules:   Environment variable OMUR_LOG_HMAC_KEY must be set. Missing environment variable will raise a RuntimeError with 'OMUR_LOG_HMAC_KEY' in the message.
+    Rules:   Environment variable LOG_HMAC_KEY must be set. Missing environment variable will raise a RuntimeError with 'LOG_HMAC_KEY' in the message.
     """
     tid = str(uuid4())
-    monkeypatch.delenv("OMUR_LOG_HMAC_KEY", raising=False)
-    with pytest.raises(RuntimeError, match="OMUR_LOG_HMAC_KEY"):
+    monkeypatch.delenv("LOG_HMAC_KEY", raising=False)
+    with pytest.raises(RuntimeError, match="LOG_HMAC_KEY"):
         tenant.hashed_for_log(tid)

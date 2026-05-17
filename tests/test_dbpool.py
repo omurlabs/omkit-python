@@ -9,7 +9,7 @@ import os
 
 import pytest
 
-from omur_sdk.dbpool import create_pool, sqlalchemy_asyncpg_connect_args
+from omkit.dbpool import create_pool, sqlalchemy_asyncpg_connect_args
 
 
 def test_sqlalchemy_connect_args_disables_prepared_statements():

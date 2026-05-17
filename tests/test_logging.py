@@ -12,7 +12,7 @@ import logging
 from io import StringIO
 
 import structlog
-from omur_sdk.logging import configure_logging
+from omkit.logging import configure_logging
 
 
 def test_configure_logging_sets_processors():
@@ -106,7 +106,7 @@ def test_correlation_fields_emitted_when_tenant_bound(monkeypatch):
 
     Rules:   When tenant and request_id are bound to the logging context, they must automatically appear in all subsequent log records without explicit inclusion in the log message.
     """
-    from omur_sdk import tenant
+    from omkit import tenant
 
     monkeypatch.delenv("LOG_FORMAT", raising=False)
     buf = StringIO()

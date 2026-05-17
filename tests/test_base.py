@@ -6,7 +6,7 @@ agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial
 message: 
 """
 import pytest
-from omur_sdk.providers.base import ProviderBase, ProviderDocument, ProviderMetric
+from omkit.providers.base import ProviderBase, ProviderDocument, ProviderMetric
 
 
 # ── ProviderDocument ──────────────────────────────────────────────

@@ -7,7 +7,7 @@ message:
 """
 from __future__ import annotations
 
-from omur_sdk.quota import (
+from omkit.quota import (
     DEFAULT_DOCS,
     DEFAULT_QUERIES_PER_MONTH,
     DEFAULT_STORAGE_BYTES,
@@ -74,7 +74,7 @@ def test_check_query_allows_when_under():
     assert d.allowed
 
 
-from omur_sdk.quota import _cap_at_32_days  # type: ignore[attr-defined]
+from omkit.quota import _cap_at_32_days  # type: ignore[attr-defined]
 
 
 def test_cap_at_32_days():
