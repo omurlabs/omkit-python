@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_data_facade.py — omkit.data re-exports DB + session primitives.
+"""tests/test_data_facade.py — omkit.data re-exports DB + session primitives.
 
 exports: EXPECTED_EXPORTS | test_data_facade_identity_matches_underlying() | test_data_facade_types() | test_data_facade_all_matches_imports_exactly() | test_data_facade_does_not_leak_internals()
 rules:   The data facade must maintain exact import equivalence with direct module imports, cannot expose internal implementation details through sys.modules, and must preserve identity consistency between facade and underlying components.

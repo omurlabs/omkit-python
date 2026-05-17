@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_security_events.py — Tests for omkit.security.events.log_security_event.
+"""tests/test_security_events.py — Tests for omkit.security.events.log_security_event.
 
 Integration tests (gated by TEST_POSTGRES_DSN) exercise the full
 RLS tenant-isolation contract: rows inserted under tenant A are

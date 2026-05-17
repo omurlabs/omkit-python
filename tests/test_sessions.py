@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_sessions.py — test_sessions module.
+"""tests/test_sessions.py — test_sessions module.
 
 exports: pool() | test_postgres_store_put_get_delete(pool) | test_postgres_store_expired(pool) | test_postgres_store_list(pool) | test_backend_from_env(monkeypatch) | test_new_store_postgres_requires_pool(monkeypatch) | test_redis_store_put_get_delete()
 rules:   The module requires explicit environment configuration for database connections and does not support implicit fallbacks or default configurations for session backends.

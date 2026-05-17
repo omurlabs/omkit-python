@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_cleanup.py — test_cleanup module.
+"""tests/test_cleanup.py — test_cleanup module.
 
 exports: test_loop_runs_task_when_lock_acquired() | test_loop_skips_when_lock_held_elsewhere()
 rules:   none

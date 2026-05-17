@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_security_facade.py — omkit.security re-exports sanitation helpers.
+"""tests/test_security_facade.py — omkit.security re-exports sanitation helpers.
 
 exports: EXPECTED_EXPORTS | test_security_facade_identity_matches_sanitize() | test_security_facade_sanitize_callables() | test_security_facade_all_matches_imports_exactly() | test_security_facade_does_not_leak_internals()
 rules:   The security facade must maintain exact import parity with all public functions from `omkit.security` and must not expose any internal module references or leak implementation details through its public interface.

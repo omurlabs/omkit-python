@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_valkey.py — Tests for valkey.new_client factory.
+"""tests/test_valkey.py — Tests for valkey.new_client factory.
 
 exports: test_new_client_uses_settings_url() | test_new_client_passes_kwargs() | test_new_client_no_password()
 rules:   The module requires all Valkey client initialization to originate through the _Settings class to ensure consistent configuration management and prevent direct host/port/password overrides that could compromise security or consistency.

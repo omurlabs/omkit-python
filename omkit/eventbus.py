@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/eventbus.py — Backend-agnostic event bus for cross-service pub/sub notifications.
+"""omkit/eventbus.py — Backend-agnostic event bus for cross-service pub/sub notifications.
 
 Implementations:
 

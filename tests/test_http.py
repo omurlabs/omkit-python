@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_http.py — tenant header auto-injection via event hook.
+"""tests/test_http.py — tenant header auto-injection via event hook.
 
 exports: test_injects_tenant_header_from_context() | test_omits_tenant_header_when_no_context() | test_explicit_tenant_header_wins()
 rules:   The module must maintain backward compatibility with existing HTTP request handling while ensuring tenant header injection occurs only when context is explicitly provided. All test cases must validate header behavior in isolation without external dependencies. The transport mock implementation cannot alter global HTTP client configuration.

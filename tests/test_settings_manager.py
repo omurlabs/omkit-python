@@ -1,11 +1,11 @@
-"""packages/omur-sdk/tests/test_settings_manager.py — test_settings_manager module.
+"""tests/test_settings_manager.py — test_settings_manager module.
 
 exports: manager() | test_get_returns_cached_value(manager) | test_get_returns_default_when_missing(manager) | test_on_change_registers_callback(manager) | test_handle_message_updates_cache_and_fires_callback(manager) | test_handle_message_secret_does_not_cache_value(manager)
 rules:   The settings manager must maintain thread-safe cache access and ensure all callback executions are non-blocking to prevent UI freezes.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
-# packages/omur-sdk/tests/test_settings_manager.py
+# tests/test_settings_manager.py
 import json
 import pytest
 from unittest.mock import AsyncMock, MagicMock

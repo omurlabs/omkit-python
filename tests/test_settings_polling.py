@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_settings_polling.py — test_settings_polling module.
+"""tests/test_settings_polling.py — test_settings_polling module.
 
 exports: pool() | test_polling_picks_up_updates(pool, monkeypatch)
 rules:   The module requires all environment configurations to be validated at startup and does not support runtime modification of backend settings. Any changes to the settings polling mechanism must maintain backward compatibility with existing PostgreSQL DSN handling and ensure thread-safe access to shared configuration state. The test suite depends on specific environment variable isolation and cannot run concurrently with other tests that modify global settings.

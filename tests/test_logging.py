@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_logging.py — Tests for shared structlog configuration.
+"""tests/test_logging.py — Tests for shared structlog configuration.
 
 exports: test_configure_logging_sets_processors() | test_configure_logging_is_idempotent() | test_default_is_json(monkeypatch) | test_console_format(monkeypatch)
 rules:   none

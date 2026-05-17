@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/sessions.py — Session store abstractions for services that persist short-lived per-user.
+"""omkit/sessions.py — Session store abstractions for services that persist short-lived per-user.
 
 sessions. Two backends are provided:
 

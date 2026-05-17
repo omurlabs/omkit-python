@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/jobqueue/streaq.py — streaq integration for Omur Python services.
+"""omkit/jobqueue/streaq.py — streaq integration for Omur Python services.
 
 Wraps the streaq Worker with the SDK's tenant + envelope contract so all
 Python services have the same ergonomics as the Go-side `omkit.jobqueue`
@@ -49,6 +49,9 @@ from omkit.jobqueue.envelope import (
 log = logging.getLogger(__name__)
 
 DEFAULT_CONCURRENCY = 4
+# NOTE: streaq's max_tries counts TOTAL attempts; Go/Asynq's MaxRetry counts
+# RETRIES (attempts - 1). DEFAULT_MAX_TRIES=3 here equals Go's MaxRetry=2 in
+# behavioral terms — both = 3 total attempts before the job is dead-lettered.
 DEFAULT_MAX_TRIES = 3
 DEFAULT_TIMEOUT_SECONDS = 300
 DEFAULT_TTL = timedelta(hours=48)

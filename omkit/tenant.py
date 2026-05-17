@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/tenant.py — Per-request tenant isolation via contextvars.
+"""omkit/tenant.py — Per-request tenant isolation via contextvars.
 
 Middleware sets the tenant on each request. Handlers call require() to access.
 Background tasks use bind() to establish context.

@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/encryption.py — Fernet-based encryption utilities for Omur settings secrets.
+"""omkit/encryption.py — Fernet-based encryption utilities for Omur settings secrets.
 
 exports: generate_key() | encrypt_value(plaintext, key) | decrypt_value(ciphertext, key) | mask_secret(value)
 rules:   The encryption module must maintain backward compatibility with all existing encrypted data formats and key structures. All cryptographic operations must be deterministic and reproducible across different runtime environments. The module cannot introduce any external dependencies beyond the standard library and the fernet package.

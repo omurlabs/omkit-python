@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_dbpool_role.py — Pure-function tests for the role plumbing in.
+"""tests/test_dbpool_role.py — Pure-function tests for the role plumbing in.
 
 ``sqlalchemy_asyncpg_connect_args`` — no DB required.
 

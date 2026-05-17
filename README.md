@@ -11,7 +11,7 @@ and a cross-runtime job-queue envelope that interoperates with the Go sibling.
 
 - **Status:** `v0.0.2` — pre-stable. Expect renames before `v0.1`.
 - **Python:** `>=3.12`
-- **License:** Apache-2.0 *(planned)*
+- **License:** Apache-2.0
 - **Sibling:** [`omkit-go`](https://github.com/omurlabs/omkit-go) — same primitives, same envelope contract, same RLS conventions.
 
 ## Install

@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/jobqueue/envelope.py — Cross-SDK envelope contract for job-queue payloads.
+"""omkit/jobqueue/envelope.py — Cross-SDK envelope contract for job-queue payloads.
 
 Every task enqueued via streaq (Python) or Asynq (Go) is wrapped in this
 envelope. Workers unwrap on receive, validate, and run the handler under the

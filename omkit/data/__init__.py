@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/data/__init__.py — re-exports DB pool and session-store primitives.
+"""omkit/data/__init__.py — re-exports DB pool and session-store primitives.
 
 Additive grouping. Flat-module imports continue to work.
 

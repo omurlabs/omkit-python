@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_metrics.py — test_metrics module.
+"""tests/test_metrics.py — test_metrics module.
 
 exports: test_mount_metrics_exposes_endpoint() | test_mount_metrics_idempotent()
 rules:   The module must maintain backward compatibility with existing FastAPI application integrations and cannot introduce breaking changes to the metrics endpoint exposure pattern. The test suite must remain fully self-contained without external dependencies and should not modify global application state during test execution. All metrics endpoint tests must validate against the standard FastAPI testing client interface and cannot rely on custom middleware or external service mocks.

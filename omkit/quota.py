@@ -1,10 +1,10 @@
-"""packages/omur-sdk/omkit/quota.py — Per-tenant quota helpers (plan 1.7).
+"""omkit/quota.py — Per-tenant quota helpers (plan 1.7).
 
 Mirrors ``packages/omur-go-sdk/quota/quota.go`` so marrow (Python) and
 spine (Go) enforce identical defaults. Absence of a ``tenant_quotas`` row
 means "use defaults below". Limits are integers; bytes are BIGINT.
 
-exports: DEFAULT_DOCS | DEFAULT_STORAGE_BYTES | DEFAULT_QUERIES_PER_MONTH | class Resource | class Limits | class Usage | class Decision | load(session) | get_usage(session) | check_upload(lim, usage, incoming_bytes) | check_query(lim, usage)
+exports: DEFAULT_DOCS | DEFAULT_STORAGE_BYTES | DEFAULT_QUERIES_PER_MONTH | class Resource | class Limits | class Usage | class Decision | load(session) | get_usage(session) | check_upload(lim, usage, incoming_bytes) | check_query(lim, usage) | record_usage(conn, tenant_id, provider, model, input_tokens, output_tokens, cost_usd)
 rules:   The module must maintain backward compatibility with existing quota enforcement logic and cannot modify the public API of `load`, `get_usage`, `check_upload`, or `check_query` functions.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
@@ -15,9 +15,15 @@ from __future__ import annotations
 import enum
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from decimal import Decimal
+from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+
+if TYPE_CHECKING:
+    import asyncpg
 
 DEFAULT_DOCS = 100
 DEFAULT_STORAGE_BYTES = 500 * 1024 * 1024  # 500 MiB
@@ -169,6 +175,52 @@ def check_query(lim: Limits, usage: Usage) -> Decision:
             retry_after=_seconds_until_next_month(),
         )
     return Decision(allowed=True)
+
+
+async def record_usage(
+    conn: "asyncpg.Connection",
+    *,
+    tenant_id: UUID,
+    provider: str,
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    cost_usd: Decimal | float,
+) -> None:
+    """Insert a usage row into ``usage_log``. Mirrors Go ``quota.RecordUsage``.
+
+    Write side of the quota contract — the consuming service's quota
+    middleware enforces ``queries_per_month`` by counting rows in
+    ``usage_log``, so without this write enforcement silently becomes a
+    no-op. Callers should invoke after any successful LLM completion
+    (chat, embed, tool call) on behalf of a tenant.
+
+    ``conn`` is an asyncpg connection (or pool-acquired connection) that
+    has already been set up with SET ROLE omur_app and the request
+    tenant's ``app.tenant_id`` GUC (via ``tenant.set_rls_conn``). RLS on
+    ``usage_log`` enforces tenant isolation: a compromised tenant context
+    cannot poison another tenant's counter. The column list, types, and
+    cast pattern are kept byte-identical to Go's ``quota.RecordUsage`` so
+    the two SDKs share one schema contract.
+
+    ``cost_usd`` may be zero when the provider does not return a price
+    (e.g. local Ollama). ``Decimal`` is preferred over ``float`` to avoid
+    drift on the ``NUMERIC`` column; asyncpg accepts either.
+    """
+    await conn.execute(
+        """
+        INSERT INTO usage_log
+            (tenant_id, provider, model, input_tokens, output_tokens, cost_usd)
+        VALUES
+            ($1::uuid, $2, $3, $4, $5, $6)
+        """,
+        str(tenant_id),
+        provider,
+        model,
+        input_tokens,
+        output_tokens,
+        cost_usd,
+    )
 
 
 def _cap_at_32_days(s: int) -> int:

@@ -1,11 +1,11 @@
-"""packages/omur-sdk/omkit/settings.py — Settings manager with in-memory cache, Valkey pub/sub subscriber, and callbacks.
+"""omkit/settings.py — Settings manager with in-memory cache, Valkey pub/sub subscriber, and callbacks.
 
 exports: class SettingsManager
 rules:   The SettingsManager must maintain thread-safe cache access and ensure all database and Redis operations are properly synchronized to prevent race conditions during concurrent updates.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
 """
-# packages/omur-sdk/omkit/settings.py
+# omkit/settings.py
 """Settings manager with in-memory cache, Valkey pub/sub subscriber, and callbacks."""
 
 import asyncio

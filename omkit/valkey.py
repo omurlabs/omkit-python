@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/valkey.py — Valkey client factory.
+"""omkit/valkey.py — Valkey client factory.
 
 Single source of truth for `redis.asyncio.Redis` construction across the SDK.
 Replaces the URL-construction duplication in `eventbus.new_bus()` and other

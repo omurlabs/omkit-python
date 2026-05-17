@@ -33,7 +33,6 @@ htmlcov/
 # versions agents while keeping user-local settings private.
 !.claude/
 !.claude/agents/
-!.claude/agents/*.md
 .claude/settings.local.json
 .claude/worktrees/
 .claude/scheduled_tasks.lock

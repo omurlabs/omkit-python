@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/transport/__init__.py — re-exports cross-cutting wire / observability primitives.
+"""omkit/transport/__init__.py — re-exports cross-cutting wire / observability primitives.
 
 This is an additive grouping for discoverability. Existing imports from the
 flat modules (``omkit.http``, ``omkit.tracing``, etc.) continue to work

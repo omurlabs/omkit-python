@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_encryption.py — Tests for omkit.encryption.
+"""tests/test_encryption.py — Tests for omkit.encryption.
 
 exports: test_roundtrip() | test_different_keys_fail() | test_encrypt_empty_string() | test_mask_secret_long() | test_mask_secret_medium() | test_mask_secret_very_short() | test_mask_secret_none() | test_mask_secret_empty() | test_mask_secret_exactly_4() | test_mask_secret_exactly_10()
 rules:   The encryption module must maintain backward compatibility for all existing mask_secret behaviors and key generation methods. All test cases must continue to pass without modification to ensure consistent encryption handling. The module cannot introduce new dependencies or alter the public API of encryption functions.

@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_jobqueue_streaq.py — Unit tests for omkit.jobqueue.streaq.
+"""tests/test_jobqueue_streaq.py — Unit tests for omkit.jobqueue.streaq.
 
 Avoids spinning up an actual streaq Worker / Valkey by exercising the
 middleware, enqueue helper, and Prometheus collector in isolation. The
