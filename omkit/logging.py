@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/logging.py — Shared structlog configuration for all Omur services.
+"""omkit/logging.py — Shared structlog configuration for all Omur services.
 
 Default output is JSON, suitable for production log aggregation. Set
 ``LOG_FORMAT=console`` to switch to the human-readable renderer during dev.

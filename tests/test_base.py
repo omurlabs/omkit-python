@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_base.py — test_base module.
+"""tests/test_base.py — test_base module.
 
 exports: test_provider_document_required_fields() | test_provider_document_rejects_missing_content() | test_provider_document_optional_fields_default() | test_provider_metric_required_fields() | test_provider_metric_coerces_value_to_float() | test_provider_metric_rejects_non_numeric_value() | test_provider_base_cannot_be_instantiated_directly() | test_provider_base_concrete_subclass_must_implement_run() | test_provider_base_subclass_stores_tenant_and_config()
 rules:   none

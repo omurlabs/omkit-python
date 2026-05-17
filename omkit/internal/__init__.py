@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/internal/__init__.py — Internal helpers. NOT part of the SDK's stable public API.
+"""omkit/internal/__init__.py — Internal helpers. NOT part of the SDK's stable public API.
 
 exports: none
 rules:   none

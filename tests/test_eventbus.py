@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_eventbus.py — test_eventbus module.
+"""tests/test_eventbus.py — test_eventbus module.
 
 exports: pool() | test_postgres_bus_publish_subscribe(pool) | test_backend_from_env(monkeypatch) | test_redis_bus_publish_subscribe()
 rules:   The module requires explicit environment variable configuration for database and Redis connections, and all tests must be isolated to prevent cross-test pollution of event bus state.

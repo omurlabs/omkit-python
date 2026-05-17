@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_registry_polling.py — test_registry_polling module.
+"""tests/test_registry_polling.py — test_registry_polling module.
 
 exports: class NoopProvider | pool() | test_registry_polling_picks_up_providers(pool, monkeypatch)
 rules:   The module requires all provider implementations to inherit from ProviderBase and implement explicit run() and __init__() methods with specific signatures. The test suite depends on environment variable configuration for backend selection and expects specific class variable collections for observing tenant and config data during execution.

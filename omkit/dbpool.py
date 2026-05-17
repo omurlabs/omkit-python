@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/dbpool.py — asyncpg pool helper that enforces a Postgres role via the init coroutine.
+"""omkit/dbpool.py — asyncpg pool helper that enforces a Postgres role via the init coroutine.
 
 Runs ``SET ROLE <role>`` on every new physical connection so the role is
 guaranteed even across reconnects — the async equivalent of pgx's

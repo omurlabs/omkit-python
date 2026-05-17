@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/jobqueue/__init__.py — Job-queue primitives shared across Omur Python services.
+"""omkit/jobqueue/__init__.py — Job-queue primitives shared across Omur Python services.
 
 Exposes the cross-SDK Envelope contract; streaq helpers live in the
 sibling `streaq` submodule (`omkit.jobqueue.streaq`) and are not

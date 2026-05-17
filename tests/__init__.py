@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/__init__.py — Package init for tests.
+"""tests/__init__.py — Package init for tests.
 
 exports: none
 rules:   none

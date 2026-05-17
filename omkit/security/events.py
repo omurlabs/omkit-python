@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/security/events.py — write-side helper for the security_events table.
+"""omkit/security/events.py — write-side helper for the security_events table.
 
 Evidence must be structured metadata (pattern names, classifier verdicts,
 stripped URLs). Never pass full document content — the column comment in

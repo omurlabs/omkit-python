@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/resilience.py — HTTP resilience primitives: circuit breaker + retry with exponential backoff.
+"""omkit/resilience.py — HTTP resilience primitives: circuit breaker + retry with exponential backoff.
 
 exports: T | class CircuitOpen | class CircuitBreaker | resilient(breaker)
 rules:   The circuit breaker must maintain thread safety across all state transitions and failure tracking operations. The breaker's state must be consistent between concurrent calls and failures, with proper synchronization to prevent race conditions during state changes. All external dependencies like httpx exceptions must be handled with specific type checking to ensure transient error detection works correctly.

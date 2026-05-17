@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/cleanup.py — Coordinated periodic cleanup task runner.
+"""omkit/cleanup.py — Coordinated periodic cleanup task runner.
 
 Loop.run() fires the provided ``task`` coroutine every ``interval`` seconds
 while holding ``pg_try_advisory_lock(lock_key)`` — horizontally scaled

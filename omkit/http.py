@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/http.py — Tenant-aware httpx.AsyncClient factory.
+"""omkit/http.py — Tenant-aware httpx.AsyncClient factory.
 
 Callers construct one long-lived client per service (NOT per request) via
 ``build_tenant_client`` and rely on the attached ``event_hook`` to inject

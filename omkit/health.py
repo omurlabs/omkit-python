@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/health.py — Shared health and readiness endpoints for Omur services.
+"""omkit/health.py — Shared health and readiness endpoints for Omur services.
 
 Usage:
     from omkit.health import mount_health_endpoints

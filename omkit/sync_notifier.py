@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/sync_notifier.py — Fire-and-forget notifier for solid-sync Pod synchronization.
+"""omkit/sync_notifier.py — Fire-and-forget notifier for solid-sync Pod synchronization.
 
 Usage:
     notifier = SyncNotifier(base_url="http://solid-sync:8000", token="...")

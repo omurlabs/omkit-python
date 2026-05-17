@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_settings_cache.py — Tests for SettingsManager write-through cache.
+"""tests/test_settings_cache.py — Tests for SettingsManager write-through cache.
 
 exports: class TestWriteThroughCache
 rules:   The cache module must ensure atomic file operations to prevent corruption during concurrent access, maintain consistent file permissions across all cache files, and guarantee that sensitive data is never written to disk in plaintext format.

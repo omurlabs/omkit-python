@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/sanitize.py — Shared sanitisation helpers for LLM output and HTML.
+"""omkit/sanitize.py — Shared sanitisation helpers for LLM output and HTML.
 
 ``sanitize_llm_output`` is the minimal form used by Frontal: strip
 ``<think>...</think>`` blocks and trim whitespace. ``sanitize_llm_response``

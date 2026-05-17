@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_transport_facade.py — omkit.transport re-exports the expected surface.
+"""tests/test_transport_facade.py — omkit.transport re-exports the expected surface.
 
 exports: EXPECTED_EXPORTS | test_transport_facade_exports_are_callable_or_classes() | test_transport_facade_identity_matches_underlying() | test_transport_facade_all_matches_imports_exactly() | test_transport_facade_does_not_leak_internals()
 rules:   The transport facade must maintain exact import parity with the omkit package structure while preventing internal module leakage, ensuring all exported objects are either callable or class types, and preserving the identity mapping between facade and underlying modules.

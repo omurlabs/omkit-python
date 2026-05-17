@@ -1,4 +1,4 @@
-"""packages/omur-sdk/tests/test_dbpool.py — test_dbpool module.
+"""tests/test_dbpool.py — test_dbpool module.
 
 exports: test_sqlalchemy_connect_args_disables_prepared_statements() | test_role_set_on_acquire() | test_role_set_after_txn_error() | test_no_role_leaves_pool_behaviour_unchanged()
 rules:   The module requires all database connection tests to validate against environment-based DSN settings and must maintain consistent role assignment behavior across transaction states.

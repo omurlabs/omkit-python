@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/tracing.py — OpenTelemetry tracing bootstrap for Omur services.
+"""omkit/tracing.py — OpenTelemetry tracing bootstrap for Omur services.
 
 Usage:
     from omkit.tracing import init_tracing
@@ -47,6 +47,10 @@ def init_tracing(
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
         from opentelemetry.sdk.resources import Resource
         from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+        from opentelemetry.propagate import set_global_textmap
+        from opentelemetry.propagators.composite import CompositePropagator
+        from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+        from opentelemetry.baggage.propagation import W3CBaggagePropagator
     except ImportError:
         log.info("tracing.not_installed", service=service_name)
         return None
@@ -56,6 +60,10 @@ def init_tracing(
     exporter = OTLPSpanExporter(endpoint=f"{endpoint}/v1/traces")
     provider.add_span_processor(BatchSpanProcessor(exporter))
     trace.set_tracer_provider(provider)
+    set_global_textmap(CompositePropagator([
+        TraceContextTextMapPropagator(),
+        W3CBaggagePropagator(),
+    ]))
 
     log.info("tracing.enabled", service=service_name, endpoint=endpoint)
     return provider

@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/providers/registry.py — loads providers from DB, manages asyncio tasks, hot-reloads via Valkey.
+"""omkit/providers/registry.py — loads providers from DB, manages asyncio tasks, hot-reloads via Valkey.
 
 exports: DEFAULT_PROVIDERS_POLL_INTERVAL | class ProviderRegistry
 rules:   The module must maintain thread safety across all asyncio task management and ensure consistent state synchronization between PostgreSQL and Valkey for tenant-provider configurations.
@@ -177,7 +177,9 @@ class ProviderRegistry:
         # Connect directly to postgres (bypass PgBouncer) to avoid RLS issues
         # with SET ROLE omur_app when app.tenant_id isn't set.
         dsn = self._postgres_dsn.replace("postgresql+asyncpg://", "postgresql://")
-        dsn = dsn.replace("pgbouncer:6432", "postgres:5432")
+        # Opt-in rewrite for omur-core docker-compose layout; default OFF to avoid leaking host names into the public SDK.
+        if os.environ.get("OMKIT_REWRITE_PGBOUNCER_HOST") == "1":
+            dsn = dsn.replace("pgbouncer:6432", "postgres:5432")
         conn = await asyncpg.connect(dsn)
         try:
             if tenant_id:

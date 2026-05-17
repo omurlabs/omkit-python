@@ -1,4 +1,4 @@
-"""packages/omur-sdk/omkit/security/__init__.py — re-exports sanitation helpers and event logger.
+"""omkit/security/__init__.py — re-exports sanitation helpers and event logger.
 
 The ``omkit.encryption`` module has a mixed public surface and is
 intentionally NOT re-exported here; continue to import from
