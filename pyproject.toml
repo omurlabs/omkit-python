@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "omkit"
-version = "0.1.0"
+version = "0.1.1"
 description = "Multi-tenant SaaS scaffolding for Python services."
 requires-python = ">=3.12"
 authors = [{name = "Omur Labs"}]
@@ -14,7 +14,6 @@ urls = {Homepage = "https://github.com/omurlabs/omkit-python", Repository = "htt
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
