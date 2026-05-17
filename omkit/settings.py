@@ -214,12 +214,14 @@ class SettingsManager:
 
     async def _poll_loop(self):
         """Background task: re-fetch rows with updated_at > last_seen."""
-        while not self._stop.is_set():
+        assert self._stop is not None, "_poll_loop requires start() to have set _stop"
+        stop = self._stop
+        while not stop.is_set():
             try:
-                await asyncio.wait_for(self._stop.wait(), timeout=self._poll_interval)
+                await asyncio.wait_for(stop.wait(), timeout=self._poll_interval)
             except asyncio.TimeoutError:
                 pass
-            if self._stop.is_set():
+            if stop.is_set():
                 return
             await self._poll_once()
 
@@ -262,7 +264,7 @@ class SettingsManager:
     def _write_cache(self):
         """Write non-secret settings to local cache file atomically."""
         try:
-            secret_keys = getattr(self, "_secret_keys", set())
+            secret_keys: set[str] = getattr(self, "_secret_keys", set())
             data = {k: v for k, v in self._cache.items() if k not in secret_keys}
             tmp_path = self._cache_path + ".tmp"
             with open(tmp_path, "w") as f:

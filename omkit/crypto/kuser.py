@@ -53,9 +53,13 @@ class KUser:
         """Generate a fresh KUser from `os.urandom`. Equivalent to Go's `NewKUser`."""
         return cls(os.urandom(KUSER_SIZE))
 
-    @property
-    def bytes(self) -> bytes:
-        """Return a defensive copy of the key bytes."""
+    def as_bytes(self) -> bytes:
+        """Return a defensive copy of the key bytes.
+
+        Named ``as_bytes`` (not ``bytes``) to avoid shadowing the builtin
+        ``bytes`` type within the class scope, which would break type
+        annotations on later methods.
+        """
         return bytes(self._buf)
 
     def zero(self) -> None:

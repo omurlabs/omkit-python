@@ -209,7 +209,7 @@ class RedisSessionStore:
     def _key(self, token: str) -> str:
         return self._prefix + token
 
-    async def get(self, token: str) -> Session:
+    async def get(self, token: str, *, tenant_id: str | None = None) -> Session:
         """
         Rules:   Function requires token string input and returns a Session object with parsed datetime fields; raises NotFound exception when token is not found in storage. Function performs async Redis get operation and JSON deserialization, with caller responsible for handling the NotFound exception and ensuring token exists before calling.
         """
@@ -237,7 +237,7 @@ class RedisSessionStore:
         }
         await self._r.setex(self._key(s.token), ttl, json.dumps(d))
 
-    async def delete(self, token: str) -> None:
+    async def delete(self, token: str, *, tenant_id: str | None = None) -> None:
         """
         Rules:   The delete method requires a valid string token parameter and asynchronously removes the corresponding key-value pair from the underlying storage system. The method has no return value and may raise exceptions if the token is invalid or the storage operation fails.
         """

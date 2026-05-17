@@ -185,14 +185,14 @@ def test_kuser_self_test_tamper_fails():
 def test_kuser_zero_clears_bytes():
     k = KUser(b"0123456789abcdef0123456789abcdef")
     k.zero()
-    assert k.bytes == b"\x00" * 32
+    assert k.as_bytes() == b"\x00" * 32
 
 
 def test_kuser_zero_clears_all_nonzero_pattern():
     raw = bytes(i + 1 for i in range(32))
     k = KUser(raw)
     k.zero()
-    assert k.bytes == b"\x00" * 32
+    assert k.as_bytes() == b"\x00" * 32
 
 
 # --- LocalDev KMS DEK flow (mirrors Go localdev_dek_test.go) ---------------

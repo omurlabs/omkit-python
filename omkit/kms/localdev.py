@@ -74,10 +74,11 @@ class LocalDevKMS:
         if not raw:
             raise RuntimeError(f"{env_var} not set")
         # Try hex.
+        decoded: bytes | None
         try:
             decoded = bytes.fromhex(raw.strip())
         except ValueError:
-            decoded = None  # type: ignore[assignment]
+            decoded = None
         if decoded is None or len(decoded) != _MASTER_SIZE:
             # Try base64 (std + url-safe).
             try:

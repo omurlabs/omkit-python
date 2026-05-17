@@ -144,7 +144,11 @@ class ProviderRegistry:
         assert key not in self._tasks, f"Task {key!r} already running — cancel before starting"
         instance = cls(tenant_id=tenant_id, config=config)
         task = asyncio.create_task(instance.run(), name=key)
-        task.add_done_callback(lambda t, k=key: self._on_task_done(k, t))
+
+        def _done(t: asyncio.Task, k: str = key) -> None:
+            self._on_task_done(k, t)
+
+        task.add_done_callback(_done)
         self._tasks[key] = task
         log.info("registry.task_started", key=key)
 

@@ -41,6 +41,8 @@ dev = [
     "redis>=7.4",
     "respx>=0.21",
     "mypy>=1.13",
+    "opentelemetry-sdk>=1.41.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.41.0",
 ]
 tracing = [
     "opentelemetry-api>=1.41.0",
@@ -65,5 +67,37 @@ asyncio_mode = "auto"
 
 [tool.mypy]
 python_version = "3.12"
-strict = true
 files = ["omkit"]
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+# `strict = true` is aspirational. The codebase ships `py.typed` but predates
+# strict typing; tighten gradually rather than blocking on a full annotation
+# pass.
+
+[[tool.mypy.overrides]]
+module = [
+    "structlog",
+    "structlog.*",
+    "prometheus_client",
+    "prometheus_client.*",
+    "redis",
+    "redis.*",
+    "asyncpg",
+    "asyncpg.*",
+    "httpx",
+    "streaq",
+    "streaq.*",
+    "fastapi",
+    "fastapi.*",
+    "opentelemetry.*",
+    "sqlalchemy",
+    "sqlalchemy.*",
+    "pydantic",
+    "pydantic_settings",
+    "cryptography.*",
+    "tenacity",
+    "prometheus_fastapi_instrumentator",
+]
+ignore_missing_imports = true

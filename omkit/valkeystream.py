@@ -21,7 +21,7 @@ message:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Mapping, Union
+from typing import TYPE_CHECKING, Any, Mapping, Union
 
 if TYPE_CHECKING:
     import redis.asyncio as aioredis
@@ -164,7 +164,7 @@ class StreamConsumer:
         return [_message_from_pair(item) for item in claimed]
 
 
-def _flatten(resp: object) -> list[StreamMessage]:
+def _flatten(resp: Any) -> list[StreamMessage]:
     """Flatten the XREADGROUP response into a flat list of `StreamMessage`."""
     if not resp:
         return []
@@ -176,6 +176,6 @@ def _flatten(resp: object) -> list[StreamMessage]:
     return out
 
 
-def _message_from_pair(item: object) -> StreamMessage:
-    msg_id, fields = item  # type: ignore[misc]
+def _message_from_pair(item: Any) -> StreamMessage:
+    msg_id, fields = item
     return StreamMessage(id=_coerce_id(msg_id), fields=_normalize_fields(fields))
