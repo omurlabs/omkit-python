@@ -15,7 +15,7 @@ concurrency:
 jobs:
   test:
     name: pytest + mypy (py${{ matrix.python-version }})
-    runs-on: [self-hosted, unraid]
+    runs-on: self-hosted
     timeout-minutes: 25
 
     strategy:
