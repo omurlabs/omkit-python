@@ -35,9 +35,10 @@ jobs:
         run: pip install pip-audit==2.9.0
 
       - name: Audit declared dependencies (pyproject.toml)
+        # Auto-detects pyproject.toml in the working dir and resolves via pip.
         # --strict makes the action fail when audit cannot resolve a dep
         # (e.g. yanked release), not just when vulns are found.
-        run: pip-audit --strict --disable-pip --progress-spinner=off
+        run: pip-audit --strict --progress-spinner=off
 
   gitleaks:
     name: gitleaks
