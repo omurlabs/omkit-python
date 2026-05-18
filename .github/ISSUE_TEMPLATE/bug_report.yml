@@ -1,0 +1,144 @@
+name: Bug report
+description: Report a bug in omkit — unexpected behaviour, crash, or regression.
+title: "[bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. The fields below help us
+        triage and reproduce. Vague reports without a repro or version block
+        usually stall — please fill in everything you can.
+
+        For security vulnerabilities, **do not file a public issue**. See
+        [`SECURITY.md`](https://github.com/omurlabs/omkit-python/blob/main/SECURITY.md).
+
+  - type: input
+    id: omkit_version
+    attributes:
+      label: omkit version
+      description: Output of `pip show omkit | grep Version` or the git SHA if running from source.
+      placeholder: "0.1.2"
+    validations:
+      required: true
+
+  - type: input
+    id: python_version
+    attributes:
+      label: Python version
+      description: Output of `python --version`.
+      placeholder: "3.12.4"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install_mode
+    attributes:
+      label: Install mode
+      options:
+        - PyPI (`pip install omkit`)
+        - Editable from source (`pip install -e .`)
+        - Container (specify image tag in "Environment" below)
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Affected module
+      multiple: true
+      options:
+        - cleanup
+        - config
+        - cost
+        - crypto
+        - data
+        - dbpool
+        - encryption
+        - eventbus
+        - events
+        - health
+        - http
+        - jobqueue
+        - kms
+        - logging
+        - metrics
+        - model_lifecycle
+        - platform
+        - providers
+        - quota
+        - resilience
+        - sanitize
+        - security
+        - sessions
+        - settings
+        - sync_notifier
+        - tenant
+        - tracing
+        - transport
+        - valkey
+        - valkeystream
+        - valkeysub
+        - Other / unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened
+      description: A clear description of the actual behaviour.
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_expected
+    attributes:
+      label: What you expected
+      description: What did you expect the SDK to do? Cite the README / docstring / spec, if possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: |
+        Smallest viable Python program / SQL / config that reproduces the bug.
+        Include the input data shape and any environment variables.
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        OS / arch (e.g. `darwin/arm64`, `linux/amd64`), Postgres / Valkey
+        versions if relevant, and any `OMUR_*` envs (with secrets redacted).
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: |
+        Last ~50 lines of structlog output around the failure.
+        **Redact `tenant_id` and any payload bodies you don't want public.**
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I have searched [existing issues](https://github.com/omurlabs/omkit-python/issues?q=is%3Aissue) and this is not a duplicate.
+          required: true
+        - label: This is not a security vulnerability (those go via [`SECURITY.md`](https://github.com/omurlabs/omkit-python/blob/main/SECURITY.md) instead).
+          required: true

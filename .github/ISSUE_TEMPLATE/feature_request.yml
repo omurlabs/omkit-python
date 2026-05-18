@@ -1,0 +1,57 @@
+name: Feature request
+description: Suggest a new module, function, or behaviour change.
+title: "[feature] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing a feature. Some changes need maintainer
+        pre-approval — see the
+        [contribution stance](https://github.com/omurlabs/omkit-python/blob/main/CONTRIBUTING.md#contribution-stance)
+        in CONTRIBUTING.md. The pre-flight checklist below helps you (and
+        us) figure out the right path early.
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use case
+      description: |
+        Which downstream service is this for? What problem does it solve
+        that the current surface doesn't?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_surface
+    attributes:
+      label: Proposed surface
+      description: |
+        New module? New public symbol on an existing module? Be specific —
+        module paths or signatures help.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: |
+        What else could solve this? Why not? Is there a workaround
+        downstream services can do today?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: breaking
+    attributes:
+      label: Cross-SDK / breaking-change pre-flight
+      description: |
+        These flags signal a higher review bar. If any apply, an issue
+        discussion is mandatory before code lands.
+      options:
+        - label: Changes the AES-256-GCM envelope or any wire-compat surface shared with omkit-go
+        - label: Changes the job-queue envelope shared with omkit-go
+        - label: Removes or renames a public symbol on a stable module
+        - label: Adds a new external dependency (anything beyond what pyproject.toml already pulls)
+        - label: None of the above

@@ -1,5 +1,11 @@
 # omkit
 
+[![ci](https://github.com/omurlabs/omkit-python/actions/workflows/ci.yml/badge.svg)](https://github.com/omurlabs/omkit-python/actions/workflows/ci.yml)
+[![security](https://github.com/omurlabs/omkit-python/actions/workflows/security.yml/badge.svg)](https://github.com/omurlabs/omkit-python/actions/workflows/security.yml)
+[![PyPI](https://img.shields.io/pypi/v/omkit.svg)](https://pypi.org/project/omkit/)
+[![Python versions](https://img.shields.io/pypi/pyversions/omkit.svg)](https://pypi.org/project/omkit/)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 Multi-tenant SaaS scaffolding for Python services.
 
 `omkit` is the Python side of Omur Labs' shared service toolkit. It bundles the
