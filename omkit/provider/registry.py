@@ -1,4 +1,4 @@
-"""omkit/providers/registry.py — loads providers from DB, manages asyncio tasks, hot-reloads via Valkey.
+"""omkit/provider/registry.py — loads providers from DB, manages asyncio tasks, hot-reloads via Valkey.
 
 exports: DEFAULT_PROVIDERS_POLL_INTERVAL | class ProviderRegistry
 rules:   The module must maintain thread safety across all asyncio task management and ensure consistent state synchronization between PostgreSQL and Valkey for tenant-provider configurations.

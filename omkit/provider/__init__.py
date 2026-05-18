@@ -1,4 +1,4 @@
-"""omkit/providers/__init__.py — Package init for providers.
+"""omkit/provider/__init__.py — Package init for provider.
 
 exports: none
 rules:   none

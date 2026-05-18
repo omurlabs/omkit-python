@@ -3,7 +3,7 @@
 Public surface re-exports a small set of commonly-used helpers. Internal
 primitives are available via the submodules directly.
 """
-from omkit.http import build_tenant_client
+from omkit.httpclient import build_tenant_client
 from omkit.metrics import mount_metrics
 from omkit.settings import SettingsManager
 from omkit import tenant

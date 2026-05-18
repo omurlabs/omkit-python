@@ -1,4 +1,4 @@
-"""omkit/http.py — Tenant-aware httpx.AsyncClient factory.
+"""omkit/httpclient.py — Tenant-aware httpx.AsyncClient factory.
 
 Callers construct one long-lived client per service (NOT per request) via
 ``build_tenant_client`` and rely on the attached ``event_hook`` to inject
@@ -7,7 +7,7 @@ removes a whole class of bugs where ad-hoc per-request clients forgot the
 header and silently stripped tenant context.
 
 Example:
-    from omkit.http import build_tenant_client
+    from omkit.httpclient import build_tenant_client
     client = build_tenant_client(service_token=settings.omur_tenant_token)
 
     async def query_upstream(body):

@@ -1,4 +1,4 @@
-"""omkit/providers/base.py — ProviderBase ABC and shared data contracts for all Omur providers.
+"""omkit/provider/base.py — ProviderBase ABC and shared data contracts for all Omur providers.
 
 exports: class ProviderDocument | class ProviderMetric | class ProviderBase
 rules:   All provider classes must inherit from ProviderBase and implement the run() method, with ProviderMetric values must be coercible to float.

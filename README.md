@@ -15,7 +15,7 @@ pool that enforces Row-Level Security per connection, a pluggable event bus
 provider registry, BYOK encryption helpers, FastAPI observability middleware,
 and a cross-runtime job-queue envelope that interoperates with the Go sibling.
 
-- **Status:** `v0.1.1` — internal API stable.
+- **Status:** `v0.2.0` — internal API stable.
 - **Python:** `>=3.12`
 - **License:** Apache-2.0
 - **Sibling:** [`omkit-go`](https://github.com/omurlabs/omkit-go) — same primitives, same envelope contract, same RLS conventions.
@@ -23,7 +23,7 @@ and a cross-runtime job-queue envelope that interoperates with the Go sibling.
 ## Install
 
 ```bash
-pip install git+https://github.com/omurlabs/omkit-python@v0.1.1
+pip install git+https://github.com/omurlabs/omkit-python@v0.2.0
 ```
 
 Optional extras:
@@ -35,7 +35,7 @@ Optional extras:
 | `dev`      | `fastapi`, `pytest`, `pytest-asyncio`, `respx`                    | Local development and tests            |
 
 ```bash
-pip install "omkit[tracing,metrics] @ git+https://github.com/omurlabs/omkit-python@v0.1.1"
+pip install "omkit[tracing,metrics] @ git+https://github.com/omurlabs/omkit-python@v0.2.0"
 ```
 
 ## Quickstart
@@ -95,7 +95,7 @@ Tenant context is set by `TenantMiddleware` and read by everything downstream
 | `omkit.jobqueue`          | `Envelope` contract — `wrap`/`unwrap` for tenant-scoped tasks. Same wire format as `omkit-go/jobqueue`. |
 | `omkit.jobqueue.streaq`   | streaq worker helpers (`make_worker`, `enqueue`, `mount_streaq_ui`, Prometheus collector). Import explicitly. |
 | `omkit.model_lifecycle`   | `ModelRegistry` + `ModelLifecycle` ABC — lazy model loading with polling.     |
-| `omkit.sync_notifier`     | `SyncNotifier` — enqueue outbound HTTP callbacks.                             |
+| `omkit.syncnotifier`      | `SyncNotifier` — enqueue outbound HTTP callbacks.                             |
 
 ### Observability & resilience
 
@@ -122,11 +122,11 @@ Tenant context is set by `TenantMiddleware` and read by everything downstream
 
 | Module               | What it does                                                              |
 |----------------------|---------------------------------------------------------------------------|
-| `omkit.providers`    | `ProviderBase` ABC + `ProviderRegistry` for pluggable LLM providers.      |
+| `omkit.provider`     | `ProviderBase` ABC + `ProviderRegistry` for pluggable LLM providers.      |
 | `omkit.sanitize`     | `sanitize_llm_output`, `sanitize_llm_response`, `sanitize_html`, `extract_json`. |
 | `omkit.security` *(facade)* | Sanitation re-exports plus `log_security_event`.                   |
 | `omkit.cost`         | `record_cost`, `COST_UNITS_TOTAL` Prometheus counter, `TenantBucket` enum. |
-| `omkit.http`         | `build_tenant_client()` — httpx `AsyncClient` that injects tenant headers. |
+| `omkit.httpclient`   | `build_tenant_client()` — httpx `AsyncClient` that injects tenant headers. |
 | `omkit.cleanup`      | `Loop` context manager — ensure event-loop cleanup on shutdown.           |
 
 ### Internal

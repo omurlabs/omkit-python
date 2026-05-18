@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.0 — 2026-05-18
+
+### Changed (BREAKING)
+
+- **module renames** to align Python module names with `omkit-go` package names. Drops cross-runtime naming drift; consumers must update imports.
+  - `omkit.http` → `omkit.httpclient`
+  - `omkit.providers` → `omkit.provider`
+  - `omkit.sync_notifier` → `omkit.syncnotifier`
+- Re-exports via `omkit.platform`, `omkit.transport`, and top-level `omkit` are unchanged — code that imports from those facades is unaffected. Code that imports the three renamed submodules directly must update.
+- Log event keys (`sync_notifier.*`) are unchanged to preserve observability dashboards.
+
 ## v0.1.2 — 2026-05-18
 
 ### Changed

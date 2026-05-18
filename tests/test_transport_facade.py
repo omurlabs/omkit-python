@@ -56,9 +56,9 @@ def test_transport_facade_identity_matches_underlying():
     This is a property of Python ``from X import y`` in general and is not a
     facade-specific regression.
     """
-    from omkit import health, http, logging, metrics, resilience
+    from omkit import health, httpclient, logging, metrics, resilience
 
-    assert build_tenant_client is http.build_tenant_client
+    assert build_tenant_client is httpclient.build_tenant_client
     assert mount_metrics is metrics.mount_metrics
     assert mount_health_endpoints is health.mount_health_endpoints
     assert configure_logging is logging.configure_logging

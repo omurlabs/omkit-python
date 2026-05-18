@@ -11,8 +11,8 @@ import os
 import asyncpg
 import pytest
 
-from omkit.providers.base import ProviderBase
-from omkit.providers.registry import ProviderRegistry
+from omkit.provider.base import ProviderBase
+from omkit.provider.registry import ProviderRegistry
 
 
 class NoopProvider(ProviderBase):

@@ -7,7 +7,7 @@ grouping; flat imports still work.
 from omkit.config import BaseServiceSettings
 from omkit.model_lifecycle import ModelLifecycle, ModelRegistry
 from omkit.settings import SettingsManager
-from omkit.sync_notifier import SyncNotifier
+from omkit.syncnotifier import SyncNotifier
 
 __all__ = [
     "BaseServiceSettings",

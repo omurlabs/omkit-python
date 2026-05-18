@@ -1,7 +1,7 @@
 """omkit/transport/__init__.py — re-exports cross-cutting wire / observability primitives.
 
 This is an additive grouping for discoverability. Existing imports from the
-flat modules (``omkit.http``, ``omkit.tracing``, etc.) continue to work
+flat modules (``omkit.httpclient``, ``omkit.tracing``, etc.) continue to work
 unchanged; new code is encouraged to import from this facade.
 
 exports: none
@@ -11,7 +11,7 @@ message:
 """
 
 from omkit.health import mount_health_endpoints
-from omkit.http import build_tenant_client
+from omkit.httpclient import build_tenant_client
 from omkit.logging import configure_logging
 from omkit.metrics import mount_metrics
 from omkit.resilience import CircuitBreaker, resilient
