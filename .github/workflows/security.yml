@@ -1,0 +1,77 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Mondays 03:00 UTC — catches newly-disclosed vulns even when no PR lands.
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pip-audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install pip-audit
+        # Renovate-tracked via customManagers in renovate.json.
+        run: pip install pip-audit==2.9.0
+
+      - name: Audit declared dependencies (pyproject.toml)
+        # --strict makes the action fail when audit cannot resolve a dep
+        # (e.g. yanked release), not just when vulns are found.
+        run: pip-audit --strict --disable-pip --progress-spinner=off
+
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install gitleaks
+        # gitleaks-action@v2 requires a paid license for orgs; run the binary
+        # directly. Renovate-tracked via customManagers in renovate.json.
+        run: |
+          set -euo pipefail
+          VERSION="8.21.2"
+          TMP=$(mktemp -d)
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" \
+            | tar -xz -C "$TMP" gitleaks
+          sudo install -m 0755 "$TMP/gitleaks" /usr/local/bin/gitleaks
+          rm -rf "$TMP"
+          gitleaks version
+
+      - name: Gitleaks scan
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            LOG_OPTS="origin/${{ github.base_ref }}..HEAD"
+          elif [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            LOG_OPTS=""
+          else
+            LOG_OPTS="HEAD~1..HEAD"
+          fi
+          gitleaks detect --source . \
+                          --config .gitleaks.toml \
+                          ${LOG_OPTS:+--log-opts="$LOG_OPTS"} \
+                          --redact \
+                          --verbose
