@@ -4,7 +4,7 @@ Every task enqueued via streaq (Python) or Asynq (Go) is wrapped in this
 envelope. Workers unwrap on receive, validate, and run the handler under the
 tenant's RLS scope.
 
-exports: ENVELOPE_VERSION | class InvalidEnvelopeError | class Envelope | wrap(tenant_id, payload) | unwrap(data)
+exports: ENVELOPE_VERSION | class InvalidEnvelopeError | class Envelope | wrap(tenant_id, payload, request_id="") | unwrap(data)
 rules:   The Envelope class must maintain strict tenant isolation and never allow cross-tenant data leakage. All envelope validation must be immutable and deterministic to ensure consistent task processing across distributed workers. The wrap/unwrap functions must handle all serialization edge cases including nested data structures and preserve original payload integrity during transformation.
 agent:   ollama/qwen3-coder:latest | ollama | 2026-05-01 | codedna-cli | initial CodeDNA annotation pass
 message: 
@@ -42,6 +42,9 @@ class Envelope(BaseModel):
     # reject the missing-key case symmetrically.
     version: int
     tenant_id: str
+    # Mirrors Go's `RequestID string \`json:"request_id,omitempty"\`` — wrap()
+    # omits the key entirely when empty so byte-for-byte parity holds.
+    request_id: str = ""
     payload: dict[str, Any]
 
     @field_validator("tenant_id")
@@ -74,22 +77,27 @@ class Envelope(BaseModel):
         return v
 
 
-def wrap(tenant_id: str, payload: dict[str, Any]) -> bytes:
+def wrap(tenant_id: str, payload: dict[str, Any], request_id: str = "") -> bytes:
     """Build an envelope and serialize to JSON bytes for streaq enqueue.
 
-    Raises InvalidEnvelopeError if tenant_id is not a UUID.
-
-    Rules:   tenant_id must be a valid UUID string, otherwise InvalidEnvelopeError is raised
+    Raises InvalidEnvelopeError if tenant_id is not a UUID. `request_id` is
+    optional; when empty, the field is omitted from the JSON output to match
+    Go's `omitempty` semantics (byte-for-byte cross-SDK parity).
     """
     try:
-        env = Envelope(
+        Envelope(
             version=ENVELOPE_VERSION,
             tenant_id=tenant_id,
+            request_id=request_id,
             payload=payload,
         )
     except ValidationError as exc:
         raise InvalidEnvelopeError(str(exc)) from exc
-    return env.model_dump_json().encode("utf-8")
+    obj: dict[str, Any] = {"version": ENVELOPE_VERSION, "tenant_id": tenant_id}
+    if request_id:
+        obj["request_id"] = request_id
+    obj["payload"] = payload
+    return json.dumps(obj, separators=(",", ":")).encode("utf-8")
 
 
 def unwrap(data: bytes | str | dict[str, Any]) -> Envelope:
