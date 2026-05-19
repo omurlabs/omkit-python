@@ -1,0 +1,23 @@
+[
+  {
+    "name": "anthropic_api_key",
+    "key_b64": "ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA=",
+    "plaintext": "sk-ant-api03-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "token": "djH4vg5CiHJ8fJIeUJW1j9xKT1iAqB4S33fF93rz1oZY74mGWhAkBbSoswZ2Maf1bK2a1-NbGFm3PINSrxpY5yHzQw4vSgi-pTKL",
+    "produced_by": "py"
+  },
+  {
+    "name": "openai_api_key",
+    "key_b64": "ISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISE=",
+    "plaintext": "sk-proj-YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY",
+    "token": "djGsqhfY62Vlm3G9IrbSjT8mW6jYE49zShlyP9Ivg8xrm-B5I0QPPe6boGRd3YCs8o-WRtx-blamnRYOor3dsHmwWuju6AAn0Q==",
+    "produced_by": "py"
+  },
+  {
+    "name": "openrouter_api_key",
+    "key_b64": "IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI=",
+    "plaintext": "sk-or-v1-ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+    "token": "djFVj4hw-7ntdqg1GY3AuZcgR7reRsdXxr5VOVtMPnseus9ijyTqvZFGpHt0ZiOoTXyedO2uC2SJBzwtS3kZDzdppk3OD5M=",
+    "produced_by": "py"
+  }
+]
