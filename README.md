@@ -146,7 +146,7 @@ Tenant context is set by `TenantMiddleware` and read by everything downstream
 | `omkit.security` *(facade)* | `log_security_event` + sanitation re-exports *(sanitation moving to cortex)*. |
 | `omkit.cost`         | `record_cost`, `COST_UNITS_TOTAL` Prometheus counter, `TenantBucket` enum. |
 | `omkit.httpclient`   | `build_tenant_client()` — httpx `AsyncClient` that injects tenant headers. |
-| `omkit.cleanup`      | `Loop` context manager — ensure event-loop cleanup on shutdown.           |
+| `omkit.cleanup`      | `Loop` — coordinated periodic task runner with `pg_try_advisory_lock` (matches `omkit-go/cleanup.Loop`). |
 
 ### LLM (deprecated — moving to cortex)
 
