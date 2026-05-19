@@ -11,19 +11,40 @@ Multi-tenant SaaS scaffolding for Python services.
 `omkit` is the Python side of Omur Labs' shared service toolkit. It bundles the
 boring-but-load-bearing pieces every tenant-isolated service needs: a Postgres
 pool that enforces Row-Level Security per connection, a pluggable event bus
-(Postgres `LISTEN/NOTIFY` or Valkey), session and settings stores, an LLM
-provider registry, BYOK encryption helpers, FastAPI observability middleware,
-and a cross-runtime job-queue envelope that interoperates with the Go sibling.
+(Postgres `LISTEN/NOTIFY` or Valkey), session and settings stores, BYOK
+encryption helpers, FastAPI observability middleware, and a cross-runtime
+job-queue envelope that interoperates with the Go sibling.
+
+## What makes this different
+
+omkit is not a framework and not a BaaS. Each primitive (asyncpg, structlog,
+OTel, streaq) is borrowed. The value is in the *seams*:
+
+1. **RLS-per-connection** discipline encoded in the pool — tenant context flows
+   from `TenantMiddleware` through every downstream primitive so policies
+   actually apply at the DB.
+2. **Cross-runtime job envelope** — a Python streaq worker and a Go Asynq
+   worker exchange byte-identical job envelopes over a shared Valkey instance.
+3. **Wire-compatible encryption + settings** with `omkit-go` so secrets written
+   by one runtime decrypt on the other.
+
+Closest neighbors (`django-tenants`, Faktory, Encore.dev, Supabase) each cover
+one axis; none cover all three as a library.
 
 - **Status:** `v0.2.0` — internal API stable.
 - **Python:** `>=3.12`
 - **License:** Apache-2.0
 - **Sibling:** [`omkit-go`](https://github.com/omurlabs/omkit-go) — same primitives, same envelope contract, same RLS conventions.
 
+> **Scope note:** LLM provider abstraction (`omkit.provider`) and LLM-output
+> sanitization (`omkit.sanitize`) are being migrated to **cortex** (see
+> [#4](https://github.com/omurlabs/omkit-python/issues/4)). Expect deprecation
+> shims before removal.
+
 ## Install
 
 ```bash
-pip install git+https://github.com/omurlabs/omkit-python@v0.2.0
+pip install omkit
 ```
 
 Optional extras:
@@ -35,7 +56,7 @@ Optional extras:
 | `dev`      | `fastapi`, `pytest`, `pytest-asyncio`, `respx`                    | Local development and tests            |
 
 ```bash
-pip install "omkit[tracing,metrics] @ git+https://github.com/omurlabs/omkit-python@v0.2.0"
+pip install "omkit[tracing,metrics]"
 ```
 
 ## Quickstart
@@ -118,16 +139,21 @@ Tenant context is set by `TenantMiddleware` and read by everything downstream
 | `omkit.settings`     | `SettingsManager` — async tenant-settings loader with polling.            |
 | `omkit.platform` *(facade)* | Re-exports config + lifecycle + sync notifier.                     |
 
-### LLM & security
+### Security, cost, HTTP
 
 | Module               | What it does                                                              |
 |----------------------|---------------------------------------------------------------------------|
-| `omkit.provider`     | `ProviderBase` ABC + `ProviderRegistry` for pluggable LLM providers.      |
-| `omkit.sanitize`     | `sanitize_llm_output`, `sanitize_llm_response`, `sanitize_html`, `extract_json`. |
-| `omkit.security` *(facade)* | Sanitation re-exports plus `log_security_event`.                   |
+| `omkit.security` *(facade)* | `log_security_event` + sanitation re-exports *(sanitation moving to cortex)*. |
 | `omkit.cost`         | `record_cost`, `COST_UNITS_TOTAL` Prometheus counter, `TenantBucket` enum. |
 | `omkit.httpclient`   | `build_tenant_client()` — httpx `AsyncClient` that injects tenant headers. |
 | `omkit.cleanup`      | `Loop` context manager — ensure event-loop cleanup on shutdown.           |
+
+### LLM (deprecated — moving to cortex)
+
+| Module               | What it does                                                              |
+|----------------------|---------------------------------------------------------------------------|
+| `omkit.provider`     | `ProviderBase` ABC + `ProviderRegistry`. **Slated for migration to cortex — see [#4](https://github.com/omurlabs/omkit-python/issues/4).** |
+| `omkit.sanitize`     | LLM-output sanitization. **Slated for migration to cortex — see [#4](https://github.com/omurlabs/omkit-python/issues/4).** |
 
 ### Internal
 
