@@ -143,10 +143,13 @@ Tenant context is set by `TenantMiddleware` and read by everything downstream
 
 | Module               | What it does                                                              |
 |----------------------|---------------------------------------------------------------------------|
-| `omkit.security` *(facade)* | `log_security_event` + sanitation re-exports *(sanitation moving to cortex)*. |
+| `omkit.security` *(facade)* | `SecurityEvent` + `write_security_event` / `log_security_event` + sanitation re-exports *(sanitation moving to cortex)*. |
 | `omkit.cost`         | `record_cost`, `COST_UNITS_TOTAL` Prometheus counter, `TenantBucket` enum. |
 | `omkit.httpclient`   | `build_tenant_client()` — httpx `AsyncClient` that injects tenant headers. |
 | `omkit.cleanup`      | `Loop` — coordinated periodic task runner with `pg_try_advisory_lock` (matches `omkit-go/cleanup.Loop`). |
+| `omkit.auth`         | `Role` enum, `with_roles` context, `has_role`/`require_role`, `AuditEntry` + `write_audit_entry` — parity with `omkit-go/auth`. |
+| `omkit.featureflags` | `Flag`, `StaticStore`, `PostgresStore` (TTL cache), `allowed(store, key)` — parity with `omkit-go/featureflags`. |
+| `omkit.scheduler`    | `Scheduler` — DB-driven reconcile loop wrapping any cron backend; `PgxProviderSource`, `Provider`, `CronDeriver`. Parity with `omkit-go/scheduler`. |
 
 ### LLM (deprecated — moving to cortex)
 

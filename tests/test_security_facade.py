@@ -14,6 +14,8 @@ from omkit.security import (
     sanitize_llm_response,
     extract_json,
     log_security_event,
+    write_security_event,
+    SecurityEvent,
 )
 
 EXPECTED_EXPORTS = {
@@ -22,6 +24,8 @@ EXPECTED_EXPORTS = {
     "sanitize_llm_response",
     "extract_json",
     "log_security_event",
+    "write_security_event",
+    "SecurityEvent",
 }
 
 
