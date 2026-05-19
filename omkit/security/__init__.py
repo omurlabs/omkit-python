@@ -17,7 +17,11 @@ from omkit.sanitize import (
     sanitize_llm_output,
     sanitize_llm_response,
 )
-from omkit.security.events import log_security_event
+from omkit.security.events import (
+    SecurityEvent,
+    log_security_event,
+    write_security_event,
+)
 
 __all__ = [
     "sanitize_llm_output",
@@ -25,4 +29,6 @@ __all__ = [
     "sanitize_llm_response",
     "extract_json",
     "log_security_event",
+    "write_security_event",
+    "SecurityEvent",
 ]
