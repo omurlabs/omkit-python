@@ -3,12 +3,12 @@
     "name": "v1_short_plaintext",
     "key_b64": "QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=",
     "plaintext": "sk-prod-secret-token-v1",
-    "token": "djExHmbYoOftg02ilz55inn-dvlE5wlxv2mjf_W07rcgjmjvYECwwv7CaSLu__eDQyYa6Xc="
+    "token": "djF5GeNFOdoJbhKBM2hKHs4iOU-krgZlXsA3Re0oRcgERkZHmyhn-SiE6F0JuPN0PXZMe7s="
   },
   {
     "name": "v1_empty_plaintext",
     "key_b64": "QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=",
     "plaintext": "",
-    "token": "djE8aRHLUYcLDynAJYSeSkrX3sJ7tiT4udc-nymr"
+    "token": "djFmqi1OzNQh7Pz3slwJ5qIMmEhoq8bYgdOninDP"
   }
 ]

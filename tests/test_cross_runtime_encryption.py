@@ -31,10 +31,22 @@ import pytest
 from omkit.encryption import InvalidToken, decrypt_value, encrypt_value
 
 GOLDEN_PATH = Path(__file__).parent / "golden" / "encryption_v1.json"
+GO_GOLDEN_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "omkit-go"
+    / "internal"
+    / "testdata"
+    / "golden"
+    / "encryption.json"
+)
 
 
 def _cases() -> list[dict]:
     return json.loads(GOLDEN_PATH.read_text())
+
+
+def _go_cases() -> list[dict]:
+    return json.loads(GO_GOLDEN_PATH.read_text())
 
 
 def test_golden_fixture_present():
@@ -82,3 +94,18 @@ def test_decrypt_tampered_token_fails():
     bad = base64.urlsafe_b64encode(bytes(raw)).decode("ascii")
     with pytest.raises(InvalidToken):
         decrypt_value(bad, case["key_b64"])
+
+
+@pytest.mark.skipif(
+    not GO_GOLDEN_PATH.exists(),
+    reason=f"omkit-go fixture not found at {GO_GOLDEN_PATH}",
+)
+@pytest.mark.parametrize(
+    "case",
+    _go_cases() if GO_GOLDEN_PATH.exists() else [],
+    ids=lambda c: c["name"],
+)
+def test_decrypt_go_produced_token(case: dict):
+    """Decrypt a token produced by omkit-go's Encrypt — true cross-runtime pin."""
+    got = decrypt_value(case["token"], case["key_b64"])
+    assert got == case["plaintext"], f"{case['name']}: plaintext drift from Go-produced token"

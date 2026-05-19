@@ -21,7 +21,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from omkit.security.events import log_security_event
+from omkit.security.events import (
+    SecurityEvent,
+    log_security_event,
+    write_security_event,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -112,6 +116,80 @@ async def test_log_security_event_facade_export():
     from omkit.security.events import log_security_event as direct_fn
 
     assert facade_fn is direct_fn
+
+
+# ---------------------------------------------------------------------------
+# SecurityEvent + write_security_event (Go parity)
+# ---------------------------------------------------------------------------
+
+
+def _mock_pool() -> tuple[MagicMock, AsyncMock]:
+    mock_conn = AsyncMock()
+    mock_pool = MagicMock()
+    mock_pool.acquire.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
+    mock_pool.acquire.return_value.__aexit__ = AsyncMock(return_value=False)
+    return mock_pool, mock_conn
+
+
+def test_security_event_is_frozen():
+    ev = SecurityEvent(
+        tenant_id=uuid.uuid4(),
+        kind="sanitiser_pattern_hit",
+        severity="warn",
+    )
+    with pytest.raises(Exception):
+        ev.kind = "other"  # type: ignore[misc]
+
+
+@pytest.mark.asyncio
+async def test_write_security_event_inserts_row():
+    pool, conn = _mock_pool()
+    tenant = uuid.uuid4()
+    ev = SecurityEvent(
+        tenant_id=tenant,
+        kind="classifier_malicious",
+        severity="block",
+        evidence={"pattern": "x"},
+        request_id="req-1",
+    )
+    await write_security_event(pool, ev)
+    conn.execute.assert_awaited_once()
+    args = conn.execute.await_args.args
+    assert args[1] == tenant
+    assert args[2] == "classifier_malicious"
+    assert args[3] == "block"
+
+
+@pytest.mark.asyncio
+async def test_write_security_event_rejects_nil_pool():
+    ev = SecurityEvent(tenant_id=uuid.uuid4(), kind="k", severity="info")
+    with pytest.raises(ValueError, match="nil pool"):
+        await write_security_event(None, ev)  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+async def test_write_security_event_rejects_empty_kind():
+    pool, _ = _mock_pool()
+    ev = SecurityEvent(tenant_id=uuid.uuid4(), kind="", severity="info")
+    with pytest.raises(ValueError, match="kind required"):
+        await write_security_event(pool, ev)
+
+
+@pytest.mark.asyncio
+async def test_write_security_event_rejects_empty_severity():
+    pool, _ = _mock_pool()
+    ev = SecurityEvent(tenant_id=uuid.uuid4(), kind="k", severity="")
+    with pytest.raises(ValueError, match="severity required"):
+        await write_security_event(pool, ev)
+
+
+@pytest.mark.asyncio
+async def test_write_security_event_facade_export():
+    from omkit.security import SecurityEvent as facade_se
+    from omkit.security import write_security_event as facade_fn
+
+    assert facade_se is SecurityEvent
+    assert facade_fn is write_security_event
 
 
 # ---------------------------------------------------------------------------

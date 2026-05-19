@@ -31,10 +31,22 @@ from omkit.jobqueue.envelope import (
 )
 
 GOLDEN_PATH = Path(__file__).parent / "golden" / "envelope_v1.json"
+GO_GOLDEN_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "omkit-go"
+    / "internal"
+    / "testdata"
+    / "golden"
+    / "envelope.json"
+)
 
 
 def _cases() -> list[dict]:
     return json.loads(GOLDEN_PATH.read_text())
+
+
+def _go_cases() -> list[dict]:
+    return json.loads(GO_GOLDEN_PATH.read_text())
 
 
 def test_envelope_version_pinned():
@@ -89,3 +101,55 @@ def test_unwrap_tolerates_missing_request_id():
     )
     env = unwrap(raw)
     assert env.request_id == ""
+
+
+@pytest.mark.skipif(
+    not GO_GOLDEN_PATH.exists(),
+    reason=f"omkit-go fixture not found at {GO_GOLDEN_PATH}",
+)
+@pytest.mark.parametrize(
+    "case",
+    _go_cases() if GO_GOLDEN_PATH.exists() else [],
+    ids=lambda c: c["name"],
+)
+def test_unwrap_go_produced_envelope(case: dict):
+    """Unwrap an envelope produced by omkit-go — true cross-runtime pin.
+
+    The Go fixture stores the canonical bytes as base64; decode and feed to
+    Python's unwrap(). Fields must match what the Go side recorded.
+    """
+    import base64
+
+    raw = base64.b64decode(case["envelope_bytes_b64"])
+    env = unwrap(raw)
+    assert env.version == ENVELOPE_VERSION
+    assert env.tenant_id == case["tenant_id"]
+    assert env.payload == case["payload"]
+    assert env.request_id == case.get("request_id", "")
+
+
+@pytest.mark.skipif(
+    not GO_GOLDEN_PATH.exists(),
+    reason=f"omkit-go fixture not found at {GO_GOLDEN_PATH}",
+)
+@pytest.mark.parametrize(
+    "case",
+    _go_cases() if GO_GOLDEN_PATH.exists() else [],
+    ids=lambda c: c["name"],
+)
+def test_wrap_matches_go_produced_bytes(case: dict):
+    """wrap() output equals Go's bytes for sorted-key payloads.
+
+    Both SDKs emit canonical compact JSON; payloads in fixtures are kept
+    single-key or alphabetically ordered so Go's sorted-map output and
+    Python's insertion-ordered output agree byte-for-byte.
+    """
+    import base64
+
+    want = base64.b64decode(case["envelope_bytes_b64"])
+    got = wrap(
+        case["tenant_id"],
+        case["payload"],
+        request_id=case.get("request_id", ""),
+    )
+    assert got == want, f"{case['name']}: byte drift vs Go-produced envelope"
