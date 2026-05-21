@@ -68,6 +68,33 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev,tracing,metrics]"
 
+      - name: wait for services
+        # The `services:` block waits for the docker --health-cmd to pass
+        # before launching steps, but on the self-hosted runner we've seen
+        # tests start while Postgres is still listening only on the
+        # container network (host port 5432 not yet bound). Explicitly
+        # poll the host port so we fail fast with a clear error instead
+        # of dozens of `ConnectionRefusedError [Errno 111]` inside pytest.
+        run: |
+          set -e
+          for i in $(seq 1 30); do
+            (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1 && pg_ok=1 && break
+            sleep 1
+          done
+          for i in $(seq 1 30); do
+            (echo > /dev/tcp/127.0.0.1/6379) >/dev/null 2>&1 && redis_ok=1 && break
+            sleep 1
+          done
+          if [ -z "$pg_ok" ]; then
+            echo "::error::postgres host port 5432 never opened after 30s" >&2
+            exit 1
+          fi
+          if [ -z "$redis_ok" ]; then
+            echo "::error::valkey host port 6379 never opened after 30s" >&2
+            exit 1
+          fi
+          echo "services reachable: postgres:5432, valkey:6379"
+
       - name: pytest
         run: >-
           pytest -v --tb=short
