@@ -15,9 +15,20 @@ message:
 from __future__ import annotations
 
 import re
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
-import asyncpg
+if TYPE_CHECKING:
+    import asyncpg
+
+
+def _require_asyncpg():
+    try:
+        import asyncpg
+    except ImportError as e:
+        raise ImportError(
+            "omkit.dbpool requires `asyncpg`. Install with: pip install omkit[db]"
+        ) from e
+    return asyncpg
 
 
 def sqlalchemy_asyncpg_connect_args(role: str | None = "omur_app") -> dict[str, Any]:
@@ -63,7 +74,13 @@ def build_retrieval_engine(dsn: str):
     Returns an async engine; caller binds it to its own AsyncSession class
     (sqlalchemy vs sqlmodel session subclass).
     """
-    from sqlalchemy.ext.asyncio import create_async_engine
+    try:
+        from sqlalchemy.ext.asyncio import create_async_engine
+    except ImportError as e:
+        raise ImportError(
+            "omkit.dbpool.build_retrieval_engine requires `sqlalchemy`. "
+            "Install with: pip install omkit[db]"
+        ) from e
 
     return create_async_engine(
         dsn,
@@ -75,7 +92,7 @@ def build_retrieval_engine(dsn: str):
     )
 
 
-async def new_session_pool(dsn: str, **kwargs) -> asyncpg.Pool:
+async def new_session_pool(dsn: str, **kwargs) -> "asyncpg.Pool":
     """Build an asyncpg pool for :class:`omkit.sessions.PostgresSessionStore`.
 
     The session pool intentionally does **not** run ``SET ROLE omur_app``
@@ -111,7 +128,7 @@ async def create_pool(
     min_size: int = 1,
     max_size: int = 10,
     **kwargs,
-) -> asyncpg.Pool:
+) -> "asyncpg.Pool":
     """Create an asyncpg pool. If ``role`` is given, every new physical
     connection runs ``SET ROLE "<role>"`` via the init coroutine.
 
@@ -122,8 +139,9 @@ async def create_pool(
 
     Rules:   If `role` is provided, it must be a valid PostgreSQL role name, and the calling user must have the necessary permissions to execute `SET ROLE <role>`. Additionally, `statement_cache_size` is defaulted to 0 for pgbouncer compatibility, but callers can override this if needed.
     explicitly."""
+    asyncpg = _require_asyncpg()
 
-    async def _init(conn: asyncpg.Connection) -> None:
+    async def _init(conn) -> None:
         if role:
             await conn.execute(f'SET ROLE "{role}"')
 

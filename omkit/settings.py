@@ -14,8 +14,6 @@ import logging
 import os
 from typing import Any, Callable
 
-import redis.asyncio as aioredis
-
 from omkit.encryption import decrypt_value
 
 logger = logging.getLogger(__name__)
@@ -306,6 +304,13 @@ class SettingsManager:
 
     async def _subscribe(self):
         """Subscribe to Valkey pub/sub channel for setting changes."""
+        try:
+            import redis.asyncio as aioredis
+        except ImportError as e:
+            raise ImportError(
+                "omkit.settings Redis pub/sub backend requires `redis`. "
+                "Install with: pip install omkit[redis]"
+            ) from e
         channel = f"omur:settings:{self._tenant_id}"
         try:
             client = aioredis.from_url(self._valkey_url, decode_responses=True)

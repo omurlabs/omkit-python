@@ -29,12 +29,21 @@ from __future__ import annotations
 
 from typing import Callable
 
-from cryptography.exceptions import InvalidTag
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-
 NONCE_SIZE: int = 12  # AES-GCM standard nonce; matches Go cipher.NewGCM default.
 TAG_SIZE: int = 16  # AES-GCM authentication tag length.
 KEK_SIZE: int = 32  # AES-256.
+
+
+def _load_cryptography():
+    try:
+        from cryptography.exceptions import InvalidTag
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    except ImportError as e:
+        raise ImportError(
+            "omkit.crypto.aes_gcm requires `cryptography`. "
+            "Install with: pip install omkit[crypto]"
+        ) from e
+    return AESGCM, InvalidTag
 
 
 class InvalidKeyError(ValueError):
@@ -60,6 +69,7 @@ def wrap_with_key(kek: bytes, plaintext: bytes, aad: bytes) -> bytes:
     `omkit-go/crypto.Wrap(kek, plaintext, aad)`.
     """
     _validate_kek(kek)
+    AESGCM, _ = _load_cryptography()
     aead = AESGCM(kek)
     # AESGCM.encrypt generates random nonce externally — we generate it here
     # so the returned blob is `nonce || ciphertext_with_tag`, matching Go.
@@ -79,6 +89,7 @@ def unwrap_with_key(kek: bytes, blob: bytes, aad: bytes) -> bytes:
     if len(blob) < NONCE_SIZE:
         raise InvalidEnvelopeError(f"blob too short: {len(blob)} bytes (need >= {NONCE_SIZE})")
     nonce, ct = blob[:NONCE_SIZE], blob[NONCE_SIZE:]
+    AESGCM, InvalidTag = _load_cryptography()
     aead = AESGCM(kek)
     try:
         return aead.decrypt(nonce, ct, aad if aad else None)

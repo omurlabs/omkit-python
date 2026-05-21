@@ -24,15 +24,27 @@ message:
 from __future__ import annotations
 
 import os
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from cryptography.exceptions import InvalidTag
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+if TYPE_CHECKING:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM as _AESGCM
 
 KUSER_SIZE: Final[int] = 32
 _SELF_TEST_PAYLOAD: Final[bytes] = b"OMUR-SELFTEST-V1"
 _SELF_TEST_AAD: Final[bytes] = b"omur-selftest"
 _NONCE_SIZE: Final[int] = 12
+
+
+def _load_cryptography():
+    try:
+        from cryptography.exceptions import InvalidTag
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    except ImportError as e:
+        raise ImportError(
+            "omkit.crypto.kuser requires `cryptography`. "
+            "Install with: pip install omkit[crypto]"
+        ) from e
+    return AESGCM, InvalidTag
 
 
 class KUser:
@@ -67,9 +79,10 @@ class KUser:
         for i in range(len(self._buf)):
             self._buf[i] = 0
 
-    def _aead(self) -> AESGCM:
+    def _aead(self) -> "_AESGCM":
         # AESGCM accepts a bytes-like; pass a fresh `bytes` view so the
         # cryptography library doesn't retain a reference to our mutable buffer.
+        AESGCM, _ = _load_cryptography()
         return AESGCM(bytes(self._buf))
 
     def new_self_test(self) -> tuple[bytes, bytes]:
@@ -86,6 +99,7 @@ class KUser:
 
         Matches `omkit-go/crypto.(*KUser).VerifySelfTest`.
         """
+        _, InvalidTag = _load_cryptography()
         try:
             pt = self._aead().decrypt(nonce, ciphertext, _SELF_TEST_AAD)
         except InvalidTag as exc:

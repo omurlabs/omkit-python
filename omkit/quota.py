@@ -19,11 +19,19 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
-
 if TYPE_CHECKING:
     import asyncpg
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+
+def _sa_text():
+    try:
+        from sqlalchemy import text
+    except ImportError as e:
+        raise ImportError(
+            "omkit.quota requires `sqlalchemy`. Install with: pip install omkit[db]"
+        ) from e
+    return text
 
 DEFAULT_DOCS = 100
 DEFAULT_STORAGE_BYTES = 500 * 1024 * 1024  # 500 MiB
@@ -59,7 +67,7 @@ class Decision:
     retry_after: int = 0  # seconds; 0 means "no retry will help"
 
 
-async def load(session: AsyncSession) -> Limits:
+async def load(session: "AsyncSession") -> Limits:
     """Read the caller's effective limits under the session's RLS role.
 
     The caller is expected to have already invoked ``tenant.set_rls(session)``.
@@ -67,6 +75,7 @@ async def load(session: AsyncSession) -> Limits:
 
     Rules:   The function assumes that `tenant.set_rls(session)` has already been called, and explicitly filters by `app.tenant_id` to prevent cross-tenant data leakage since `tenant_quotas` has no RLS policy.
     """
+    text = _sa_text()
     # ``tenant_quotas`` intentionally has no RLS policy (operators need
     # cross-tenant visibility for capacity planning), so we filter by
     # the caller's app.tenant_id GUC explicitly. Without this WHERE the
@@ -94,7 +103,7 @@ async def load(session: AsyncSession) -> Limits:
     )
 
 
-async def get_usage(session: AsyncSession) -> Usage:
+async def get_usage(session: "AsyncSession") -> Usage:
     """Read docs / storage_bytes / queries-this-month for the request tenant.
 
     Caller must have already set RLS on the session.
@@ -107,6 +116,7 @@ async def get_usage(session: AsyncSession) -> Usage:
 
     Rules:   The function requires the caller to have already set RLS on the session, and services without SELECT permission on `usage_log` will get `queries_this_month=0`, which may mask real permission errors in query enforcement.
     """
+    text = _sa_text()
     doc_row = (
         await session.execute(
             text(
