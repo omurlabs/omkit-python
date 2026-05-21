@@ -38,4 +38,4 @@ def mount_metrics(app: "FastAPI", service_name: str) -> None:
         excluded_handlers=["/metrics", "/health", "/ready"],
     ).instrument(app, metric_namespace="omur", metric_subsystem=service_name).expose(app)
 
-    app._omkit_metrics_mounted = True
+    app._omkit_metrics_mounted = True  # type: ignore[attr-defined]
