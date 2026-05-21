@@ -81,7 +81,7 @@ class StreamProducer:
 
     async def add(self, fields: Mapping[str, FieldValue]) -> str:
         """XADD `fields` to the stream and return the generated entry ID."""
-        result = await self._r.xadd(self._stream, dict(fields))
+        result = await self._r.xadd(self._stream, dict(fields))  # type: ignore[arg-type]
         return _coerce_id(result)
 
 

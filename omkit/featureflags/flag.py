@@ -55,7 +55,7 @@ def parse_from_json(raw: bytes | str | dict) -> Flag:
     except (json.JSONDecodeError, TypeError, ValueError):
         return Flag()
     if not isinstance(obj, dict):
-        return Flag()
+        return Flag()  # type: ignore[unreachable]
 
     enabled = bool(obj.get("enabled", False))
     role_strs = obj.get("roles") or []

@@ -15,6 +15,7 @@ message:
 from __future__ import annotations
 
 import os
+from typing import Any
 
 import structlog
 
@@ -33,6 +34,7 @@ def configure_logging(service_name: str) -> None:
     Rules:   LOG_FORMAT environment variable must be either 'json' or 'console' (case insensitive), with 'json' as default. Future developers must ensure these specific values are handled or risk runtime errors.
     """
     fmt = os.environ.get("LOG_FORMAT", "json").lower()
+    renderer: Any
     if fmt == "console":
         renderer = structlog.dev.ConsoleRenderer()
     else:
