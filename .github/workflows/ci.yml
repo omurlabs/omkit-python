@@ -69,10 +69,15 @@ jobs:
       # uv is ~10-100x faster than pip for resolve + install. Its on-disk
       # cache is keyed per-dependency hash, so a one-line pyproject.toml
       # edit no longer invalidates every wheel.
+      #
+      # `enable-cache: false` — self-hosted runner bind-mounts UV_CACHE_DIR
+      # (/home/runner/.cache/uv) from the Unraid host. setup-uv's GHA-backed
+      # cache layer would redundantly pull a multi-GB cache over the
+      # residential pipe before uv could start. The local mount is faster
+      # and survives ephemeral container teardown.
       - uses: astral-sh/setup-uv@v6
         with:
-          enable-cache: true
-          cache-dependency-glob: pyproject.toml
+          enable-cache: false
 
       # Per-job venv (NOT --system) — concurrent matrix legs on shared
       # self-hosted runners with a bind-mounted /opt/hostedtoolcache
