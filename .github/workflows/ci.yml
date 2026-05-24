@@ -74,12 +74,19 @@ jobs:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
 
+      # Per-job venv (NOT --system) — concurrent matrix legs on shared
+      # self-hosted runners with a bind-mounted /opt/hostedtoolcache
+      # would race when both install into the same site-packages,
+      # producing partially-broken installs (e.g. pytest-cov entry
+      # points missing). A workspace-local .venv isolates each leg.
       - name: install
-        run: uv pip install --system -e ".[dev,tracing,metrics]"
+        run: |
+          uv venv .venv --python ${{ matrix.python-version }}
+          uv pip install --python .venv/bin/python -e ".[dev,tracing,metrics]"
 
       - name: pytest
         run: >-
-          pytest -v --tb=short
+          .venv/bin/pytest -v --tb=short
           --cov=omkit --cov-report=term-missing --cov-report=xml
 
       - uses: actions/upload-artifact@v7
@@ -91,4 +98,4 @@ jobs:
           retention-days: 14
 
       - name: mypy
-        run: mypy omkit
+        run: .venv/bin/mypy omkit
