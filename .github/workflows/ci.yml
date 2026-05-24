@@ -26,15 +26,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # PR runs only the newest supported Python (fast feedback). Full matrix
+  # fires on push-to-main + workflow_dispatch so a 3.12-only regression
+  # cannot reach a tagged release. 3.12 is the minimum supported per
+  # `requires-python = ">=3.12"` in pyproject.toml.
+  matrix-config:
+    name: matrix config
+    runs-on: self-hosted
+    timeout-minutes: 1
+    outputs:
+      pythons: ${{ steps.set.outputs.pythons }}
+    steps:
+      - id: set
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            echo 'pythons=["3.14"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'pythons=["3.12","3.14"]' >> "$GITHUB_OUTPUT"
+          fi
+
   test:
     name: pytest + mypy (py${{ matrix.python-version }})
+    needs: matrix-config
     runs-on: self-hosted
     timeout-minutes: 25
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.14"]
+        python-version: ${{ fromJSON(needs.matrix-config.outputs.pythons) }}
 
     steps:
       - uses: actions/checkout@v6
@@ -42,13 +65,17 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
+
+      # uv is ~10-100x faster than pip for resolve + install. Its on-disk
+      # cache is keyed per-dependency hash, so a one-line pyproject.toml
+      # edit no longer invalidates every wheel.
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
 
       - name: install
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev,tracing,metrics]"
+        run: uv pip install --system -e ".[dev,tracing,metrics]"
 
       - name: pytest
         run: >-
