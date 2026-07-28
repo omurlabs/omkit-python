@@ -32,7 +32,7 @@ jobs:
   # `requires-python = ">=3.12"` in pyproject.toml.
   matrix-config:
     name: matrix config
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 1
     outputs:
       pythons: ${{ steps.set.outputs.pythons }}
@@ -51,7 +51,7 @@ jobs:
   test:
     name: pytest + mypy (py${{ matrix.python-version }})
     needs: matrix-config
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 25
 
     strategy:
@@ -70,20 +70,17 @@ jobs:
       # cache is keyed per-dependency hash, so a one-line pyproject.toml
       # edit no longer invalidates every wheel.
       #
-      # `enable-cache: false` — self-hosted runner bind-mounts UV_CACHE_DIR
-      # (/home/runner/.cache/uv) from the Unraid host. setup-uv's GHA-backed
-      # cache layer would redundantly pull a multi-GB cache over the
-      # residential pipe before uv could start. The local mount is faster
-      # and survives ephemeral container teardown.
+      # `enable-cache: true` — on GitHub-hosted runners there is no warm
+      # local uv cache, so the GHA-backed cache layer is what makes repeat
+      # runs fast. (It was disabled while this job ran on the self-hosted
+      # fleet, which bind-mounted UV_CACHE_DIR from the Unraid host.)
       - uses: astral-sh/setup-uv@v6
         with:
-          enable-cache: false
+          enable-cache: true
 
-      # Per-job venv (NOT --system) — concurrent matrix legs on shared
-      # self-hosted runners with a bind-mounted /opt/hostedtoolcache
-      # would race when both install into the same site-packages,
-      # producing partially-broken installs (e.g. pytest-cov entry
-      # points missing). A workspace-local .venv isolates each leg.
+      # Per-job venv (NOT --system) — keeps each matrix leg's site-packages
+      # isolated, so a resolution difference between 3.12 and 3.14 cannot
+      # leak across legs.
       - name: install
         run: |
           uv venv .venv --python ${{ matrix.python-version }}
