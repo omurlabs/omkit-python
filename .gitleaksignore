@@ -1,0 +1,12 @@
+# Gitleaks findings allowlisted by fingerprint.
+#
+# Format: <commit>:<path>:<rule-id>:<line>
+# gitleaks scans full history, so a finding in an old commit keeps failing the
+# nightly scan even after the line is changed or removed on main. Allowlisting
+# the fingerprint is the supported way to clear a confirmed false positive.
+
+# tests/test_tenant.py:320 in 19f9612 — `hex_key = "0123456789abcdef" * 4`, a
+# synthetic 64-char hex string built by repeating a literal, used to exercise
+# hashed_for_log()'s OMUR_LOG_HMAC_KEY parsing. Flagged as generic-api-key on
+# entropy alone. Not a credential; nothing to rotate.
+19f96124565cb22b2d3dc9b759fc00bc93cbb3f7:tests/test_tenant.py:generic-api-key:320
